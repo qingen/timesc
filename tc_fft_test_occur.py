@@ -58,7 +58,11 @@ def predict_weekly():
     df221 = pd.read_csv("./data/0720_2639/22_1_202307201615.csv", header=0, sep=',', encoding='gbk')
     df227 = pd.read_csv("./data/0720_2639/22_7_202307201610.csv", header=0, sep=',', encoding='gbk')
     df23_1 = pd.read_csv("./data/0720_2639/2023_1_5_202308171425.csv", header=0, sep=',', encoding='gbk')
-    df23_2 = pd.read_csv("./data/0720_2639/2023_5_8_202308171416.csv", header=0, sep=',', encoding='gbk')
+    #df23_2 = pd.read_csv("./data/0720_2639/2023_5_8_202308171416.csv", header=0, sep=',', encoding='gbk')
+    df23_2 = pd.read_csv("./data/0720_2639/2023_5_6_202309081528.csv", header=0, sep=',', encoding='gbk')
+    df23_3 = pd.read_csv("./data/0720_2639/2023_6_7_202309081530.csv", header=0, sep=',', encoding='gbk')
+    df23_4 = pd.read_csv("./data/0720_2639/2023_7_8_202309081532.csv", header=0, sep=',', encoding='gbk')
+    df23_5 = pd.read_csv("./data/0720_2639/2023_8_202309081535.csv", header=0, sep=',', encoding='gbk')
 
     # print(df207.shape)
     # print(df211.shape)
@@ -67,9 +71,7 @@ def predict_weekly():
     # print(df227.shape)
     # print(df23.shape)
     # df_all = pd.concat([df207, df211, df217, df221, df227, df23])
-    df_all = pd.concat([df221, df227, df23_1, df23_2])
-    # df_all = pd.concat([df227,df23])
-    # df_all = df23
+    df_all = pd.concat([df221, df227, df23_1, df23_2, df23_3, df23_4, df23_5])
     print(df_all.shape)
 
     #col = df_all.columns.tolist()
@@ -119,9 +121,9 @@ def predict_weekly():
            'AUDIT_10YCHKSZYDHGWF_R', 'AUDIT_1YCHKWGWF_IND', 'AUDIT_1YCHKPCT25_IND', 'EXT_12M_R']
     # dfAlt = shuffle(dfAlt,random_state=0)
 
-    n_line_tail = 210  # (1-7) * 30
-    n_line_head = 210
-    n_max_time = 28 + n_line_tail  # 7*4 + n_line_tail
+    n_line_tail = 60  # (1-7) * 30
+    n_line_head = 60
+    n_max_time = 28*3 + n_line_tail  # 7*4*2 + n_line_tail    2 month
     n_step_time = 7  # occur 7, treat 1
     type = 'occur'  # occur  treat
 
@@ -132,9 +134,10 @@ def predict_weekly():
     # network=PaddleBaseClassifier.load('./model/1multiM5/0726_50_20_16_244_fft_p_t_SS_t'+str(n_line_tail)+'_y22_m07_y23_m07_v1.itc')
     # network=PaddleBaseClassifier.load('./model/2baseM6/0802_50_20_16_244_fft_p_t_SS_t'+str(n_line_tail)+'_y18_m01_y23_m7_t0.itc')
     #network = PaddleBaseClassifier.load('./model/3multiM6/0809_' + type + '_50_20_16_244_fft_p_t_SS_t' + str(n_line_tail) + '_y16_m01_y23_m7_v1.itc')
-    network = PaddleBaseClassifier.load('./model/3multiM6/20230821_' + type + '_50_20_16_244_fft_p_t_SS_t' + str(n_line_tail) + '_y16_m01_y23_m7_fl.itc')
+    #network = PaddleBaseClassifier.load('./model/3multiM6/20230821_' + type + '_50_20_16_244_fft_p_t_SS_t' + str(n_line_tail) + '_y16_m01_y23_m7_fl.itc')
+    network = PaddleBaseClassifier.load('./model/4multiM6/20230906_' + type + '_50_20_16_244_fft_p_t_SS_t' + str(n_line_tail) + '_y16_m01_y23_m7_fl.itc')
 
-    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)
+    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230901)
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
     print('df_all.shape:', df_all.shape)
 
@@ -144,9 +147,9 @@ def predict_weekly():
     # filename = './result/20230803_M5_y22_m10_y23_m7_result_data_'+str(n_line_head)+'.csv'
     # filename = './result/20230803_M5_y22_m07_y23_m7_result_data_'+str(n_line_head)+'.csv'
     # filename = './result/20230817_' + type + '_M6_y16_m01_y23_m7_result_' + str(n_line_head) + '.csv'
-    filename = './result/20230821_' + type + '_M6_y16_m01_y23_m7_result_' + str(n_line_head) + '_fl.csv'
+    filename = './result/20230905_' + type + '_M6_y16_m01_y23_m7_result_' + str(n_line_head) + '_fl.csv'
 
-    start_date = datetime(2023, 8, 16)
+    start_date = datetime(2023, 9, 5)
 
     for i in np.arange(n_line_tail, n_max_time, n_step_time):
         dfAlt1 = df_all
@@ -332,8 +335,8 @@ def test_for_report():
            'RPCNT7_180_90INV_R', 'AUDIT_1YCHK_IND', 'AUDIT_5YCHKSZYD_R', 'AUDIT_10YCHKSZYD_R', 'AUDIT_5YCHKSZYDHGWF_R',
            'AUDIT_10YCHKSZYDHGWF_R', 'AUDIT_1YCHKWGWF_IND', 'AUDIT_1YCHKPCT25_IND', 'EXT_12M_R']
 
-    n_line_tail = 30  # (1~5) * 30
-    n_line_head = 30  # = tail
+    n_line_tail = 90  # (1~5) * 30
+    n_line_head = 90  # = tail
     n_max_time = 7*4*6 + n_line_tail  # half_year + n_line_tail
     n_step_time = 7  # occur 7, treat 1
     type = 'occur'  # occur  treat
@@ -469,5 +472,5 @@ def test_for_report():
 
 
 if __name__ == '__main__':
-    test_for_report()
-    #predict_weekly()
+    #test_for_report()
+    predict_weekly()

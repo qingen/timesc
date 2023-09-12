@@ -347,12 +347,13 @@ def train_occur_for_report():
            'RPCNT3_180_90AGE_R', 'RPCNT7_180_90AGE_R', 'RPCNT3_90_90INV_R', 'RPCNT7_90_90INV_R', 'RPCNT3_180_90INV_R',
            'RPCNT7_180_90INV_R', 'AUDIT_1YCHK_IND', 'AUDIT_5YCHKSZYD_R', 'AUDIT_10YCHKSZYD_R', 'AUDIT_5YCHKSZYDHGWF_R',
            'AUDIT_10YCHKSZYDHGWF_R', 'AUDIT_1YCHKWGWF_IND', 'AUDIT_1YCHKPCT25_IND', 'EXT_12M_R']
-    #col = ['GRP_REPAYCARS90_SUM', 'GRP_REPAYCARS180_SUM', 'GRP_USEAMT_SUM', 'SDV_REPAY_90', 'EXT_12M_R', 'LSR_181_AVG_180', 'GRP_CNT', 'INV_AVG_180', 'XSZQ180D_R', 'LRR_AVG_180']
+    col = ['GRP_REPAYCARS90_SUM', 'GRP_REPAYCARS180_SUM', 'GRP_USEAMT_SUM', 'SDV_REPAY_90', 'EXT_12M_R', 'LSR_181_AVG_180',
+           'GRP_CNT', 'INV_AVG_180', 'XSZQ180D_R', 'LRR_AVG_180']
 
     n_line_tail = 30  # (1-7) * 30
     n_line_head = 0
     type = 'occur'
-    date_str = datetime(2023, 8, 23).strftime("%Y%m%d")
+    date_str = datetime(2023, 9, 12).strftime("%Y%m%d")
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)  # for test
     df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train valid
