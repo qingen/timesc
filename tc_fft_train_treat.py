@@ -1291,13 +1291,13 @@ def augment_bad_data_train_treat_continue_for_report():
                'INV_AVG_15','JH_90_CNT','INV_AVG_7','SDV_REPAY_15','INV_RATIO','INV_CHA_15','INV_CHA_30','INV_CHA_60','INV_CHA_90','INV_CHA_180',
                'INV_CHA_365','INV_CHA_7','LSR_121_AVG_180','FREESPANRP_90D_R','REPAY_STD_RATIO_7_180','SDV_REPAY_7','REPAY_STD_RATIO_7_15',
                'REPAY_STD_RATIO_7_30','REPAY_STD_RATIO_7_60','REPAY_STD_RATIO_7_90','REPAY_STD_RATIO_7_365','LRR_AVG_90','LSR_91_AVG_30']  # 90 cols
-    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
                'UAR_CHA_15', 'UAR_CHA_30','UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7', 'STOCK_AGE_AVG_365', 'SDV_REPAY_365',
                'INV_AVG_365','GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365', 'LSR_91_AVG_365',
                'STOCK_AGE_AVG_180','FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180', 'GRP_REPAYCARS90_SUM',
                'GRP_CNT','JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM', 'STOCK_AGE_AVG_90', 'LSR_91_AVG_180']  # 40 cols
-    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365','UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7']  # 18 cols
     df23_2 = pd.read_csv("./data/0825_train/treat/2023_4_202308252055.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
@@ -1428,21 +1428,22 @@ def augment_bad_data_train_treat_continue_for_report():
            'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180', 'GRP_REPAYCARS90_SUM',
            'GRP_CNT','JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM', 'STOCK_AGE_AVG_90', 'LSR_91_AVG_180']  # 40
 
-    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
            'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7']  # 18
 
     n_line_tail = 7  # (1-5) * 7
     n_line_back = 1  # back 1
     n_line_head = 7  # = tail
-    type = 'treat'
+    type = 'treat_step1'
+    step = 1
     date_str = datetime(2023, 9, 13).strftime("%Y%m%d")
     split_date_str = '20230101'
-    ftr_num_str = '18'
+    ftr_num_str = '90'
     filter_num_ratio = 1 / 8
     ########## model
-    epochs = 20
-    patiences = 10  # 10
+    epochs = 100
+    patiences = 50  # 10
     kernelsize = 16
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20220101)  # 7 8 9 10 11 12
@@ -1474,7 +1475,7 @@ def augment_bad_data_train_treat_continue_for_report():
         new_groups = []
         size = len(group)
         # 循环切片生成新的组
-        for i in range(size):  # range(0,size,2)
+        for i in range(0,size,step):  # range(0,size,2)
             start_position = i
             end_position = i + batch_size
             # 获取当前组的一部分数据
@@ -1754,8 +1755,8 @@ def augment_bad_data_train_treat_continue_for_report():
 
     from sklearn.metrics import accuracy_score, f1_score
 
-    # network.save('./model/'+date_str+'_'+type+'_'+split_date_str+'_'+str(epochs)+'_'+str(patiences)+'_'+str(kernelsize)+'_ftr_'
-    #             +ftr_num_str+'_t' + str(n_line_tail) + '_fl_aug.itc')
+    network.save('./model/'+date_str+'_'+type+'_'+split_date_str+'_'+str(epochs)+'_'+str(patiences)+'_'+str(kernelsize)+'_ftr_'
+                 +ftr_num_str+'_t' + str(n_line_tail) + '_fl_aug.itc')
 
     ############################### val
     filename = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(
