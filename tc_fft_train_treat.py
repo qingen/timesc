@@ -1442,8 +1442,8 @@ def augment_bad_data_train_treat_continue_for_report():
     ftr_num_str = '90'
     filter_num_ratio = 1 / 8
     ########## model
-    epochs = 100
-    patiences = 50  # 10
+    epochs = 40
+    patiences = 20  # 10
     kernelsize = 16
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20220101)  # 7 8 9 10 11 12

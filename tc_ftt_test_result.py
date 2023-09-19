@@ -756,11 +756,33 @@ def treat_ks():
     #plt.savefig("0815_" + type + "_y16_m1_y23_m1_y23_m7_KS_test_ensemble_e50.png")
     plt.show()
 
+def augment_data_occur_for_report():
+    df201 = pd.read_csv("./result/20230913_occur_step1_20230101_80_40_16_ftr_90_t30_fl_test_aug.csv", header=0,sep=',', encoding='gbk')
+    df_all = pd.DataFrame()
+    for i in np.arange(0, 1, 0.000001):
+        print('=' * 16, i)
+        df = pd.DataFrame()
+        df['Y'] = df201['Y']
+        df['customerid'] = df201['customerid'].str.replace('_.*', '', regex=True)
+        df['prob'] = df201['prob']  # df201[column_key]
+        # print(column_key + ' ='*20)
+        # 按照列 'A' 的值进行过滤
+        filtered_df = df[df['prob'] >= (1-i)]
+        #print(filtered_df)
+        df_all = pd.concat([df_all, filtered_df])
+        df_all.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
+        value_counts = df_all['Y'].value_counts()
+        # 获取值为1的频次
+        count_1 = value_counts.get(1, 0)
+        count_0 = value_counts.get(0, 0)
+        print(1-i, count_1, count_0)
+
+
 if __name__ == '__main__':
     #weight_vote_occur_treat()
     #weight_vote_occur_static()
     #weight_vote_treat_static()
-    weight_vote_occur_dynamic_for_report()
+    #weight_vote_occur_dynamic_for_report()
     #weight_vote_treat_dynamic_for_report()
     #weight_vote_treat_static()
     #weight_vote_occur_predict_weekly()
@@ -770,3 +792,4 @@ if __name__ == '__main__':
     #max_vote_treat_static()
     #max_vote_occur_treat_static()
     #max_vote_occur_dynamic_for_report()
+    augment_data_occur_for_report()
