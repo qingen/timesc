@@ -4684,16 +4684,19 @@ def augment_bad_data_relabel_multiclass_train_occur_continue_for_report():
         y_train_customerid.append(dataset.static_cov['CUSTOMER_ID'])
         dataset.static_cov = None
     y_train = np.array(y_train)
+    y_train_customerid = np.array(y_train_customerid)
     for dataset in tsdatasets_val:
         y_val.append(dataset.static_cov['Y'])
         y_val_customerid.append(dataset.static_cov['CUSTOMER_ID'])
         dataset.static_cov = None
     y_val = np.array(y_val)
+    y_val_customerid = np.array(y_val_customerid)
     for dataset in tsdatasets_test:
         y_test.append(dataset.static_cov['Y'])
         y_test_customerid.append(dataset.static_cov['CUSTOMER_ID'])
         dataset.static_cov = None
     y_test = np.array(y_test)
+    y_test_customerid = np.array(y_test_customerid)
 
     from paddlets.transform import StandardScaler
     min_max_scaler = StandardScaler()
