@@ -15,6 +15,7 @@ import paddlets
 from paddlets.datasets.repository import get_dataset, dataset_list
 from paddlets.models.classify.dl.cnn import CNNClassifier
 from paddlets.models.classify.dl.inception_time import InceptionTimeClassifier
+from paddlets.models.classify.dl.paddle_base import PaddleBaseClassifier
 from paddlets.datasets.repository import get_dataset
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -3553,7 +3554,8 @@ def ts2vec_relabel(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomers
 
 
 def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomersid: np.ndarray,
-                                   model_path: str, repr_cluster_file_name: str = "repr-cluster-partial.pkl"):
+                                   model_path: str, repr_cluster_file_name: str = "repr-cluster-partial.pkl",
+                                   del_num:int = 200):
     ts2vec_params = {"segment_size": 30,
                      "repr_dims": 320,  # 320
                      "batch_size": 128,
@@ -3569,30 +3571,34 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
         model.fit(tsdatasets)
         model.save(model_path, repr_cluster_file_name)
     else:
-        model.load(model_path, repr_cluster_file_name)
+        model = ReprCluster.load(model_path, repr_cluster_file_name)
     y_pred = model.predict(tsdatasets)
     print(y_pred, y_pred.sum(), len(y_pred))
-
-    tsdataset_list = [[] for _ in range(6)]
-    label_list = [[] for _ in range(6)]
-    customersid_list = [[] for _ in range(6)]
+    n_class = max(y_pred) + 1
+    tsdataset_list = [[] for _ in range(n_class)]
+    label_list = [[] for _ in range(n_class)]
+    customersid_list = [[] for _ in range(n_class)]
 
     for y, data, label, id in zip(y_pred, tsdatasets, y_labels, y_cutomersid):
         tsdataset_list[y].append(data)
         label_list[y].append(label)
         customersid_list[y].append(id)
 
-    for i in range(6):
-        if len(label_list[i] < 200):
-            print('warning del class ', i, ' less 200 elements')
-            del tsdataset_list[i]
-            del label_list[i]
-            del customersid_list[i]
+    i = 0
+    while i < len(label_list):
+        if len(label_list[i]) < del_num:
+            print('warning del class ', i, ' less 100 elements:',len(label_list[i]),sum(label_list[i]))
+            label_list.pop(i)
+            tsdataset_list.pop(i)
+            customersid_list.pop(i)
+        else:
+            i += 1
+
     print('length each class')
     for i in range(len(label_list)):
         print(i, '=' * 16)
         print(len(tsdataset_list[i]))
-        print('length:', len(label_list[i]), ' sum: ', label_list[i].sum())
+        print('length:', len(label_list[i]), ' sum: ', sum(label_list[i]))
         print(len(customersid_list[i]))
         label_list[i][:] = np.array(label_list[i])
         customersid_list[i][:] = np.array(customersid_list[i])
@@ -3602,8 +3608,7 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
 
 def model_forward_ks_roc(model_file_path: str, result_file_path: str, tsdatasets: List[TSDataset], y_labels: np.ndarray,
                          y_cutomersid: np.ndarray, ):
-    network = InceptionTimeClassifier(max_epochs=20, patience=10, kernel_size=16)
-    network.load(model_file_path)
+    network = PaddleBaseClassifier.load(model_file_path)
     #pred_val = network.predict(tsdatasets)
     pred_val_prob = network.predict_proba(tsdatasets)[:, 1]
 
@@ -3636,14 +3641,14 @@ def model_forward_ks_roc(model_file_path: str, result_file_path: str, tsdatasets
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic example(val)')
+    plt.title('Receiver operating characteristic example')
     plt.legend(loc="lower right")
     # plt.savefig(roc_file_path)
     plt.show()
     plt.plot(tpr, lw=2, label='tpr')
     plt.plot(fpr, lw=2, label='fpr')
     plt.plot(tpr - fpr, label='ks')
-    plt.title('KS = %0.2f(val)' % max(tpr - fpr))
+    plt.title('KS = %0.2f' % max(tpr - fpr))
     plt.legend(loc="lower right")
     # plt.savefig(ks_file_path)
     plt.show()
@@ -4368,9 +4373,9 @@ def augment_bad_data_relabel_multiclass_train_occur_continue_for_report():
     n_line_tail = 30  # (1-5) * 30
     n_line_back = 1  # back 7
     n_line_head = 30  # = tail
-    type = 'occur_step10_reclass_less200'
-    step = 10
-    date_str = datetime(2023, 9, 19).strftime("%Y%m%d")
+
+    step = 5
+    date_str = datetime(2023, 9, 20).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '17'
     filter_num_ratio = 1 / 8
@@ -4378,6 +4383,12 @@ def augment_bad_data_relabel_multiclass_train_occur_continue_for_report():
     epochs = 20
     patiences = 10  # 10
     kernelsize = 16
+    cluster_model_path = './model/cluster_step'+str(step) + '/'
+    cluster_model_file = date_str+'-repr-cluster-partial-train-6.pkl'
+    cluster_less_train_num = 200
+    cluster_less_val_num = 200
+    cluster_less_test_num = 10
+    type = 'occur_step'+str(step)+'_reclass_less' + str(cluster_less_train_num) +'_'+str(cluster_less_test_num)
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20220101)  # 7 8 9 10 11 12
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
@@ -4704,8 +4715,12 @@ def augment_bad_data_relabel_multiclass_train_occur_continue_for_report():
     tsdatasets_val = min_max_scaler.fit_transform(tsdatasets_val)
     tsdatasets_test = min_max_scaler.fit_transform(tsdatasets_test)
 
-    tsdataset_list_train, label_list_train, customersid_list_train = ts2vec_cluster_datagroup_model(
-        tsdatasets_train,y_train,y_train_customerid,'./model/cluster/','repr-cluster-partial-train-6.pkl')
+    tsdataset_list_train, label_list_train, customersid_list_train = ts2vec_cluster_datagroup_model(tsdatasets_train,
+                                                                                                    y_train,
+                                                                                                    y_train_customerid,
+                                                                                                    cluster_model_path,
+                                                                                                    cluster_model_file,
+                                                                                                 cluster_less_train_num)
     for i in range(len(label_list_train)):
         network = InceptionTimeClassifier(max_epochs=epochs, patience=patiences, kernel_size=kernelsize)
         model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
@@ -4718,36 +4733,44 @@ def augment_bad_data_relabel_multiclass_train_occur_continue_for_report():
     tsdataset_list_val, label_list_val, customersid_list_val = ts2vec_cluster_datagroup_model(tsdatasets_val,
                                                                                                     y_val,
                                                                                                     y_val_customerid,
-                                                                                                    './model/cluster/',
-                                                                                                    'repr-cluster-partial-train-6.pkl')
+                                                                                                    cluster_model_path,
+                                                                                                    cluster_model_file,
+                                                                                                   cluster_less_val_num)
     for i in range(len(label_list_val)):
-        model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                          str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_fl_aug_' + str(i) + '.itc'
-        if not os.path.exists(model_file_path):
+        for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
                               str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                              '_fl_aug_' + str(0) + '.itc'  # default 0
-        result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) +\
-                   '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_val_aug_'+str(i)+'.csv'
-        model_forward_ks_roc(model_file_path,result_file_path,tsdataset_list_val[i],label_list_val[i],customersid_list_val[i])
+                              '_fl_aug_' + str(j) + '.itc'
+            if not os.path.exists(model_file_path):
+                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                                  '_fl_aug_' + str(0) + '.itc'  # default 0
+                j = 0
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) +\
+                       '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_val_aug_'+str(j)+'_'+str(i)+'.csv'
+            print(result_file_path)
+            model_forward_ks_roc(model_file_path,result_file_path,tsdataset_list_val[i],label_list_val[i],customersid_list_val[i])
 
     tsdataset_list_test, label_list_test, customersid_list_test = ts2vec_cluster_datagroup_model(tsdatasets_test,
                                                                                                     y_test,
                                                                                                     y_test_customerid,
-                                                                                                    './model/cluster/',
-                                                                                                    'repr-cluster-partial-train-6.pkl')
+                                                                                                    cluster_model_path,
+                                                                                                    cluster_model_file,
+                                                                                                 cluster_less_test_num)
     for i in range(len(label_list_test)):
-        model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                          str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_fl_aug_' + str(i) + '.itc'
-        if not os.path.exists(model_file_path):
+        for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
                               str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                              '_fl_aug_' + str(0) + '.itc'  # default 0
-        result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) +\
-                   '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_'+str(i)+'.csv'
-        model_forward_ks_roc(model_file_path,result_file_path,tsdataset_list_test[i],label_list_test[i],customersid_list_test[i])
+                              '_fl_aug_' + str(j) + '.itc'
+            if not os.path.exists(model_file_path):
+                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                                  '_fl_aug_' + str(0) + '.itc'  # default 0
+                j = 0
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) +\
+                       '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_'+str(j)+'_'+str(i)+'.csv'
+            print(result_file_path)
+            model_forward_ks_roc(model_file_path,result_file_path,tsdataset_list_test[i],label_list_test[i],customersid_list_test[i])
 
 if __name__ == '__main__':
     # train_occur_for_report()

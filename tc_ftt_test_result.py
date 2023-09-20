@@ -777,8 +777,27 @@ def augment_data_occur_for_report():
         count_0 = value_counts.get(0, 0)
         print(1-i, count_1, count_0)
 
+def test_file():
+    step = 5
+    date_str = datetime(2023, 9, 20).strftime("%Y%m%d")
+    split_date_str = '20230101'
+    ftr_num_str = '17'
+    filter_num_ratio = 1 / 8
+    ########## model
+    epochs = 20
+    patiences = 10  # 10
+    kernelsize = 16
+    cluster_model_path = './model/cluster_step'+str(step)
+    cluster_model_file = date_str+'-repr-cluster-partial-train-6.pkl'
+    file_path = cluster_model_path + cluster_model_file
+    if not os.path.exists(file_path):
+        print(file_path)
+        print('file not exsit')
+    else:
+        print('file exist')
 
 if __name__ == '__main__':
+    test_file()
     #weight_vote_occur_treat()
     #weight_vote_occur_static()
     #weight_vote_treat_static()
@@ -792,4 +811,4 @@ if __name__ == '__main__':
     #max_vote_treat_static()
     #max_vote_occur_treat_static()
     #max_vote_occur_dynamic_for_report()
-    augment_data_occur_for_report()
+    #augment_data_occur_for_report()
