@@ -757,13 +757,15 @@ def treat_ks():
     plt.show()
 
 def augment_data_occur_for_report():
-    df201 = pd.read_csv("./result/20230913_occur_step1_20230101_80_40_16_ftr_90_t30_fl_test_aug.csv", header=0,sep=',', encoding='gbk')
+    df201 = pd.read_csv("./result/0920/20230920_occur_step5_reclass_less200_100_20230101_20_10_16_ftr_17_t30_fl_test_aug_0_2.csv", header=0,sep=',', encoding='gbk')
     df_all = pd.DataFrame()
-    for i in np.arange(0, 1, 0.000001):
+    #for i in np.arange(0, 1, ):
+    for i in [0,1]:
         print('=' * 16, i)
         df = pd.DataFrame()
         df['Y'] = df201['Y']
-        df['customerid'] = df201['customerid'].str.replace('_.*', '', regex=True)
+        #df['customerid'] = df201['customerid'].str.replace('_.*', '', regex=True)
+        df['customerid'] = df201['customerid']
         df['prob'] = df201['prob']  # df201[column_key]
         # print(column_key + ' ='*20)
         # 按照列 'A' 的值进行过滤
@@ -776,6 +778,7 @@ def augment_data_occur_for_report():
         count_1 = value_counts.get(1, 0)
         count_0 = value_counts.get(0, 0)
         print(1-i, count_1, count_0)
+        #print(df_all)
 
 def test_file():
     step = 5
@@ -787,7 +790,7 @@ def test_file():
     epochs = 20
     patiences = 10  # 10
     kernelsize = 16
-    cluster_model_path = './model/cluster_step'+str(step)
+    cluster_model_path = './model/cluster_step'+str(step) +'/'
     cluster_model_file = date_str+'-repr-cluster-partial-train-6.pkl'
     file_path = cluster_model_path + cluster_model_file
     if not os.path.exists(file_path):
@@ -797,7 +800,7 @@ def test_file():
         print('file exist')
 
 if __name__ == '__main__':
-    test_file()
+    # test_file()
     #weight_vote_occur_treat()
     #weight_vote_occur_static()
     #weight_vote_treat_static()
@@ -811,4 +814,4 @@ if __name__ == '__main__':
     #max_vote_treat_static()
     #max_vote_occur_treat_static()
     #max_vote_occur_dynamic_for_report()
-    #augment_data_occur_for_report()
+    augment_data_occur_for_report()
