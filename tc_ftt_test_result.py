@@ -757,7 +757,7 @@ def treat_ks():
     plt.show()
 
 def augment_data_occur_for_report():
-    df201 = pd.read_csv("./result/0920/20230920_occur_step5_reclass_less200_100_20230101_20_10_16_ftr_17_t30_fl_test_aug_0_2.csv", header=0,sep=',', encoding='gbk')
+    df201 = pd.read_csv("./result/0920/20230920_occur_step5_reclass_less200_100_20230101_20_10_16_ftr_17_t30_fl_test_aug_2_2.csv", header=0,sep=',', encoding='gbk')
     df_all = pd.DataFrame()
     #for i in np.arange(0, 1, ):
     for i in [0,1]:
@@ -778,7 +778,7 @@ def augment_data_occur_for_report():
         count_1 = value_counts.get(1, 0)
         count_0 = value_counts.get(0, 0)
         print(1-i, count_1, count_0)
-        #print(df_all)
+        print(df_all[df_all['Y']==1])
 
 def test_file():
     step = 5
