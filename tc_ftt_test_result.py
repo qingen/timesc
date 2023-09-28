@@ -762,6 +762,9 @@ def augment_data_occur_for_report():
         header=0, sep=',', encoding='gbk')
     df201 = pd.read_csv("./result/0926/20230926_occur_2017_addcredit_step5_reclass_less200_100_20230101_20_10_16_ftr_91_t30_fl_test_aug_0_0.csv",
         header=0, sep=',', encoding='gbk')
+    df201 = pd.read_csv(
+        "./result/20230926_occur_2016_addcredit_step5_reclass_less200_100_20230101_20_10_16_ftr_91_t30_fl_test_aug_1_1.csv",
+        header=0, sep=',', encoding='gbk')
     df_all = pd.DataFrame()
     #for i in np.arange(0, 1, ):
     for i in [0,1]:
@@ -775,7 +778,7 @@ def augment_data_occur_for_report():
         # 按照列 'A' 的值进行过滤
         #filtered_df = df[df['prob'] >= (1-i)]
         #filtered_df = df[df['prob'] >= 0.974]
-        filtered_df = df[df['prob'] >= 0.946]
+        filtered_df = df[df['prob'] >= 0.925]  # 0.925  0.946
         #print(filtered_df)
         df_all = pd.concat([df_all, filtered_df])
         df_all.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
