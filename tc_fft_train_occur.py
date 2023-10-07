@@ -5352,6 +5352,15 @@ from tsfresh import extract_features, extract_relevant_features, select_features
 from tsfresh.utilities.dataframe_functions import impute
 from tsfresh.feature_extraction import ComprehensiveFCParameters
 
+from lightgbm import plot_importance
+from lightgbm import LGBMClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+import joblib
+import json
+
 def tsfresh_test():
     usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
@@ -5638,30 +5647,28 @@ def tsfresh_test():
         print(preds)
 
     if 1:
-        import lightgbm as lgb
-        from lightgbm import plot_importance
-        from sklearn.tree import DecisionTreeClassifier
-        from sklearn.model_selection import train_test_split
-        from sklearn.ensemble import RandomForestClassifier
-        from sklearn.metrics import classification_report
         X_full_train, X_full_test, y_train, y_test = train_test_split(X, y_train, test_size=.4)
         # 进行特征选择（也可以直接使用特征选择后的数据而不用到这里再选择）
         X_filtered_train, X_filtered_test = X_full_train[X_filtered.columns], X_full_test[X_filtered.columns]
-        lr = lgb.LGBMClassifier(max_depth=2, num_leaves=3, n_estimators=50, reg_lambda=1, reg_alpha=1,
+        lc = LGBMClassifier(max_depth=2, num_leaves=3, n_estimators=50, reg_lambda=1, reg_alpha=1,
                                 objective='binary', seed=3)
         # lr = lgb.LGBMClassifier(objective='binary')
         # 决策树&随机森林
         # lr = tree.DecisionTreeClassifier(criterion="entropy", min_impurity_decrease=0.000001, class_weight={0:0.3, 1:0.7})
         # lr = RandomForestClassifier(n_estimators=100, criterion="entropy", min_impurity_decrease=0.00005, class_weight={0:0.2, 1:0.8})
 
-        model = lr.fit(X_filtered_train, y_train)
+        model = lc.fit(X_filtered_train, y_train)
+        # 保存
+        joblib.dump(model, "lgbm_model.pkl")
         # 显示重要特征
-        plot_importance(model)
+        plot_importance(model,max_num_features=10,xlim=(0,20))
         plt.show()
         importance = model.booster_.feature_importance(importance_type='gain')
+        ftr_name = model.booster_.feature_name()
+        print('len importance:',len(importance))
         importance_dict = {}
         x_list = []
-        for x_n, im in zip(x_list, importance):
+        for x_n, im in zip(list(ftr_name), importance):
             importance_dict[x_n] = im
         target = 'tsfresh'
         if importance_dict:
@@ -5680,9 +5687,10 @@ def tsfresh_test():
         # print('截距为：', lr.intercept_)
 
         # 预测
-        y_predict = lr.predict(X_filtered_test)  # 预测
-        y_prob = lr.predict_proba(X_filtered_test)[:, 1]
-        print('prob = ', max(y_prob), min(y_prob), y_prob)
+        #y_predict = lr.predict(X_filtered_test)  # 预测
+        y_prob = lc.predict_proba(X_filtered_test)[:, 1]
+        for i in range(len(y_prob)):
+            print(y_test[i],y_prob[i])
         fpr, tpr, thresholds = metrics.roc_curve(y_test, y_prob, pos_label=1)
         print('test_ks = ',max(tpr - fpr))
 
@@ -5711,6 +5719,11 @@ def tsfresh_test():
         plt.legend(loc="lower right")
         # plt.savefig("KS（test）.png")
         plt.show()
+        # 加载
+        my_model = joblib.load("lgbm_model.pkl")
+        y_prob = my_model.predict_proba(X_filtered_test)[:, 1]
+        for i in range(len(y_prob)):
+            print(y_test[i], y_prob[i])
 
 # origin_cols , include customer,rdate,y,ftr
 def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_cols:List[str]=[]):
@@ -5724,25 +5737,75 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
                          impute_function=impute)
     #print('head X:',X.head())
     print('columns X:',X.columns,'\n length X:',len(X))
-    impute(X)
+    print(df.loc[:, ['CUSTOMER_ID','Y']].head(31))
     y = df.loc[:, ['CUSTOMER_ID','Y']].drop_duplicates().reset_index(drop=True)
+    print(y.head(2))
     #y = np.array(y['Y'])
     #print('y:',y,len(y))
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     if len(select_cols) == 0:
+        impute(X)
         print('train: select_cols is empty')
         X_filtered = select_features(X, y['Y'])
         select_cols = X_filtered.columns.tolist()
     else:
-        print('val & test: select_cols is not empty')
+        print('val & test: select_cols directly because it is not empty')
         X_filtered = X.loc[:,select_cols]
     merged = pd.merge(X_filtered, y, left_index=True, right_index=True)
+    print('merge:',merged.head(5))
     # 第二个数值是有多少个特征(列)，第一个数值是有多少行
     print("原始数据：", len(df[data_cols]), len(df[data_cols].columns))
     print("特征提取之后：", len(X), len(X.columns))
     print("特征选择之后:", len(X_filtered), len(X_filtered.columns))
     print("特征选择之后,合并customerid，y列之后:", len(merged), len(merged.columns))
     return  merged
+
+def ml_model_forward_ks_roc(model_file_path: str, result_file_path: str, datasets: pd.DataFrame, y_labels: np.ndarray,
+                         y_cutomersid: np.ndarray, ):
+    model = joblib.load(model_file_path)
+    #pred_val = network.predict(tsdatasets)
+    pred_val_prob = model.predict_proba(datasets)[:, 1]
+
+    ## prob to csv
+    df = pd.DataFrame()
+    df['Y'] = y_labels
+    df['customerid'] = y_cutomersid
+    df.to_csv(result_file_path, index=False)
+    df = pd.read_csv(result_file_path)
+    preds_prob = pred_val_prob.tolist()
+    new_data = {"prob": preds_prob, }
+    # 追加新数据到DataFrame中
+    for column, values in new_data.items():
+        df[column] = values
+    # 将DataFrame写回CSV文件
+    df.to_csv(result_file_path, index=False)
+
+    fpr, tpr, thresholds = metrics.roc_curve(y_labels, pred_val_prob, pos_label=1, )  # drop_intermediate=True
+    print('ks = ', max(tpr - fpr))
+    #for i in range(tpr.shape[0]):
+        #print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+        # if tpr[i] > 0.5:
+        #    print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+        # break
+    roc_auc = metrics.auc(fpr, tpr)
+    plt.figure(figsize=(10, 10))
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic example')
+    plt.legend(loc="lower right")
+    # plt.savefig(roc_file_path)
+    plt.show()
+    plt.plot(tpr, lw=2, label='tpr')
+    plt.plot(fpr, lw=2, label='fpr')
+    plt.plot(tpr - fpr, label='ks')
+    plt.title('KS = %0.2f' % max(tpr - fpr))
+    plt.legend(loc="lower right")
+    # plt.savefig(ks_file_path)
+    plt.show()
 
 def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report():
     usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
@@ -5856,8 +5919,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     df16_1 = pd.read_csv("./data/0825_train/occur/2016_1_7_202308251331.csv", header=0, usecols=usecols, sep=',',
                          encoding='gbk')
     credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30',]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
-    df_credit = pd.read_csv("./data/0825_train/credit/202309221506.csv", header=0, usecols=credit_usecols, sep=',',
-                         encoding='gbk')
+    df_credit = pd.read_csv("./data/0825_train/credit/202309221506.csv", header=0, usecols=credit_usecols, sep=',', encoding='gbk')
 
     df_16_18 = pd.concat([df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4])
     df_19_20 = pd.concat([df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4])
@@ -5875,7 +5937,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     print('df_all.shape:', df_all.shape)
     # merge credit
     df_all = pd.merge(df_all, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
-    print('after merge df_all.shape:', df_all.shape)
+    print('after merge credit df_all.shape:', df_all.shape)
     #df_all = df_all.astype(float)
 
     del df_16_18, df_19_20, df_21_23, df_credit
@@ -5939,24 +6001,23 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60','GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
            'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
-           'ICA_30', ]  # 18  add ICA_30 PCA_30 ZCA_30 add 3 will be filtered
+           'ICA_30']  # 18 + ICA_30
 
     df_all[col] = df_all[col].astype(float)
 
     n_line_tail = 30  # (1-5) * 30
-    n_line_back = 1  # back 7
     n_line_head = 30  # = tail
 
     step = 5
-    date_str = datetime(2023, 9, 28).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 7).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '19'
     filter_num_ratio = 1 / 8
-    ftr_good_year_split = 2022
+    ftr_good_year_split = 2022   #  quick start 2022, at last 2016/2017
     ########## model
-    epochs = 20
-    patiences = 10  # 10
-    kernelsize = 16
+    max_depth = 2
+    num_leaves = 3
+    n_estimators = 50
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_19_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 200
@@ -6149,8 +6210,6 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('2 ftr augment data:', formatted_time)
 
-
-
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('3 normal data:', formatted_time)
@@ -6179,11 +6238,46 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     tsdatasets_test = TSDataset.load_from_dataframe(
         df=df_test,
         group_id='CUSTOMER_ID',
-        target_cols=cols,
+        target_cols=col,
         fill_missing_dates=True,
         fillna_method="zero",
         static_cov_cols=['Y', 'CUSTOMER_ID'],
     )
+
+    fft = FFT(fs=1, half=False)  # _amplitude  half
+    # cwt = CWT(scales=n_line_tail/2)
+    for data in tsdatasets_train:
+        resfft = fft(data)
+        # rescwt = cwt(data)  # coefs 63*24 complex128 x+yj
+        for x in data.columns:
+            # ----------------- fft
+            resfft[x + "_amplitude"].index = data[x].index
+            resfft[x + "_phase"].index = data[x].index
+            data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
+            data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
+            # --------------- cwt
+
+    for data in tsdatasets_val:
+        resfft = fft(data)
+        # rescwt = cwt(data)
+        for x in data.columns:
+            # ----------------- fft
+            resfft[x + "_amplitude"].index = data[x].index
+            resfft[x + "_phase"].index = data[x].index
+            data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
+            data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
+            # ----------------- cwt
+
+    for data in tsdatasets_test:
+        resfft = fft(data)
+        # rescwt = cwt(data)
+        for x in data.columns:
+            # ----------------- fft
+            resfft[x + "_amplitude"].index = data[x].index
+            resfft[x + "_phase"].index = data[x].index
+            data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
+            data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
+            # ----------------- cwt
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -6215,10 +6309,10 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     y_test_customerid = np.array(y_test_customerid)
 
     from paddlets.transform import StandardScaler
-    min_max_scaler = StandardScaler()
-    tsdatasets_train = min_max_scaler.fit_transform(tsdatasets_train)
-    tsdatasets_val = min_max_scaler.fit_transform(tsdatasets_val)
-    tsdatasets_test = min_max_scaler.fit_transform(tsdatasets_test)
+    ss_scaler = StandardScaler()
+    tsdatasets_train = ss_scaler.fit_transform(tsdatasets_train)
+    tsdatasets_val = ss_scaler.fit_transform(tsdatasets_val)
+    tsdatasets_test = ss_scaler.fit_transform(tsdatasets_test)
 
     tsdataset_list_train, label_list_train, customersid_list_train = ts2vec_cluster_datagroup_model(tsdatasets_train,
                                                                                                     y_train,
@@ -6228,24 +6322,22 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
                                                                                                     cluster_less_train_num)
 
     select_cols = []
-    usecols.append('ICA_30')
-    df_train = tsfresh_ftr_augment_select(df_train,usecols,select_cols)
-    df_val = tsfresh_ftr_augment_select(df_val, usecols, select_cols)
-    df_test = tsfresh_ftr_augment_select(df_test, usecols, select_cols)
-    print('after ftr augment:')
-    print('df_test.shape: ', df_test.shape)
-    print('df_val.shape: ', df_val.shape)
-    print('df_train.shape: ', df_train.shape)
-
-
     for i in range(len(label_list_train)):
-        network = InceptionTimeClassifier(max_epochs=epochs, patience=patiences, kernel_size=kernelsize, seed=0)
-        model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                          str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_fl_aug_' + str(i) + '.itc'
+        df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
+        df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols)
+        lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
+                            reg_alpha=1,objective='binary', seed=0)
+        # lr = lgb.LGBMClassifier(objective='binary')
+        # 决策树&随机森林
+        # lr = tree.DecisionTreeClassifier(criterion="entropy", min_impurity_decrease=0.000001, class_weight={0:0.3, 1:0.7})
+        # lr = RandomForestClassifier(n_estimators=100, criterion="entropy", min_impurity_decrease=0.00005, class_weight={0:0.2, 1:0.8})
+
+        model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                          str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          '_ftr_select_' + str(i) + '.pkl'
         if not os.path.exists(model_file_path):
-            network.fit(tsdataset_list_train[i], label_list_train[i])
-            network.save(model_file_path)
+            model = lc.fit(df_train_ftr_select_notime, np.array(label_list_train[i]))
+            joblib.dump(model, model_file_path)
 
     tsdataset_list_val, label_list_val, customersid_list_val = ts2vec_cluster_datagroup_model(tsdatasets_val,
                                                                                               y_val,
@@ -6254,22 +6346,22 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
                                                                                               cluster_model_file,
                                                                                               cluster_less_val_num)
     for i in range(len(label_list_val)):
+        df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
+        df_val_ftr_select_notime = tsfresh_ftr_augment_select(df_val_part, usecols, select_cols)
+
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                              str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                              '_fl_aug_' + str(j) + '.itc'
+            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                              str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                              '_ftr_select_' + str(j) + '.pkl'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(
-                    n_line_tail) + \
-                                  '_fl_aug_' + str(0) + '.itc'  # default 0
+                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                                  str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                                  '_ftr_select_' + str(0) + '.pkl'  # default 0
                 j = 0
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(
-                epochs) + '_' + str(patiences) + \
-                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(
-                n_line_tail) + '_fl_val_aug_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+                               '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
-            model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_val[i], label_list_val[i],
+            ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime, label_list_val[i],
                                  customersid_list_val[i])
 
     tsdataset_list_test, label_list_test, customersid_list_test = ts2vec_cluster_datagroup_model(tsdatasets_test,
@@ -6279,22 +6371,22 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
                                                                                                  cluster_model_file,
                                                                                                  cluster_less_test_num)
     for i in range(len(label_list_test)):
+        df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
+        df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_test_part, usecols, select_cols)
+
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                              str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                              '_fl_aug_' + str(j) + '.itc'
+            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                              str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                              '_ftr_select_' + str(j) + '.pkl'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(
-                    n_line_tail) + \
-                                  '_fl_aug_' + str(0) + '.itc'  # default 0
+                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                                  str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                                  '_ftr_select_' + str(0) + '.pkl'  # default 0
                 j = 0
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(
-                epochs) + '_' + str(patiences) + \
-                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(
-                n_line_tail) + '_fl_test_aug_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+                               '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
-            model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_test[i], label_list_test[i],
+            ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime, label_list_test[i],
                                  customersid_list_test[i])
 
 
@@ -6310,4 +6402,5 @@ if __name__ == '__main__':
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
     # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
-    tsfresh_test()
+    # tsfresh_test()
+    augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
