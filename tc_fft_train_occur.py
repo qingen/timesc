@@ -3612,7 +3612,7 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
     return tsdataset_list, label_list, customersid_list
 
 
-def model_forward_ks_roc(model_file_path: str, result_file_path: str, tsdatasets: List[TSDataset], y_labels: np.ndarray,
+def dl_model_forward_ks_roc(model_file_path: str, result_file_path: str, tsdatasets: List[TSDataset], y_labels: np.ndarray,
                          y_cutomersid: np.ndarray, ):
     network = PaddleBaseClassifier.load(model_file_path)
     #pred_val = network.predict(tsdatasets)
@@ -4755,7 +4755,7 @@ def augment_bad_data_relabel_multiclass_train_occur_continue_for_report():
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) +\
                        '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_val_aug_'+str(j)+'_'+str(i)+'.csv'
             print(result_file_path)
-            model_forward_ks_roc(model_file_path,result_file_path,tsdataset_list_val[i],label_list_val[i],customersid_list_val[i])
+            dl_model_forward_ks_roc(model_file_path,result_file_path,tsdataset_list_val[i],label_list_val[i],customersid_list_val[i])
 
     tsdataset_list_test, label_list_test, customersid_list_test = ts2vec_cluster_datagroup_model(tsdatasets_test,
                                                                                                     y_test,
@@ -4776,11 +4776,11 @@ def augment_bad_data_relabel_multiclass_train_occur_continue_for_report():
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) +\
                        '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_'+str(j)+'_'+str(i)+'.csv'
             print(result_file_path)
-            model_forward_ks_roc(model_file_path,result_file_path,tsdataset_list_test[i],label_list_test[i],customersid_list_test[i])
+            dl_model_forward_ks_roc(model_file_path,result_file_path,tsdataset_list_test[i],label_list_test[i],customersid_list_test[i])
 
 
 def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report():
-    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
                'STOCK_AGE_AVG_365',
@@ -4809,7 +4809,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
                'LRR_CHA_30','LRR_CHA_60','LRR_CHA_7','LRR_CHA_90','LOAN_REPAY_RATIO','LRR_CHA_15','LSR_121_AVG_30','LSR_121_AVG_15',
                'LSR_121_AVG_7','STOCK_OVER_121_RATIO','LSR_121_CHA_180','LSR_121_CHA_90','LSR_121_CHA_30','LSR_121_CHA_15',
                'LSR_121_CHA_15','LSR_121_CHA_7','LSR_121_CHA_60']  # 128 cols 1/5
-    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
                'STOCK_AGE_AVG_365',
@@ -4919,7 +4919,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('1 read csv :', formatted_time)
-    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
            'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
            'STOCK_AGE_AVG_365',
@@ -4948,7 +4948,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
            'LRR_CHA_30','LRR_CHA_60','LRR_CHA_7','LRR_CHA_90','LOAN_REPAY_RATIO','LRR_CHA_15','LSR_121_AVG_30','LSR_121_AVG_15',
            'LSR_121_AVG_7','STOCK_OVER_121_RATIO','LSR_121_CHA_180','LSR_121_CHA_90','LSR_121_CHA_30',
            'LSR_121_CHA_15','LSR_121_CHA_7','LSR_121_CHA_60', 'ICA_30']  # 127 + 1
-    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
            'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
            'STOCK_AGE_AVG_365',
@@ -4983,23 +4983,23 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     n_line_head = 30  # = tail
 
     step = 5
-    date_str = datetime(2023, 9, 27).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 10).strftime("%Y%m%d")
     split_date_str = '20230101'
-    ftr_num_str = '128'
-    filter_num_ratio = 1 / 5
-    ftr_good_year_split = 2016
+    ftr_num_str = '91'
+    filter_num_ratio = 1 / 8  # 1/5
+    ftr_good_year_split = 2017
     ########## model
     epochs = 20
     patiences = 10  # 10
     kernelsize = 16
-    cluster_model_path = './model/cluster_step' + str(step) + '_credit1_128_'+str(ftr_good_year_split)+ '_'+date_str +'/'
+    cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 200
     cluster_less_val_num = 200
     cluster_less_test_num = 100
     type = 'occur_'+str(ftr_good_year_split)+'_addcredit_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(cluster_less_test_num)
 
-    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20160101)  #
+    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  #
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
 
     df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)
@@ -5279,10 +5279,10 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     y_test_customerid = np.array(y_test_customerid)
 
     from paddlets.transform import StandardScaler
-    min_max_scaler = StandardScaler()
-    tsdatasets_train = min_max_scaler.fit_transform(tsdatasets_train)
-    tsdatasets_val = min_max_scaler.fit_transform(tsdatasets_val)
-    tsdatasets_test = min_max_scaler.fit_transform(tsdatasets_test)
+    ss_scaler = StandardScaler()
+    tsdatasets_train = ss_scaler.fit_transform(tsdatasets_train)
+    tsdatasets_val = ss_scaler.fit_transform(tsdatasets_val)
+    tsdatasets_test = ss_scaler.fit_transform(tsdatasets_test)
 
     tsdataset_list_train, label_list_train, customersid_list_train = ts2vec_cluster_datagroup_model(tsdatasets_train,
                                                                                                     y_train,
@@ -5298,6 +5298,21 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
         if not os.path.exists(model_file_path):
             network.fit(tsdataset_list_train[i], label_list_train[i])
             network.save(model_file_path)
+    # get train dataset score for train ensemble model
+    for i in range(len(label_list_train)):
+        for j in range(len(label_list_train)):
+            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                              str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                              '_fl_aug_' + str(j) + '.itc'
+            if not os.path.exists(model_file_path):
+                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                                  '_fl_aug_' + str(0) + '.itc'  # default 0
+                j = 0
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(j) + '_' + str(i) + '.csv'
+            print(result_file_path)
+            dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_train[i], label_list_train[i], customersid_list_train[i])
 
     tsdataset_list_val, label_list_val, customersid_list_val = ts2vec_cluster_datagroup_model(tsdatasets_val,
                                                                                               y_val,
@@ -5321,8 +5336,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
                                '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(
                 n_line_tail) + '_fl_val_aug_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
-            model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_val[i], label_list_val[i],
-                                 customersid_list_val[i])
+            dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_val[i], label_list_val[i], customersid_list_val[i])
 
     tsdataset_list_test, label_list_test, customersid_list_test = ts2vec_cluster_datagroup_model(tsdatasets_test,
                                                                                                  y_test,
@@ -5346,8 +5360,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
                                '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(
                 n_line_tail) + '_fl_test_aug_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
-            model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_test[i], label_list_test[i],
-                                 customersid_list_test[i])
+            dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_test[i], label_list_test[i], customersid_list_test[i])
 
 from tsfresh import extract_features, extract_relevant_features, select_features
 from tsfresh.utilities.dataframe_functions import impute
@@ -5845,7 +5858,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
                'LRR_CHA_30','LRR_CHA_60','LRR_CHA_7','LRR_CHA_90','LOAN_REPAY_RATIO','LRR_CHA_15','LSR_121_AVG_30','LSR_121_AVG_15',
                'LSR_121_AVG_7','STOCK_OVER_121_RATIO','LSR_121_CHA_180','LSR_121_CHA_90','LSR_121_CHA_30','LSR_121_CHA_15',
                'LSR_121_CHA_15','LSR_121_CHA_7','LSR_121_CHA_60']  # 128 cols 1/5
-    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
                'STOCK_AGE_AVG_365',
@@ -5868,7 +5881,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
                'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
                'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
                'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols  1/8
-    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60','GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180',
                'UAR_CHA_7']  # 18 cols 1/8
@@ -5983,7 +5996,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
            'LRR_CHA_30','LRR_CHA_60','LRR_CHA_7','LRR_CHA_90','LOAN_REPAY_RATIO','LRR_CHA_15','LSR_121_AVG_30','LSR_121_AVG_15',
            'LSR_121_AVG_7','STOCK_OVER_121_RATIO','LSR_121_CHA_180','LSR_121_CHA_90','LSR_121_CHA_30',
            'LSR_121_CHA_15','LSR_121_CHA_7','LSR_121_CHA_60', 'ICA_30']  # 127 + 1
-    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
            'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
            'STOCK_AGE_AVG_365',
@@ -6006,7 +6019,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
            'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
            'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
            'LRR_AVG_90', 'LSR_91_AVG_30','ICA_30']  # 90 + 1
-    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60','GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
            'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
            'ICA_30']  # 18 + ICA_30
@@ -6017,24 +6030,24 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     n_line_head = 30  # = tail
 
     step = 5
-    date_str = datetime(2023, 10, 7).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 10).strftime("%Y%m%d")
     split_date_str = '20230101'
-    ftr_num_str = '19'
+    ftr_num_str = '91'
     filter_num_ratio = 1 / 8
-    ftr_good_year_split = 2022   #  quick start 2022, at last 2016/2017
+    ftr_good_year_split = 2017   #  quick start 2022, at last 2016/2017
     ########## model
-    max_depth = 2 # 3 4 5
-    num_leaves = 3 # 7 15 31
+    max_depth = 3 # 3 4 5
+    num_leaves = 7 # 7 15 31
     n_estimators = 100 # 100
     class_weight =  'balanced' # 'balanced'  None
-    cluster_model_path = './model/cluster_step' + str(step) + '_credit1_19_'+str(ftr_good_year_split)+ '_'+date_str +'/'
+    cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 200
     cluster_less_val_num = 200
     cluster_less_test_num = 100
     type = 'occur_'+str(ftr_good_year_split)+'_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(cluster_less_test_num)
 
-    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20220101)  #
+    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  #
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
 
     df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)
@@ -6355,6 +6368,30 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             with open(ftr_list_file_path, 'wb') as f:
                 pickle.dump(select_cols, f)
 
+    for i in range(len(label_list_train)):
+        df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
+
+        for j in range(len(label_list_train)):
+            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                              '_ftr_select_' + str(j) + '.pkl'
+            if not os.path.exists(model_file_path):
+                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                                  '_ftr_select_' + str(0) + '.pkl'  # default 0
+                j = 0
+            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_' + str(j) + '.pkl'
+            print(ftr_list_file_path)
+            with open(ftr_list_file_path, 'rb') as f:
+                select_cols = pickle.load(f)
+            print('len select cols:',len(select_cols))
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+                               '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_train_' + str(j) + '_' + str(i) + '.csv'
+            print(result_file_path)
+            df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols)
+            ml_model_forward_ks_roc(model_file_path, result_file_path, df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']),
+                                 np.array(df_train_ftr_select_notime.loc[:,'CUSTOMER_ID']))
+
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('6 group data:', formatted_time)
@@ -6424,7 +6461,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
-def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path:str, model_index:int=0, ensemble_model_file_path:str):
+def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path:str, ensemble_model_file_path:str):
     usecols = ['customerid', 'Y', 'prob', ]
     if not os.path.exists(dl_result_file_path):
         print('dl result file not exists:',dl_result_file_path)
@@ -6451,7 +6488,6 @@ def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path
     if not os.path.exists(ensemble_model_file_path):
         model = lc.fit(df_train.loc[:, select_cols], np.array(df_train.loc[:, 'Y']))
         joblib.dump(model, ensemble_model_file_path)
-    return 0
 
 def ensemble_dl_ml_base_score_test(dl_result_file_path:str, ml_result_file_path:str, ensemble_model_file_path:str,ensemble_result_file_path:str):
     usecols = ['customerid', 'Y', 'prob', ]
@@ -6468,64 +6504,24 @@ def ensemble_dl_ml_base_score_test(dl_result_file_path:str, ml_result_file_path:
     print(df_train_dl.head(2),len(df_train_dl))
     df_train = pd.merge(df_train_dl,df_train_ml,on=['customerid', 'Y'])
     print(df_train.head(2),len(df_train))
+    select_cols = ['prob_dl', 'prob_ml']
+    ml_model_forward_ks_roc(ensemble_model_file_path,ensemble_result_file_path,df_train.loc[:,select_cols],np.array(df_train[:,'Y']),np.array(df_train[:,'customerid']))
 
-    ########## model
-    max_depth = 2
-    num_leaves = 3
-    n_estimators = 50
-    class_weight = 'balanced'  # None
-    select_cols = ['prob_dl','prob_ml']
-    lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
-                        reg_alpha=1, objective='binary', class_weight=class_weight, seed=0)
-    if not os.path.exists(ensemble_model_file_path):
-        model = lc.fit(df_train.loc[:, select_cols], np.array(df_train.loc[:, 'Y']))
-        joblib.dump(model, ensemble_model_file_path)
-    return 0
-
-def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score_train():
-    usecols = ['customerid', 'Y', 'prob', ]
-    df_train_dl = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
-    df_train_ml = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
-    print(df_train_ml.head(2))
-    print(df_train_dl.head(2))
-    df_train_dl.rename(columns={'prob': 'prob_dl'}, inplace=True)
-    df_train_ml.rename(columns={'prob': 'prob_ml'}, inplace=True)
-    print(df_train_ml.head(2))
-    print(df_train_dl.head(2))
-    df_train = pd.merge(df_train_dl,df_train_ml,on=['customerid', 'Y'])
-    print(df_train.head(2))
-
-    n_line_tail = 30
-    date_str = datetime(2023, 10, 7).strftime("%Y%m%d")
-    split_date_str = '20230101'
-    ftr_num_str = '19'
-    ftr_good_year_split = 2022  # quick start 2022, at last 2016/2017
-    ########## model
-    max_depth = 2
-    num_leaves = 3
-    n_estimators = 50
-    class_weight = 'balanced'  # None
-    type = 'occur_' + str(ftr_good_year_split) + '_addcredit_group_dl_ml_ensemble_'
-
-
-    select_cols = ['prob_dl','prob_ml']
-    i = 0
-    lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
-                        reg_alpha=1, objective='binary', class_weight=class_weight, seed=0)
-
-    model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                      str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                      '_ftr_select_' + str(i) + '.pkl'
-    if not os.path.exists(model_file_path):
-        model = lc.fit(df_train.loc[:, select_cols], np.array(df_train.loc[:, 'Y']))
-        joblib.dump(model, model_file_path)
-
-
-    current_time = datetime.now()
-    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    print('6 group data:', formatted_time)
-
-    return 0
+def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
+    # model train
+    for i in range(3):
+        dl_result_file_path = '' + str(i)
+        ml_result_file_path = '' + str(i)
+        ensemble_model_file_path = '' + str(i)
+        ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path)
+    # model infer
+    for i in range(2):
+        dl_result_file_path = '' + str(i)
+        ml_result_file_path = '' + str(i)
+        for j in range(3):
+            ensemble_model_file_path = '' + str(j)
+            ensemble_result_file_path = '' + str(j) + '_' + str(i)
+            ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
 
 if __name__ == '__main__':
     # train_occur_for_report()
@@ -6538,6 +6534,6 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
     augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
