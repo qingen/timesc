@@ -5726,7 +5726,7 @@ def tsfresh_test():
             print(y_test[i], y_prob[i])
 
 # origin_cols , include customer,rdate,y,ftr
-def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_cols:List[str]=[]):
+def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_cols:List[str]):
     extraction_settings = ComprehensiveFCParameters()
     print('head df :',df[origin_cols].head())
     data_cols = origin_cols[:]
@@ -5735,29 +5735,36 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
                          default_fc_parameters=extraction_settings,
                          # impute就是自动移除所有NaN的特征
                          impute_function=impute)
-    #print('head X:',X.head())
+    impute(X)
+    print('head X:',X.iloc[:200, :5])
     print('columns X:',X.columns,'\n length X:',len(X))
-    print(df.loc[:, ['CUSTOMER_ID','Y']].head(31))
+    #print(df.loc[:, ['CUSTOMER_ID','Y']].head(31))
     y = df.loc[:, ['CUSTOMER_ID','Y']].drop_duplicates().reset_index(drop=True)
-    print(y.head(2))
+    #print(y.head(2))
     #y = np.array(y['Y'])
-    #print('y:',y,len(y))
+    print('y:',y.iloc[:200,:],len(y))
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     if len(select_cols) == 0:
-        impute(X)
         print('train: select_cols is empty')
-        X_filtered = select_features(X, y['Y'])
-        select_cols = X_filtered.columns.tolist()
+        X_filtered = select_features(X, np.array(y['Y']))
+        select_cols[:] = X_filtered.columns.tolist().copy()
     else:
         print('val & test: select_cols directly because it is not empty')
         X_filtered = X.loc[:,select_cols]
-    merged = pd.merge(X_filtered, y, left_index=True, right_index=True)
-    print('merge:',merged.head(5))
+    print('select cols:',select_cols[:4])
+    print('head X_filtered:', X_filtered.iloc[:2, :5])
+    X_filtered.reset_index(inplace=True)
+    X_filtered.rename(columns={'index': 'CUSTOMER_ID'}, inplace=True)
+    print('head X_filtered after  rename:', X_filtered.iloc[:2, :5])
+    merged = pd.merge(X_filtered, y, on=['CUSTOMER_ID'])
+    #merged = pd.concat([X_filtered, y], axis=1) # 按列进行连接
+    print('merge head:',merged.iloc[:1, :5])
+    print('merge tail:', merged.iloc[:1, -5:])
     # 第二个数值是有多少个特征(列)，第一个数值是有多少行
     print("原始数据：", len(df[data_cols]), len(df[data_cols].columns))
     print("特征提取之后：", len(X), len(X.columns))
     print("特征选择之后:", len(X_filtered), len(X_filtered.columns))
-    print("特征选择之后,合并customerid，y列之后:", len(merged), len(merged.columns))
+    print("特征选择之后,合并 CUSTOMER_ID，Y 列之后:", len(merged), len(merged.columns))
     return  merged
 
 def ml_model_forward_ks_roc(model_file_path: str, result_file_path: str, datasets: pd.DataFrame, y_labels: np.ndarray,
@@ -6018,6 +6025,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     max_depth = 2
     num_leaves = 3
     n_estimators = 50
+    class_weight = 'balanced'  # None
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_19_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 200
@@ -6025,7 +6033,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     cluster_less_test_num = 100
     type = 'occur_'+str(ftr_good_year_split)+'_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(cluster_less_test_num)
 
-    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20220101)  #
+    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20221101)  #
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
 
     df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)
@@ -6208,11 +6216,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    print('2 ftr augment data:', formatted_time)
-
-    current_time = datetime.now()
-    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    print('3 normal data:', formatted_time)
+    print('2 load data:', formatted_time)
     ###################### del
     del df_part1, df_part2, df_part3
     ######################
@@ -6281,7 +6285,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    print('3 extract ftr:', formatted_time)
+    print('3 transform data:', formatted_time)
 
     y_train = []
     y_val = []
@@ -6314,6 +6318,10 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     tsdatasets_val = ss_scaler.fit_transform(tsdatasets_val)
     tsdatasets_test = ss_scaler.fit_transform(tsdatasets_test)
 
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('4 group data:', formatted_time)
+
     tsdataset_list_train, label_list_train, customersid_list_train = ts2vec_cluster_datagroup_model(tsdatasets_train,
                                                                                                     y_train,
                                                                                                     y_train_customerid,
@@ -6321,12 +6329,16 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
                                                                                                     cluster_model_file,
                                                                                                     cluster_less_train_num)
 
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('5 classifier train:', formatted_time)
+
     select_cols = []
     for i in range(len(label_list_train)):
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols)
         lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
-                            reg_alpha=1,objective='binary', seed=0)
+                            reg_alpha=1,objective='binary', class_weight=class_weight, seed=0)
         # lr = lgb.LGBMClassifier(objective='binary')
         # 决策树&随机森林
         # lr = tree.DecisionTreeClassifier(criterion="entropy", min_impurity_decrease=0.000001, class_weight={0:0.3, 1:0.7})
@@ -6336,8 +6348,12 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
                           str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                           '_ftr_select_' + str(i) + '.pkl'
         if not os.path.exists(model_file_path):
-            model = lc.fit(df_train_ftr_select_notime, np.array(label_list_train[i]))
+            model = lc.fit(df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']))
             joblib.dump(model, model_file_path)
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('6 group data:', formatted_time)
 
     tsdataset_list_val, label_list_val, customersid_list_val = ts2vec_cluster_datagroup_model(tsdatasets_val,
                                                                                               y_val,
@@ -6345,6 +6361,11 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
                                                                                               cluster_model_path,
                                                                                               cluster_model_file,
                                                                                               cluster_less_val_num)
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('7 classifier test:', formatted_time)
+
     for i in range(len(label_list_val)):
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         df_val_ftr_select_notime = tsfresh_ftr_augment_select(df_val_part, usecols, select_cols)
@@ -6361,8 +6382,8 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                                '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
-            ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime, label_list_val[i],
-                                 customersid_list_val[i])
+            ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y']),
+                                 np.array(df_val_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
     tsdataset_list_test, label_list_test, customersid_list_test = ts2vec_cluster_datagroup_model(tsdatasets_test,
                                                                                                  y_test,
@@ -6386,10 +6407,11 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                                '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
-            ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime, label_list_test[i],
-                                 customersid_list_test[i])
+            ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
+                                 np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
-
+def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
+    return 0
 if __name__ == '__main__':
     # train_occur_for_report()
     # train_occur_for_predict()
