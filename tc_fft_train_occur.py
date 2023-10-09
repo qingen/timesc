@@ -2,6 +2,7 @@
 import sys, os, time
 import cmath
 import math
+import pickle
 import numpy as np
 import pandas as pd
 from pandas import Series
@@ -5736,13 +5737,13 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
                          # impute就是自动移除所有NaN的特征
                          impute_function=impute)
     impute(X)
-    print('head X:',X.iloc[:200, :5])
+    print('head X:',X.iloc[:2, :5])
     print('columns X:',X.columns,'\n length X:',len(X))
     #print(df.loc[:, ['CUSTOMER_ID','Y']].head(31))
     y = df.loc[:, ['CUSTOMER_ID','Y']].drop_duplicates().reset_index(drop=True)
     #print(y.head(2))
     #y = np.array(y['Y'])
-    print('y:',y.iloc[:200,:],len(y))
+    print('y:',y.iloc[:2,:],len(y))
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     if len(select_cols) == 0:
         print('train: select_cols is empty')
@@ -6022,10 +6023,10 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     filter_num_ratio = 1 / 8
     ftr_good_year_split = 2022   #  quick start 2022, at last 2016/2017
     ########## model
-    max_depth = 2
-    num_leaves = 3
-    n_estimators = 50
-    class_weight = 'balanced'  # None
+    max_depth = 2 # 3 4 5
+    num_leaves = 3 # 7 15 31
+    n_estimators = 100 # 100
+    class_weight =  'balanced' # 'balanced'  None
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_19_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 200
@@ -6033,7 +6034,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     cluster_less_test_num = 100
     type = 'occur_'+str(ftr_good_year_split)+'_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(cluster_less_test_num)
 
-    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20221101)  #
+    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20220101)  #
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
 
     df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)
@@ -6333,8 +6334,8 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('5 classifier train:', formatted_time)
 
-    select_cols = []
     for i in range(len(label_list_train)):
+        select_cols = []
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols)
         lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
@@ -6345,11 +6346,14 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
         # lr = RandomForestClassifier(n_estimators=100, criterion="entropy", min_impurity_decrease=0.00005, class_weight={0:0.2, 1:0.8})
 
         model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                          str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          str(num_leaves) + '_' + str(n_estimators) +'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                           '_ftr_select_' + str(i) + '.pkl'
+        ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_'+str(i) + '.pkl'
         if not os.path.exists(model_file_path):
             model = lc.fit(df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']))
             joblib.dump(model, model_file_path)
+            with open(ftr_list_file_path, 'wb') as f:
+                pickle.dump(select_cols, f)
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -6368,20 +6372,25 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
 
     for i in range(len(label_list_val)):
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
-        df_val_ftr_select_notime = tsfresh_ftr_augment_select(df_val_part, usecols, select_cols)
 
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                              str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                               '_ftr_select_' + str(j) + '.pkl'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                                  str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                                   '_ftr_select_' + str(0) + '.pkl'  # default 0
                 j = 0
+            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_' + str(j) + '.pkl'
+            print(ftr_list_file_path)
+            with open(ftr_list_file_path, 'rb') as f:
+                select_cols = pickle.load(f)
+            print('len select cols:',len(select_cols))
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                               '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_val_' + str(j) + '_' + str(i) + '.csv'
+                               '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
+            df_val_ftr_select_notime = tsfresh_ftr_augment_select(df_val_part, usecols, select_cols)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_val_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
@@ -6393,25 +6402,131 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
                                                                                                  cluster_less_test_num)
     for i in range(len(label_list_test)):
         df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
-        df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_test_part, usecols, select_cols)
 
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                              str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                               '_ftr_select_' + str(j) + '.pkl'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                                  str(num_leaves) + '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                                   '_ftr_select_' + str(0) + '.pkl'  # default 0
                 j = 0
+            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_' + str(j) + '.pkl'
+            print(ftr_list_file_path)
+            with open(ftr_list_file_path, 'rb') as f:
+                select_cols = pickle.load(f)
+            print('len select cols:', len(select_cols))
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                               '_' + str(n_estimators) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + str(j) + '_' + str(i) + '.csv'
+                               '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
+            df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_test_part, usecols, select_cols)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
-def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
+def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path:str, model_index:int=0, ensemble_model_file_path:str):
+    usecols = ['customerid', 'Y', 'prob', ]
+    if not os.path.exists(dl_result_file_path):
+        print('dl result file not exists:',dl_result_file_path)
+        return
+    df_train_dl = pd.read_csv(dl_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
+    df_train_ml = pd.read_csv(ml_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
+    print(df_train_ml.head(2))
+    print(df_train_dl.head(2))
+    df_train_dl.rename(columns={'prob': 'prob_dl'}, inplace=True)
+    df_train_ml.rename(columns={'prob': 'prob_ml'}, inplace=True)
+    print(df_train_ml.head(2))
+    print(df_train_dl.head(2),len(df_train_dl))
+    df_train = pd.merge(df_train_dl,df_train_ml,on=['customerid', 'Y'])
+    print(df_train.head(2),len(df_train))
+
+    ########## model
+    max_depth = 2
+    num_leaves = 3
+    n_estimators = 50
+    class_weight = 'balanced'  # None
+    select_cols = ['prob_dl','prob_ml']
+    lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
+                        reg_alpha=1, objective='binary', class_weight=class_weight, seed=0)
+    if not os.path.exists(ensemble_model_file_path):
+        model = lc.fit(df_train.loc[:, select_cols], np.array(df_train.loc[:, 'Y']))
+        joblib.dump(model, ensemble_model_file_path)
     return 0
+
+def ensemble_dl_ml_base_score_test(dl_result_file_path:str, ml_result_file_path:str, ensemble_model_file_path:str,ensemble_result_file_path:str):
+    usecols = ['customerid', 'Y', 'prob', ]
+    if not os.path.exists(dl_result_file_path):
+        print('dl result file not exists:',dl_result_file_path)
+        return
+    df_train_dl = pd.read_csv(dl_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
+    df_train_ml = pd.read_csv(ml_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
+    print(df_train_ml.head(2))
+    print(df_train_dl.head(2))
+    df_train_dl.rename(columns={'prob': 'prob_dl'}, inplace=True)
+    df_train_ml.rename(columns={'prob': 'prob_ml'}, inplace=True)
+    print(df_train_ml.head(2))
+    print(df_train_dl.head(2),len(df_train_dl))
+    df_train = pd.merge(df_train_dl,df_train_ml,on=['customerid', 'Y'])
+    print(df_train.head(2),len(df_train))
+
+    ########## model
+    max_depth = 2
+    num_leaves = 3
+    n_estimators = 50
+    class_weight = 'balanced'  # None
+    select_cols = ['prob_dl','prob_ml']
+    lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
+                        reg_alpha=1, objective='binary', class_weight=class_weight, seed=0)
+    if not os.path.exists(ensemble_model_file_path):
+        model = lc.fit(df_train.loc[:, select_cols], np.array(df_train.loc[:, 'Y']))
+        joblib.dump(model, ensemble_model_file_path)
+    return 0
+
+def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score_train():
+    usecols = ['customerid', 'Y', 'prob', ]
+    df_train_dl = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df_train_ml = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    print(df_train_ml.head(2))
+    print(df_train_dl.head(2))
+    df_train_dl.rename(columns={'prob': 'prob_dl'}, inplace=True)
+    df_train_ml.rename(columns={'prob': 'prob_ml'}, inplace=True)
+    print(df_train_ml.head(2))
+    print(df_train_dl.head(2))
+    df_train = pd.merge(df_train_dl,df_train_ml,on=['customerid', 'Y'])
+    print(df_train.head(2))
+
+    n_line_tail = 30
+    date_str = datetime(2023, 10, 7).strftime("%Y%m%d")
+    split_date_str = '20230101'
+    ftr_num_str = '19'
+    ftr_good_year_split = 2022  # quick start 2022, at last 2016/2017
+    ########## model
+    max_depth = 2
+    num_leaves = 3
+    n_estimators = 50
+    class_weight = 'balanced'  # None
+    type = 'occur_' + str(ftr_good_year_split) + '_addcredit_group_dl_ml_ensemble_'
+
+
+    select_cols = ['prob_dl','prob_ml']
+    i = 0
+    lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
+                        reg_alpha=1, objective='binary', class_weight=class_weight, seed=0)
+
+    model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                      str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                      '_ftr_select_' + str(i) + '.pkl'
+    if not os.path.exists(model_file_path):
+        model = lc.fit(df_train.loc[:, select_cols], np.array(df_train.loc[:, 'Y']))
+        joblib.dump(model, model_file_path)
+
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('6 group data:', formatted_time)
+
+    return 0
+
 if __name__ == '__main__':
     # train_occur_for_report()
     # train_occur_for_predict()
