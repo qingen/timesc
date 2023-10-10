@@ -6508,19 +6508,56 @@ def ensemble_dl_ml_base_score_test(dl_result_file_path:str, ml_result_file_path:
     ml_model_forward_ks_roc(ensemble_model_file_path,ensemble_result_file_path,df_train.loc[:,select_cols],np.array(df_train[:,'Y']),np.array(df_train[:,'customerid']))
 
 def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
+
+    n_line_tail = 30  # (1-5) * 30
+    n_line_back = 1  # back 7
+    n_line_head = 30  # = tail
+
+    step = 5
+    date_str = datetime(2023, 10, 10).strftime("%Y%m%d")
+    split_date_str = '20230101'
+    ftr_num_str = '91'
+    ftr_good_year_split = 2017
+    ########## model
+    epochs = 20
+    patiences = 10  # 10
+    kernelsize = 16
+    max_depth = 3 # 3 4 5
+    num_leaves = 7 # 7 15 31
+    n_estimators = 100 # 100
+    class_weight =  'balanced' # 'balanced'  None
+
+    cluster_less_train_num = 200
+    cluster_less_test_num = 100
+
+    type = 'occur_' + str(ftr_good_year_split) + '_addcredit_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
+        cluster_less_test_num)
+
     # model train
     for i in range(3):
-        dl_result_file_path = '' + str(i)
-        ml_result_file_path = '' + str(i)
-        ensemble_model_file_path = '' + str(i)
+        dl_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+                              '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(i) + '_' + str(i) + '.csv'
+        ml_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+                              '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_train_' + \
+                              str(i) + '_' + str(i) + '.csv'
+        ensemble_model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(2) + '_' + \
+                          str(3) + '_' + str(50) + '_' + str('balanced') + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          '_ensemble_' + str(i) + '.pkl'
         ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path)
     # model infer
     for i in range(2):
-        dl_result_file_path = '' + str(i)
-        ml_result_file_path = '' + str(i)
+        dl_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+                              '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(i) + '_' + str(i) + '.csv'
+        ml_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+                              '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + \
+                              str(i) + '_' + str(i) + '.csv'
         for j in range(3):
-            ensemble_model_file_path = '' + str(j)
-            ensemble_result_file_path = '' + str(j) + '_' + str(i)
+            ensemble_model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(2) + '_' + \
+                          str(3) + '_' + str(50) + '_' + str('balanced') + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          '_ensemble_' + str(j) + '.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(2) + '_' + \
+                          str(3) + '_' + str(50) + '_' + str('balanced') + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          '_ensemble_' + str(j) + '_' + str(i) + '.csv'
             ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
 
 if __name__ == '__main__':
@@ -6534,6 +6571,6 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
     augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
