@@ -5428,54 +5428,58 @@ def tsfresh_test():
                'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
                'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
                'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols  1/8
-    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60','GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
                'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7']  # 18 cols
     df23 = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, usecols=usecols, sep=',',
                        encoding='gbk')
     df22_4 = pd.read_csv("./data/0825_train/occur/2022_10_12_202308250913.csv", header=0, usecols=usecols, sep=',',
                          encoding='gbk')
-    # df22_3 = pd.read_csv("./data/0825_train/occur/2022_7_10_202308250922.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df22_2 = pd.read_csv("./data/0825_train/occur/2022_4_7_202308250927.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df22_1 = pd.read_csv("./data/0825_train/occur/2022_1_4_202308250931.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df21_4 = pd.read_csv("./data/0825_train/occur/2021_10_12_202308250937.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df21_3 = pd.read_csv("./data/0825_train/occur/2021_7_10_202308251006.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df21_2 = pd.read_csv("./data/0825_train/occur/2021_4_7_202308251012.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df21_1 = pd.read_csv("./data/0825_train/occur/2021_1_4_202308251017.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df20_4 = pd.read_csv("./data/0825_train/occur/2020_10_12_202308251023.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df20_3 = pd.read_csv("./data/0825_train/occur/2020_7_10_202308251033.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df20_2 = pd.read_csv("./data/0825_train/occur/2020_4_7_202308251037.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df20_1 = pd.read_csv("./data/0825_train/occur/2020_1_4_202308251042.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df19_4 = pd.read_csv("./data/0825_train/occur/2019_10_12_202308251047.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df19_3 = pd.read_csv("./data/0825_train/occur/2019_7_10_202308251052.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df19_2 = pd.read_csv("./data/0825_train/occur/2019_4_7_202308251057.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df19_1 = pd.read_csv("./data/0825_train/occur/2019_1_4_202308251238.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df18_4 = pd.read_csv("./data/0825_train/occur/2018_10_12_202308251253.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df18_3 = pd.read_csv("./data/0825_train/occur/2018_7_10_202308251257.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df18_2 = pd.read_csv("./data/0825_train/occur/2018_4_7_202308251301.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df18_1 = pd.read_csv("./data/0825_train/occur/2018_1_4_202308251306.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df17_4 = pd.read_csv("./data/0825_train/occur/2017_10_12_202308251310.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df17_3 = pd.read_csv("./data/0825_train/occur/2017_7_10_202308251313.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df17_2 = pd.read_csv("./data/0825_train/occur/2017_4_7_202308251316.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df17_1 = pd.read_csv("./data/0825_train/occur/2017_1_4_202308251320.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df16_2 = pd.read_csv("./data/0825_train/occur/2016_7_12_202308251325.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    # df16_1 = pd.read_csv("./data/0825_train/occur/2016_1_7_202308251331.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df22_3 = pd.read_csv("./data/0825_train/occur/2022_7_10_202308250922.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df22_2 = pd.read_csv("./data/0825_train/occur/2022_4_7_202308250927.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df22_1 = pd.read_csv("./data/0825_train/occur/2022_1_4_202308250931.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df21_4 = pd.read_csv("./data/0825_train/occur/2021_10_12_202308250937.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df21_3 = pd.read_csv("./data/0825_train/occur/2021_7_10_202308251006.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df21_2 = pd.read_csv("./data/0825_train/occur/2021_4_7_202308251012.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df21_1 = pd.read_csv("./data/0825_train/occur/2021_1_4_202308251017.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df20_4 = pd.read_csv("./data/0825_train/occur/2020_10_12_202308251023.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df20_3 = pd.read_csv("./data/0825_train/occur/2020_7_10_202308251033.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df20_2 = pd.read_csv("./data/0825_train/occur/2020_4_7_202308251037.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df20_1 = pd.read_csv("./data/0825_train/occur/2020_1_4_202308251042.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df19_4 = pd.read_csv("./data/0825_train/occur/2019_10_12_202308251047.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df19_3 = pd.read_csv("./data/0825_train/occur/2019_7_10_202308251052.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df19_2 = pd.read_csv("./data/0825_train/occur/2019_4_7_202308251057.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df19_1 = pd.read_csv("./data/0825_train/occur/2019_1_4_202308251238.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df18_4 = pd.read_csv("./data/0825_train/occur/2018_10_12_202308251253.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df18_3 = pd.read_csv("./data/0825_train/occur/2018_7_10_202308251257.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df18_2 = pd.read_csv("./data/0825_train/occur/2018_4_7_202308251301.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df18_1 = pd.read_csv("./data/0825_train/occur/2018_1_4_202308251306.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df17_4 = pd.read_csv("./data/0825_train/occur/2017_10_12_202308251310.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df17_3 = pd.read_csv("./data/0825_train/occur/2017_7_10_202308251313.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df17_2 = pd.read_csv("./data/0825_train/occur/2017_4_7_202308251316.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df17_1 = pd.read_csv("./data/0825_train/occur/2017_1_4_202308251320.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df16_2 = pd.read_csv("./data/0825_train/occur/2016_7_12_202308251325.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df16_1 = pd.read_csv("./data/0825_train/occur/2016_1_7_202308251331.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
 
-    # df_16_18 = pd.concat([df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4])
-    # df_19_20 = pd.concat([df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4])
-    # df_21_23 = pd.concat([df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23])
-    df_22_23 = pd.concat([df22_4, df23])
+    #df_16_18 = pd.concat([df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4])
+    df_16_18 = pd.concat([df18_1, df18_2, df18_3, df18_4])
+    df_19_20 = pd.concat([df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4])
+    df_21_23 = pd.concat([df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23])
+    #df_22_23 = pd.concat([df22_1, df22_2, df22_3, df22_4, df23])
     # print(df_16_18.shape)
     # print(df_19_20.shape)
-    print(df_22_23.shape)
+    #print(df_22_23.shape)
 
-    del df22_4, df23
+    #del df22_4, df23
 
-    df_all = df_22_23
+    #df_all = df_22_23
+    df_all = pd.concat([df_16_18, df_19_20, df_21_23])
     print('df_all.shape:', df_all.shape)
 
-    del df_22_23
-
+    #del df_22_23
+    del df_16_18,df_19_20, df_21_23
+    del df18_1, df18_2, df18_3, df18_4, df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4,
+    del df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('1 read csv :', formatted_time)
@@ -5576,7 +5580,7 @@ def tsfresh_test():
            'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
            'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
            'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
-           'LRR_AVG_90', 'LSR_91_AVG_30',]  # 90 + 1
+           'LRR_AVG_90', 'LSR_91_AVG_30',]  # 90
     cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90', 'UAR_AVG_7',
            'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365', 'UAR_CHA_15',
            'UAR_CHA_30',
@@ -5586,7 +5590,7 @@ def tsfresh_test():
            'GRP_CNT',
            'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM', 'STOCK_AGE_AVG_90', 'LSR_91_AVG_180']  # 40
 
-    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
            'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7']  # 18
 
@@ -5596,7 +5600,7 @@ def tsfresh_test():
     # fill nan with 0
     df_all.fillna(0, inplace=True)
 
-    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)
+    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20180101)
     df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230701)  # for test
 
     df_part2_0 = df_part2[df_part2['Y'] == 0]
@@ -5607,24 +5611,36 @@ def tsfresh_test():
     df_part2_0 = df_part2_0.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_tail)
     df_train = pd.concat([df_part2_0, df_part2_1])
+    print('df_train.shape:', df_train.shape)
 
 
     extraction_settings = ComprehensiveFCParameters()
     col.append('CUSTOMER_ID')
     col.append('RDATE')
-    #print(df_train[col].head())
-    X = extract_features(df_train[col], column_id='CUSTOMER_ID', column_sort='RDATE',
-                         default_fc_parameters=extraction_settings,
-                         # impute就是自动移除所有NaN的特征
-                         impute_function=impute)
-    print(X.head())
+
+    # 按照 group 列进行分组
+    grouped_data = df_train.groupby('CUSTOMER_ID')
+    # 每份数据包含的相同组数
+    num_groups_per_data = 500
+    # 划分数据
+    splitted_data = [group for _, group in grouped_data]
+    split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data)
+    X = pd.DataFrame()
+    # 打印划分结果
+    for indices in split_indices:
+        df_part = pd.concat([splitted_data[i] for i in indices])
+        X_part = extract_features(df_part[col], column_id='CUSTOMER_ID', column_sort='RDATE',
+                             default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
+        X = pd.concat([X, X_part])
+
+    print(X.head(2))
     print(X.columns.tolist())
     impute(X)
     y = df_train.loc[:, ['CUSTOMER_ID','Y']].drop_duplicates().reset_index(drop=True)
     y_train = np.array(y['Y'])
-    print(y.head(),len(y))
+    print(len(X),y.head(),len(y))
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
-    X_filtered = select_features(X, y_train)
+    X_filtered = select_features(X, y_train,)  # chunksize=10,n_jobs=8,
     print(X_filtered.columns)
     select_cols = X_filtered.columns.tolist()
     merged = pd.merge(X_filtered, y, left_index=True, right_index=True)
@@ -5745,10 +5761,17 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     print('head df :',df[origin_cols].head())
     data_cols = origin_cols[:]
     data_cols.remove('Y')
-    X = extract_features(df[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE',
-                         default_fc_parameters=extraction_settings,
-                         # impute就是自动移除所有NaN的特征
-                         impute_function=impute)
+    df.fillna(0, inplace=True)
+    grouped_data = df.groupby('CUSTOMER_ID')
+    num_groups_per_data = 500
+    splitted_data = [group for _, group in grouped_data]
+    split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data)
+    X = pd.DataFrame()
+    for indices in split_indices:
+        df_part = pd.concat([splitted_data[i] for i in indices])
+        X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
+                                  default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
+        X = pd.concat([X, X_part])
     impute(X)
     print('head X:',X.iloc[:2, :5])
     print('columns X:',X.columns,'\n length X:',len(X))
@@ -5760,7 +5783,7 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     if len(select_cols) == 0:
         print('train: select_cols is empty')
-        X_filtered = select_features(X, np.array(y['Y']))
+        X_filtered = select_features(X, np.array(y['Y']), chunksize=10,) # n_jobs=8,
         select_cols[:] = X_filtered.columns.tolist().copy()
     else:
         print('val & test: select_cols directly because it is not empty')
@@ -6047,7 +6070,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     cluster_less_test_num = 100
     type = 'occur_'+str(ftr_good_year_split)+'_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(cluster_less_test_num)
 
-    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  #
+    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101 20221201
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
 
     df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)
