@@ -5620,8 +5620,11 @@ def tsfresh_test():
 
     # 按照 group 列进行分组
     grouped_data = df_train.groupby('CUSTOMER_ID')
+    if(len(grouped_data) > 500):
+        num_groups_per_data = 500
+    else:
+        num_groups_per_data = len(grouped_data) / 2
     # 每份数据包含的相同组数
-    num_groups_per_data = 500
     # 划分数据
     splitted_data = [group for _, group in grouped_data]
     split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data)
@@ -5763,9 +5766,12 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     data_cols.remove('Y')
     df.fillna(0, inplace=True)
     grouped_data = df.groupby('CUSTOMER_ID')
-    num_groups_per_data = 500
+    if (len(grouped_data) > 500):
+        num_groups_per_data = 500
+    else:
+        num_groups_per_data = len(grouped_data) / 2
     splitted_data = [group for _, group in grouped_data]
-    split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data)
+    split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data) # num < 500 -> 0
     X = pd.DataFrame()
     for indices in split_indices:
         df_part = pd.concat([splitted_data[i] for i in indices])
@@ -6372,6 +6378,12 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
 
     for i in range(len(label_list_train)):
         select_cols = []
+        model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          '_ftr_select_' + str(i) + '.pkl'
+        if os.path.exists(model_file_path):
+            print('{} already exists, so no more train.'.format(model_file_path))
+            break
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols)
         lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
@@ -6380,16 +6392,11 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
         # 决策树&随机森林
         # lr = tree.DecisionTreeClassifier(criterion="entropy", min_impurity_decrease=0.000001, class_weight={0:0.3, 1:0.7})
         # lr = RandomForestClassifier(n_estimators=100, criterion="entropy", min_impurity_decrease=0.00005, class_weight={0:0.2, 1:0.8})
-
-        model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                          str(num_leaves) + '_' + str(n_estimators) +'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_ftr_select_' + str(i) + '.pkl'
         ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_'+str(i) + '.pkl'
-        if not os.path.exists(model_file_path):
-            model = lc.fit(df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']))
-            joblib.dump(model, model_file_path)
-            with open(ftr_list_file_path, 'wb') as f:
-                pickle.dump(select_cols, f)
+        model = lc.fit(df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']))
+        joblib.dump(model, model_file_path)
+        with open(ftr_list_file_path, 'wb') as f:
+            pickle.dump(select_cols, f)
 
     for i in range(len(label_list_train)):
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
@@ -6411,6 +6418,9 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                                '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
+            if os.path.exists(result_file_path):
+                print('{} already exists, so no more infer.'.format(result_file_path))
+                break
             df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_train_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -6450,6 +6460,9 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                                '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
+            if os.path.exists(result_file_path):
+                print('{} already exists, so no more infer.'.format(result_file_path))
+                break
             df_val_ftr_select_notime = tsfresh_ftr_augment_select(df_val_part, usecols, select_cols)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_val_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -6480,6 +6493,9 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                                '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
+            if os.path.exists(result_file_path):
+                print('{} already exists, so no more infer.'.format(result_file_path))
+                break
             df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_test_part, usecols, select_cols)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -6550,21 +6566,24 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     cluster_less_train_num = 200
     cluster_less_test_num = 100
 
-    type = 'occur_' + str(ftr_good_year_split) + '_addcredit_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
+    dl_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
         cluster_less_test_num)
+    ml_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
+        cluster_less_test_num)
+    ensemble_type = 'occur'
 
     # model train
     for i in range(3):
-        dl_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+        dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(i) + '_' + str(i) + '.csv'
-        ml_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+        ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_train_' + \
                               str(i) + '_' + str(i) + '.csv'
-        ml_result_file_path = dl_result_file_path
-        ensemble_model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(2) + '_' + \
+        ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + split_date_str + '_' + str(2) + '_' + \
                           str(3) + '_' + str(50) + '_' + str('balanced') + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                           '_ensemble_' + str(i) + '.pkl'
         ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path)
+    return
     # model infer
     for i in range(2):
         dl_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
