@@ -5371,6 +5371,8 @@ from lightgbm import LGBMClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import BaggingClassifier
 from sklearn.metrics import classification_report
 import joblib
 import json
@@ -5829,6 +5831,8 @@ def ml_model_forward_ks_roc(model_file_path: str, result_file_path: str, dataset
         df[column] = values
     # 将DataFrame写回CSV文件
     df.to_csv(result_file_path, index=False)
+    sorted_df = df.sort_values(by='prob', ascending=False)
+    print(sorted_df.head(40))
 
     fpr, tpr, thresholds = metrics.roc_curve(y_labels, pred_val_prob, pos_label=1, )  # drop_intermediate=True
     print('ks = ', max(tpr - fpr))
@@ -6392,6 +6396,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
         # 决策树&随机森林
         # lr = tree.DecisionTreeClassifier(criterion="entropy", min_impurity_decrease=0.000001, class_weight={0:0.3, 1:0.7})
         # lr = RandomForestClassifier(n_estimators=100, criterion="entropy", min_impurity_decrease=0.00005, class_weight={0:0.2, 1:0.8})
+
         ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_'+str(i) + '.pkl'
         model = lc.fit(df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']))
         joblib.dump(model, model_file_path)
@@ -6507,24 +6512,27 @@ def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path
         return
     df_train_dl = pd.read_csv(dl_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
     df_train_ml = pd.read_csv(ml_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
-    print(df_train_ml.head(2))
-    print(df_train_dl.head(2))
+    #print(df_train_ml.head(2))
+    #print(df_train_dl.head(2))
     df_train_dl.rename(columns={'prob': 'prob_dl'}, inplace=True)
     df_train_ml.rename(columns={'prob': 'prob_ml'}, inplace=True)
-    print(df_train_ml.head(2))
-    print(df_train_dl.head(2),len(df_train_dl))
+    #print(df_train_ml.head(2))
+    #print(df_train_dl.head(2),len(df_train_dl))
     df_train = pd.merge(df_train_dl,df_train_ml,on=['customerid', 'Y'])
-    print(df_train.head(2),len(df_train))
+    #print(df_train.head(2),len(df_train))
 
     ########## model
     max_depth = 2
     num_leaves = 3
     n_estimators = 50
-    class_weight = 'balanced'  # None
+    class_weight = 'balanced'   # None  'balanced'
     select_cols = ['prob_dl','prob_ml']
-    lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
-                        reg_alpha=1, objective='binary', class_weight=class_weight, seed=0)
-    if not os.path.exists(ensemble_model_file_path):
+    #lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
+    #                    reg_alpha=1, objective='binary', class_weight=class_weight, seed=0)
+    lc = LogisticRegression(penalty="l2",C=0.02,random_state=0)
+    #lc = BaggingClassifier(base_estimator=LogisticRegression(), n_estimators=10, random_state=42)
+    if os.path.exists(ensemble_model_file_path):
+        print('train========ing')
         model = lc.fit(df_train.loc[:, select_cols], np.array(df_train.loc[:, 'Y']))
         joblib.dump(model, ensemble_model_file_path)
 
@@ -6535,14 +6543,14 @@ def ensemble_dl_ml_base_score_test(dl_result_file_path:str, ml_result_file_path:
         return
     df_train_dl = pd.read_csv(dl_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
     df_train_ml = pd.read_csv(ml_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
-    print(df_train_ml.head(2))
-    print(df_train_dl.head(2))
+    #print(df_train_ml.head(2))
+    #print(df_train_dl.head(2))
     df_train_dl.rename(columns={'prob': 'prob_dl'}, inplace=True)
     df_train_ml.rename(columns={'prob': 'prob_ml'}, inplace=True)
-    print(df_train_ml.head(2))
-    print(df_train_dl.head(2),len(df_train_dl))
+    #print(df_train_ml.head(2))
+    #print(df_train_dl.head(2),len(df_train_dl))
     df_train = pd.merge(df_train_dl,df_train_ml,on=['customerid', 'Y'])
-    print(df_train.head(2),len(df_train))
+    #print(df_train.head(2),len(df_train))
     select_cols = ['prob_dl', 'prob_ml']
     ml_model_forward_ks_roc(ensemble_model_file_path,ensemble_result_file_path,df_train.loc[:,select_cols],np.array(df_train.loc[:,'Y']),np.array(df_train.loc[:,'customerid']))
 
@@ -6581,24 +6589,29 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                               str(i) + '_' + str(i) + '.csv'
         ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + split_date_str + '_' + str(2) + '_' + \
                           str(3) + '_' + str(50) + '_' + str('balanced') + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_ensemble_' + str(i) + '.pkl'
+                          '_ensemble_' + str(i) + '_lr.pkl'
+        if os.path.exists(ensemble_model_file_path):
+            print('{} already exists, so no more train.'.format(ensemble_model_file_path))
+            #break
         ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path)
-    return
     # model infer
     for i in range(2):
-        dl_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+        dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(i) + '_' + str(i) + '.csv'
-        ml_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+        ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + \
                               str(i) + '_' + str(i) + '.csv'
-        ml_result_file_path = dl_result_file_path
         for j in range(3):
-            ensemble_model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(2) + '_' + \
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + split_date_str + '_' + str(2) + '_' + \
                           str(3) + '_' + str(50) + '_' + str('balanced') + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_ensemble_' + str(j) + '.pkl'
-            ensemble_result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(2) + '_' + \
+                          '_ensemble_' + str(j) + '_lr.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_' + split_date_str + '_' + str(2) + '_' + \
                           str(3) + '_' + str(50) + '_' + str('balanced') + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                           '_ensemble_' + str(j) + '_' + str(i) + '.csv'
+            if os.path.exists(ensemble_result_file_path) and (i != j):
+                print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
+                continue
+            print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
 
 if __name__ == '__main__':
@@ -6614,5 +6627,5 @@ if __name__ == '__main__':
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
     # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
-    augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
-    # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
+    # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
+    ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
