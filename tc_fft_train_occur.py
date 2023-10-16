@@ -6069,10 +6069,10 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     filter_num_ratio = 1 / 8
     ftr_good_year_split = 2017   #  quick start 2022, at last 2016/2017
     ########## model
-    max_depth = 3 # 3 4 5
-    num_leaves = 7 # 7 15 31
-    n_estimators = 100 # 100
-    class_weight =  'balanced' # 'balanced'  None
+    max_depth = 2 # 2 3 4 5
+    num_leaves = 3 # 3 7 15 31
+    n_estimators = 50 # 100
+    class_weight =  None # 'balanced'  None
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 200
@@ -6400,8 +6400,9 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
         ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_'+str(i) + '.pkl'
         model = lc.fit(df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']))
         joblib.dump(model, model_file_path)
-        with open(ftr_list_file_path, 'wb') as f:
-            pickle.dump(select_cols, f)
+        if not os.path.exists(ftr_list_file_path):
+            with open(ftr_list_file_path, 'wb') as f:
+                pickle.dump(select_cols, f)
 
     for i in range(len(label_list_train)):
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
@@ -6505,7 +6506,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
-def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path:str, ensemble_model_file_path:str):
+def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path:str, ensemble_model_file_path:str, lc_c:float=0.02):
     usecols = ['customerid', 'Y', 'prob', ]
     if not os.path.exists(dl_result_file_path):
         print('dl result file not exists:',dl_result_file_path)
@@ -6529,12 +6530,12 @@ def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path
     select_cols = ['prob_dl','prob_ml']
     #lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
     #                    reg_alpha=1, objective='binary', class_weight=class_weight, seed=0)
-    lc = LogisticRegression(penalty="l2",C=0.02,random_state=0)
+    lc = LogisticRegression(penalty="l2",C=lc_c,random_state=0) # 0.02 -> 1  0.2-> 0
     #lc = BaggingClassifier(base_estimator=LogisticRegression(), n_estimators=10, random_state=42)
-    if os.path.exists(ensemble_model_file_path):
-        print('train========ing')
-        model = lc.fit(df_train.loc[:, select_cols], np.array(df_train.loc[:, 'Y']))
-        joblib.dump(model, ensemble_model_file_path)
+    print('train========ing')
+    model = lc.fit(df_train.loc[:, select_cols], np.array(df_train.loc[:, 'Y']))
+    joblib.dump(model, ensemble_model_file_path)
+    print('train========done')
 
 def ensemble_dl_ml_base_score_test(dl_result_file_path:str, ml_result_file_path:str, ensemble_model_file_path:str,ensemble_result_file_path:str):
     usecols = ['customerid', 'Y', 'prob', ]
@@ -6566,11 +6567,11 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     epochs = 20
     patiences = 10  # 10
     kernelsize = 16
-    max_depth = 3 # 3 4 5
-    num_leaves = 7 # 7 15 31
-    n_estimators = 100 # 100
-    class_weight =  'balanced' # 'balanced'  None
-
+    max_depth = 3 # 2 3  -1
+    num_leaves = 7 # 3 7  31
+    n_estimators = 100 #  50 100 100
+    class_weight =  'balanced' # None 'balanced' None
+    lc_c = [0.2, 0.02, 0.02] # 0.02 -> 1  0.2-> 0
     cluster_less_train_num = 200
     cluster_less_test_num = 100
 
@@ -6578,7 +6579,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
         cluster_less_test_num)
     ml_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
         cluster_less_test_num)
-    ensemble_type = 'occur'
+    ensemble_type = 'occur_ensemble'
 
     # model train
     for i in range(3):
@@ -6587,13 +6588,13 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_train_' + \
                               str(i) + '_' + str(i) + '.csv'
-        ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + split_date_str + '_' + str(2) + '_' + \
-                          str(3) + '_' + str(50) + '_' + str('balanced') + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_ensemble_' + str(i) + '_lr.pkl'
+        ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          '_' + str(i) + '_lr.pkl'
         if os.path.exists(ensemble_model_file_path):
             print('{} already exists, so no more train.'.format(ensemble_model_file_path))
-            #break
-        ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path)
+            break
+        ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,lc_c[i])
     # model infer
     for i in range(2):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
@@ -6602,13 +6603,13 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                               '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + \
                               str(i) + '_' + str(i) + '.csv'
         for j in range(3):
-            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + split_date_str + '_' + str(2) + '_' + \
-                          str(3) + '_' + str(50) + '_' + str('balanced') + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_ensemble_' + str(j) + '_lr.pkl'
-            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_' + split_date_str + '_' + str(2) + '_' + \
-                          str(3) + '_' + str(50) + '_' + str('balanced') + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_ensemble_' + str(j) + '_' + str(i) + '.csv'
-            if os.path.exists(ensemble_result_file_path) and (i != j):
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_'+ split_date_str + '_' + str(max_depth) + '_' + \
+                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          '_' + str(j) + '_lr.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          '_' + str(j) + '_' + str(i) + '.csv'
+            if os.path.exists(ensemble_result_file_path) or (i != j):
                 print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
                 continue
             print(ensemble_result_file_path)
