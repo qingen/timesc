@@ -1,7 +1,7 @@
 # coding=utf-8
 import csv
-import sys, os, time
-import cmath
+import sys, os
+import pickle
 import math
 from datetime import datetime, timedelta
 
@@ -14,10 +14,11 @@ import warnings
 import paddlets
 from paddlets.datasets.repository import get_dataset, dataset_list
 import matplotlib.pyplot as plt
-from paddlets.models.classify.dl.cnn import CNNClassifier
 from paddlets.models.classify.dl.inception_time import InceptionTimeClassifier
-from paddlets.datasets.repository import get_dataset
 
+from tc_fft_train_occur import ts2vec_cluster_datagroup_model,dl_model_forward_ks_roc
+from tc_fft_train_occur import tsfresh_ftr_augment_select,ml_model_forward_ks_roc
+from tc_fft_train_occur import ensemble_dl_ml_base_score_test
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 # 显示所有列
@@ -254,7 +255,6 @@ def predict_weekly():
         df.to_csv(filename, index=False)
         start_date -= timedelta(days=n_step_time)
 
-
 def test_for_report():
     # network = PaddleBaseClassifier.load('./model/0711_50_20_16_244_fft_p_t_SS_t30_y23_m147_v1.itc')
     # network=PaddleBaseClassifier.load('./model/0711_50_20_16_244_fft_p_t_SS_t30_y21_m11012_v1.itc')
@@ -470,6 +470,265 @@ def test_for_report():
         df.to_csv(filename, index=False)
         start_date -= timedelta(days=n_step_time)
 
+def ensemble_predict():
+    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+               'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+               'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+               'STOCK_AGE_AVG_365',
+               'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+               'LSR_91_AVG_365',
+               'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+               'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+               'STOCK_AGE_AVG_90',
+               'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+               'FREESPANRP_180D_R', 'SDV_REPAY_60',
+               'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+               'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+               'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+               'STOCK_AGE_CHA_RATIO_180',
+               'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+               'LSR_91_AVG_60',
+               'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+               'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+               'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+               'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+               'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+               'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols  1/8  Y ->
+    df221 = pd.read_csv("./data/0720_2639/22_1_202307201615.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    df227 = pd.read_csv("./data/0720_2639/22_7_202307201610.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    df23_1 = pd.read_csv("./data/0720_2639/2023_1_5_202308171425.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    # df23_2 = pd.read_csv("./data/0720_2639/2023_5_8_202308171416.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    df23_2 = pd.read_csv("./data/0720_2639/2023_5_6_202309081528.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    df23_3 = pd.read_csv("./data/0720_2639/2023_6_7_202309081530.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    df23_4 = pd.read_csv("./data/0720_2639/2023_7_8_202309081532.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    df23_5 = pd.read_csv("./data/0720_2639/2023_8_202309081535.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30',]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
+    df_credit = pd.read_csv("./data/0825_train/credit/202309221506.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+
+    df_all = pd.concat([df221, df227, df23_1, df23_2, df23_3, df23_4, df23_5])
+    del df221, df227, df23_1, df23_2, df23_3, df23_4, df23_5
+    print(df_all.shape)
+    df_all = pd.merge(df_all, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
+    print('after merge df_all.shape:', df_all.shape)
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('1 read csv :', formatted_time)
+
+    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+           'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+           'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+           'STOCK_AGE_AVG_365',
+           'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+           'LSR_91_AVG_365',
+           'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+           'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+           'STOCK_AGE_AVG_90',
+           'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+           'FREESPANRP_180D_R', 'SDV_REPAY_60',
+           'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+           'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+           'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+           'STOCK_AGE_CHA_RATIO_180',
+           'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+           'LSR_91_AVG_60',
+           'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+           'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+           'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+           'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+           'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+           'LRR_AVG_90', 'LSR_91_AVG_30', 'ICA_30']  # 90 + 1
+
+    df_all[col] = df_all[col].astype(float)
+
+    n_line_tail = 30  # (1-5) * 30
+    n_line_back = 1  # back 7
+    n_line_head = 30  # = tail
+
+    step = 5
+    date_str = datetime(2023, 10, 10).strftime("%Y%m%d")
+    split_date_str = '20230101'
+    ftr_num_str = '91'
+    filter_num_ratio = 1 / 8  # 1/5
+    ftr_good_year_split = 2017
+    ########## model cnn dt
+    epochs = 20
+    patiences = 10  # 10
+    kernelsize = 16
+    max_depth = 3 # 2 3 4 5
+    num_leaves = 7 # 3 7 15 31
+    n_estimators = 100 # 50 100
+    class_weight =  'balanced' # 'balanced'  None
+    lc_c = [0.2, 0.02, 0.02]  # 0.02 -> 1  0.2-> 0
+    fdr_level = 0.03 # 0.05(default)  0.04 0.03 0.02 0.01
+    cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_' + str(ftr_good_year_split) + '_' + date_str + '/'
+    cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
+    cluster_less_train_num = 200
+    cluster_less_test_num = 100
+
+    dl_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
+        cluster_less_test_num)
+    ml_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
+        cluster_less_test_num)
+    ensemble_type = 'occur_ensemble'
+
+    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20231001)
+    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
+    print('df_all.shape:', df_all.shape)
+    df_all = df_all.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
+
+    # 定义每次读取的数量
+    batch_size = n_line_head
+
+    def generate_new_groups(group):
+        new_groups = []
+        size = len(group)
+        # 循环切片生成新的组
+        for i in range(0, size, step):  # range(0,size,2)
+            start_position = i
+            end_position = i + batch_size
+            # 获取当前组的一部分数据
+            batch = group.iloc[start_position:end_position].copy()
+            # 修改组名
+            batch['CUSTOMER_ID'] = f'{group.iloc[i]["CUSTOMER_ID"]}_{i + 1}'
+            # 将切片后的数据添加到新的组列表中
+            new_groups.append(batch)
+        # 将新的组数据合并为一个 DataFrame
+        new_df = pd.concat(new_groups)
+        return new_df
+
+    # 将数据按照 CUSTOMER_ID 列的值分组，并应用函数生成新的组
+    df_all = df_all.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
+    # 输出结果
+    print('df_all.head:', df_all.head(32))
+    print('df_all.shape:', df_all.shape)
+
+    # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和; 3 -> watch out
+    count_df = df_all.groupby('CUSTOMER_ID').apply(lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
+    # 设定阈值 K
+    K = n_line_head * int(ftr_num_str) * filter_num_ratio
+    print('K:', K)
+    # 删除满足条件的组
+    filtered_groups = count_df[count_df.gt(K)].index
+    print(filtered_groups)
+    df_all = df_all[~df_all['CUSTOMER_ID'].isin(filtered_groups)]
+    print('after filter 0/null df_all.shape:', df_all.shape)
+
+    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_head)
+
+    df_all = df_all.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
+        reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
+    print('df_all.shape: ', df_all.shape)
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('2 load data:', formatted_time)
+
+    from paddlets import TSDataset
+    from paddlets.analysis import FFT
+    tsdatasets_all = TSDataset.load_from_dataframe(
+        df=df_all,
+        group_id='CUSTOMER_ID',
+        target_cols=col,
+        # known_cov_cols='CUSTOMER_ID',
+        fill_missing_dates=True,
+        fillna_method="zero",
+        static_cov_cols=['Y', 'CUSTOMER_ID'],
+    )
+
+    fft = FFT(fs=1, half=False)  # _amplitude  half
+    # cwt = CWT(scales=n_line_tail/2)
+    for data in tsdatasets_all:
+        resfft = fft(data)
+        # rescwt = cwt(data)  # coefs 63*24 complex128 x+yj
+        for x in data.columns:
+            # ----------------- fft
+            resfft[x + "_amplitude"].index = data[x].index
+            resfft[x + "_phase"].index = data[x].index
+            data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
+            data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('3 transform data:', formatted_time)
+
+    from paddlets.transform import StandardScaler
+    ss_scaler = StandardScaler()
+    tsdatasets_all = ss_scaler.fit_transform(tsdatasets_all)
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('4 group data:', formatted_time)
+
+    tsdataset_list_all, label_list_all, customersid_list_all = ts2vec_cluster_datagroup_model(tsdatasets_all,
+                                                                                                    y_train,
+                                                                                                    y_train_customerid,
+                                                                                                    cluster_model_path,
+                                                                                                    cluster_model_file,
+                                                                                                    cluster_less_train_num)
+    for i in range(len(label_list_all)):
+        for j in range(3):
+            model_file_path = './model/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                              str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                              '_fl_aug_' + str(j) + '.itc'
+            if not os.path.exists(model_file_path):
+                model_file_path = './model/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                                  '_fl_aug_' + str(0) + '.itc'  # default 0
+                j = 0
+            result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(j) + '_' + str(i) + '.csv'
+            print(result_file_path)
+            dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
+
+    for i in range(len(label_list_all)):
+        df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
+
+        for j in range(3):
+            model_file_path = './model/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + \
+                              '_t' + str(n_line_tail) + '_ftr_select_' + str(j) + '.pkl'
+            if not os.path.exists(model_file_path):
+                model_file_path = './model/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) +'_'+str(fdr_level) +  '_ftr_' + ftr_num_str + \
+                                  '_t' + str(n_line_tail) + '_ftr_select_' + str(0) + '.pkl'  # default 0
+                j = 0
+            ftr_list_file_path = './model/' + date_str + '_' + ml_type + '_' + split_date_str+ '_'+str(fdr_level) +'_ftr_list_' + str(j) + '.pkl'
+            print(ftr_list_file_path)
+            with open(ftr_list_file_path, 'rb') as f:
+                select_cols = pickle.load(f)
+            print('len select cols:', len(select_cols))
+            result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+                               '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                               '_ftr_select_test_' + str(j) + '_' + str(i) + '.csv'
+            print(result_file_path)
+            if os.path.exists(result_file_path):
+                print('{} already exists, so no more infer.'.format(result_file_path))
+                break
+            df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_all_part, usecols, select_cols, fdr_level)
+            ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
+                                 np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
+
+    for i in range(2):
+        dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+                              '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(i) + '_' + str(i) + '.csv'
+        ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+                              '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + \
+                              str(i) + '_' + str(i) + '.csv'
+        for j in range(3):
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_'+ split_date_str + '_' + str(max_depth) + '_' + \
+                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          '_' + str(j) + '_lr.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                          '_' + str(j) + '_' + str(i) + '.csv'
+            if os.path.exists(ensemble_result_file_path) or (i != j):
+                print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
+                continue
+            print(ensemble_result_file_path)
+            ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
+
+    return
 
 if __name__ == '__main__':
     #test_for_report()

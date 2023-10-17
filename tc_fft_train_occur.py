@@ -5645,7 +5645,7 @@ def tsfresh_test():
     y_train = np.array(y['Y'])
     print(len(X),y.head(),len(y))
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
-    X_filtered = select_features(X, y_train,)  # chunksize=10,n_jobs=8,
+    X_filtered = select_features(X, y_train,fdr_level=0.04)  # chunksize=10,n_jobs=8,fdr_level=0.05
     print(X_filtered.columns)
     select_cols = X_filtered.columns.tolist()
     merged = pd.merge(X_filtered, y, left_index=True, right_index=True)
@@ -5761,7 +5761,7 @@ def tsfresh_test():
             print(y_test[i], y_prob[i])
 
 # origin_cols , include customer,rdate,y,ftr
-def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_cols:List[str]):
+def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_cols:List[str],fdr_level:float=0.05):
     extraction_settings = ComprehensiveFCParameters()
     print('head df :',df[origin_cols].head())
     data_cols = origin_cols[:]
@@ -5791,7 +5791,7 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     if len(select_cols) == 0:
         print('train: select_cols is empty')
-        X_filtered = select_features(X, np.array(y['Y']), chunksize=10,) # n_jobs=8,
+        X_filtered = select_features(X, np.array(y['Y']), chunksize=10, fdr_level=fdr_level) # n_jobs=8,
         select_cols[:] = X_filtered.columns.tolist().copy()
     else:
         print('val & test: select_cols directly because it is not empty')
@@ -6069,10 +6069,11 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     filter_num_ratio = 1 / 8
     ftr_good_year_split = 2017   #  quick start 2022, at last 2016/2017
     ########## model
-    max_depth = 2 # 2 3 4 5
-    num_leaves = 3 # 3 7 15 31
-    n_estimators = 50 # 100
-    class_weight =  None # 'balanced'  None
+    max_depth = 3 # 2 3 4 5
+    num_leaves = 7 # 3 7 15 31
+    n_estimators = 100 # 50 100
+    class_weight =  'balanced' # 'balanced'  None
+    fdr_level = 0.03 # 0.05(default)  0.04 0.03 0.02 0.01
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 200
@@ -6383,13 +6384,13 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     for i in range(len(label_list_train)):
         select_cols = []
         model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_ftr_select_' + str(i) + '.pkl'
+                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_'+str(fdr_level) + '_ftr_' + ftr_num_str + \
+                          '_t' + str(n_line_tail) + '_ftr_select_' + str(i) + '.pkl'
         if os.path.exists(model_file_path):
             print('{} already exists, so no more train.'.format(model_file_path))
             break
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
-        df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols)
+        df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols, fdr_level)
         lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
                             reg_alpha=1,objective='binary', class_weight=class_weight, seed=0)
         # lr = lgb.LGBMClassifier(objective='binary')
@@ -6397,7 +6398,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
         # lr = tree.DecisionTreeClassifier(criterion="entropy", min_impurity_decrease=0.000001, class_weight={0:0.3, 1:0.7})
         # lr = RandomForestClassifier(n_estimators=100, criterion="entropy", min_impurity_decrease=0.00005, class_weight={0:0.2, 1:0.8})
 
-        ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_'+str(i) + '.pkl'
+        ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(fdr_level) + '_ftr_list_'+str(i) + '.pkl'
         model = lc.fit(df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']))
         joblib.dump(model, model_file_path)
         if not os.path.exists(ftr_list_file_path):
@@ -6409,25 +6410,26 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
 
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                              '_ftr_select_' + str(j) + '.pkl'
+                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) +'_'+str(fdr_level) +  '_ftr_' + ftr_num_str +\
+                              '_t' + str(n_line_tail) + '_ftr_select_' + str(j) + '.pkl'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
                                   str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                                   '_ftr_select_' + str(0) + '.pkl'  # default 0
                 j = 0
-            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_' + str(j) + '.pkl'
+            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' +str(fdr_level) + '_ftr_list_' + str(j) + '.pkl'
             print(ftr_list_file_path)
             with open(ftr_list_file_path, 'rb') as f:
                 select_cols = pickle.load(f)
             print('len select cols:',len(select_cols))
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                               '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_train_' + str(j) + '_' + str(i) + '.csv'
+                               '_' + str(n_estimators)+'_' +str(class_weight)+ '_' +str(fdr_level)  + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                               '_ftr_select_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
                 break
-            df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols)
+            df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols, fdr_level)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_train_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
@@ -6451,25 +6453,26 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
 
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                              '_ftr_select_' + str(j) + '.pkl'
+                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) +'_'+str(fdr_level) + '_ftr_' + ftr_num_str + \
+                              '_t' + str(n_line_tail) + '_ftr_select_' + str(j) + '.pkl'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                                  '_ftr_select_' + str(0) + '.pkl'  # default 0
+                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + \
+                                  '_t' + str(n_line_tail) + '_ftr_select_' + str(0) + '.pkl'  # default 0
                 j = 0
-            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_' + str(j) + '.pkl'
+            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_'+str(fdr_level) + '_ftr_list_' + str(j) + '.pkl'
             print(ftr_list_file_path)
             with open(ftr_list_file_path, 'rb') as f:
                 select_cols = pickle.load(f)
             print('len select cols:',len(select_cols))
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                               '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_val_' + str(j) + '_' + str(i) + '.csv'
+                               '_' + str(n_estimators)+'_' +str(class_weight) + '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                               '_ftr_select_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
                 break
-            df_val_ftr_select_notime = tsfresh_ftr_augment_select(df_val_part, usecols, select_cols)
+            df_val_ftr_select_notime = tsfresh_ftr_augment_select(df_val_part, usecols, select_cols,fdr_level)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_val_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
@@ -6484,25 +6487,26 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
 
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                              '_ftr_select_' + str(j) + '.pkl'
+                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + \
+                              '_t' + str(n_line_tail) + '_ftr_select_' + str(j) + '.pkl'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                                  '_ftr_select_' + str(0) + '.pkl'  # default 0
+                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) +'_'+str(fdr_level) +  '_ftr_' + ftr_num_str + \
+                                  '_t' + str(n_line_tail) + '_ftr_select_' + str(0) + '.pkl'  # default 0
                 j = 0
-            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + 'ftr_list_' + str(j) + '.pkl'
+            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str+ '_'+str(fdr_level) +'_ftr_list_' + str(j) + '.pkl'
             print(ftr_list_file_path)
             with open(ftr_list_file_path, 'rb') as f:
                 select_cols = pickle.load(f)
             print('len select cols:', len(select_cols))
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                               '_' + str(n_estimators)+'_' +str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + str(j) + '_' + str(i) + '.csv'
+                               '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                               '_ftr_select_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
                 break
-            df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_test_part, usecols, select_cols)
+            df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_test_part, usecols, select_cols, fdr_level)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
@@ -6628,5 +6632,5 @@ if __name__ == '__main__':
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
     # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
-    # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
-    ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
+    augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
+    # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
