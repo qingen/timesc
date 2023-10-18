@@ -542,7 +542,6 @@ def ensemble_predict():
     df_all[col] = df_all[col].astype(float)
 
     n_line_tail = 30  # (1-5) * 30
-    n_line_back = 1  # back 7
     n_line_head = 30  # = tail
 
     step = 5
@@ -652,6 +651,15 @@ def ensemble_predict():
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('3 transform data:', formatted_time)
 
+    y_all = [] # fake
+    y_all_customerid = []
+    for dataset in tsdatasets_all:
+        y_all.append(dataset.static_cov['Y'])
+        y_all_customerid.append(dataset.static_cov['CUSTOMER_ID'])
+        dataset.static_cov = None
+    y_all = np.array(y_all)
+    y_all_customerid = np.array(y_all_customerid)
+
     from paddlets.transform import StandardScaler
     ss_scaler = StandardScaler()
     tsdatasets_all = ss_scaler.fit_transform(tsdatasets_all)
@@ -661,8 +669,8 @@ def ensemble_predict():
     print('4 group data:', formatted_time)
 
     tsdataset_list_all, label_list_all, customersid_list_all = ts2vec_cluster_datagroup_model(tsdatasets_all,
-                                                                                                    y_train,
-                                                                                                    y_train_customerid,
+                                                                                                    y_all,
+                                                                                                    y_all_customerid,
                                                                                                     cluster_model_path,
                                                                                                     cluster_model_file,
                                                                                                     cluster_less_train_num)
@@ -677,7 +685,7 @@ def ensemble_predict():
                                   '_fl_aug_' + str(0) + '.itc'  # default 0
                 j = 0
             result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
-                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(j) + '_' + str(i) + '.csv'
+                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
 
@@ -700,7 +708,7 @@ def ensemble_predict():
             print('len select cols:', len(select_cols))
             result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                                '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                               '_ftr_select_test_' + str(j) + '_' + str(i) + '.csv'
+                               '_ftr_select_predict_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
@@ -711,9 +719,9 @@ def ensemble_predict():
 
     for i in range(2):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
-                              '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(i) + '_' + str(i) + '.csv'
+                              '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + str(i) + '_' + str(i) + '.csv'
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                              '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + \
+                              '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_predict_' + \
                               str(i) + '_' + str(i) + '.csv'
         for j in range(3):
             ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_'+ split_date_str + '_' + str(max_depth) + '_' + \
@@ -721,7 +729,7 @@ def ensemble_predict():
                           '_' + str(j) + '_lr.pkl'
             ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
                           str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_' + str(j) + '_' + str(i) + '.csv'
+                          '_predict_' + str(j) + '_' + str(i) + '.csv'
             if os.path.exists(ensemble_result_file_path) or (i != j):
                 print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
                 continue
@@ -731,5 +739,6 @@ def ensemble_predict():
     return
 
 if __name__ == '__main__':
-    #test_for_report()
-    predict_weekly()
+    # test_for_report()
+    # predict_weekly()
+    ensemble_predict()
