@@ -494,19 +494,19 @@ def ensemble_predict():
                'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
                'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
                'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols  1/8  Y ->
-    df221 = pd.read_csv("./data/0720_2639/22_1_202307201615.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
-    df227 = pd.read_csv("./data/0720_2639/22_7_202307201610.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    #df221 = pd.read_csv("./data/0720_2639/22_1_202307201615.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    #df227 = pd.read_csv("./data/0720_2639/22_7_202307201610.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     df23_1 = pd.read_csv("./data/0720_2639/2023_1_5_202308171425.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     # df23_2 = pd.read_csv("./data/0720_2639/2023_5_8_202308171416.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     df23_2 = pd.read_csv("./data/0720_2639/2023_5_6_202309081528.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     df23_3 = pd.read_csv("./data/0720_2639/2023_6_7_202309081530.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     df23_4 = pd.read_csv("./data/0720_2639/2023_7_8_202309081532.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     df23_5 = pd.read_csv("./data/0720_2639/2023_8_202309081535.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
-    usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30',]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
-    df_credit = pd.read_csv("./data/0825_train/credit/202309221506.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30',]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
+    df_credit = pd.read_csv("./data/0825_train/credit/202309221506.csv", header=0, usecols=credit_usecols, sep=',',encoding='gbk')
 
-    df_all = pd.concat([df221, df227, df23_1, df23_2, df23_3, df23_4, df23_5])
-    del df221, df227, df23_1, df23_2, df23_3, df23_4, df23_5
+    df_all = pd.concat([df23_1, df23_2, df23_3, df23_4, df23_5])
+    del  df23_1, df23_2, df23_3, df23_4, df23_5
     print(df_all.shape)
     df_all = pd.merge(df_all, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
     print('after merge df_all.shape:', df_all.shape)
@@ -559,7 +559,7 @@ def ensemble_predict():
     n_estimators = 100 # 50 100
     class_weight =  'balanced' # 'balanced'  None
     lc_c = [0.2, 0.02, 0.02]  # 0.02 -> 1  0.2-> 0
-    fdr_level = 0.03 # 0.05(default)  0.04 0.03 0.02 0.01
+    fdr_level = 0.02 # 0.05(default)  0.04 0.03 0.02 0.01
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_' + str(ftr_good_year_split) + '_' + date_str + '/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 200
@@ -571,9 +571,18 @@ def ensemble_predict():
         cluster_less_test_num)
     ensemble_type = 'occur_ensemble'
 
-    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20231001)
+    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230901)
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
     print('df_all.shape:', df_all.shape)
+
+    selected_groups = df_all['CUSTOMER_ID'].drop_duplicates().sample(n=100)
+    # 获取每个选中组的所有样本
+    df_all_selected = df_all.groupby('CUSTOMER_ID').apply(lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
+    df_all = df_all_selected.dropna(subset=['Y'])
+    print('df_all_selected.shape:', df_all.shape)
+
+
+
     df_all = df_all.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
 
     # 定义每次读取的数量
@@ -687,6 +696,9 @@ def ensemble_predict():
             result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                                '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
+            if os.path.exists(result_file_path):
+                print('{} already exists, so no more infer.'.format(result_file_path))
+                break
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
 
     for i in range(len(label_list_all)):
@@ -721,7 +733,7 @@ def ensemble_predict():
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + str(i) + '_' + str(i) + '.csv'
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                              '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_predict_' + \
+                              '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_predict_' + \
                               str(i) + '_' + str(i) + '.csv'
         for j in range(3):
             ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_'+ split_date_str + '_' + str(max_depth) + '_' + \
