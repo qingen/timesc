@@ -45,40 +45,41 @@ def train_occur_for_report():
     df21_3 = pd.read_csv("./data/0825_train/occur/2021_7_10_202308251006.csv", header=0, sep=',', encoding='gbk')
     df21_2 = pd.read_csv("./data/0825_train/occur/2021_4_7_202308251012.csv", header=0, sep=',', encoding='gbk')
     df21_1 = pd.read_csv("./data/0825_train/occur/2021_1_4_202308251017.csv", header=0, sep=',', encoding='gbk')
-    df20_4 = pd.read_csv("./data/0825_train/occur/2020_10_12_202308251023.csv", header=0, sep=',', encoding='gbk')
-    df20_3 = pd.read_csv("./data/0825_train/occur/2020_7_10_202308251033.csv", header=0, sep=',', encoding='gbk')
-    df20_2 = pd.read_csv("./data/0825_train/occur/2020_4_7_202308251037.csv", header=0, sep=',', encoding='gbk')
-    df20_1 = pd.read_csv("./data/0825_train/occur/2020_1_4_202308251042.csv", header=0, sep=',', encoding='gbk')
-    df19_4 = pd.read_csv("./data/0825_train/occur/2019_10_12_202308251047.csv", header=0, sep=',', encoding='gbk')
-    df19_3 = pd.read_csv("./data/0825_train/occur/2019_7_10_202308251052.csv", header=0, sep=',', encoding='gbk')
-    df19_2 = pd.read_csv("./data/0825_train/occur/2019_4_7_202308251057.csv", header=0, sep=',', encoding='gbk')
-    df19_1 = pd.read_csv("./data/0825_train/occur/2019_1_4_202308251238.csv", header=0, sep=',', encoding='gbk')
-    df18_4 = pd.read_csv("./data/0825_train/occur/2018_10_12_202308251253.csv", header=0, sep=',', encoding='gbk')
-    df18_3 = pd.read_csv("./data/0825_train/occur/2018_7_10_202308251257.csv", header=0, sep=',', encoding='gbk')
-    df18_2 = pd.read_csv("./data/0825_train/occur/2018_4_7_202308251301.csv", header=0, sep=',', encoding='gbk')
-    df18_1 = pd.read_csv("./data/0825_train/occur/2018_1_4_202308251306.csv", header=0, sep=',', encoding='gbk')
-    df17_4 = pd.read_csv("./data/0825_train/occur/2017_10_12_202308251310.csv", header=0, sep=',', encoding='gbk')
-    df17_3 = pd.read_csv("./data/0825_train/occur/2017_7_10_202308251313.csv", header=0, sep=',', encoding='gbk')
-    df17_2 = pd.read_csv("./data/0825_train/occur/2017_4_7_202308251316.csv", header=0, sep=',', encoding='gbk')
-    df17_1 = pd.read_csv("./data/0825_train/occur/2017_1_4_202308251320.csv", header=0, sep=',', encoding='gbk')
-    df16_2 = pd.read_csv("./data/0825_train/occur/2016_7_12_202308251325.csv", header=0, sep=',', encoding='gbk')
-    df16_1 = pd.read_csv("./data/0825_train/occur/2016_1_7_202308251331.csv", header=0, sep=',', encoding='gbk')
+    #df20_4 = pd.read_csv("./data/0825_train/occur/2020_10_12_202308251023.csv", header=0, sep=',', encoding='gbk')
+    #df20_3 = pd.read_csv("./data/0825_train/occur/2020_7_10_202308251033.csv", header=0, sep=',', encoding='gbk')
+    #df20_2 = pd.read_csv("./data/0825_train/occur/2020_4_7_202308251037.csv", header=0, sep=',', encoding='gbk')
+    #df20_1 = pd.read_csv("./data/0825_train/occur/2020_1_4_202308251042.csv", header=0, sep=',', encoding='gbk')
+    #df19_4 = pd.read_csv("./data/0825_train/occur/2019_10_12_202308251047.csv", header=0, sep=',', encoding='gbk')
+    #df19_3 = pd.read_csv("./data/0825_train/occur/2019_7_10_202308251052.csv", header=0, sep=',', encoding='gbk')
+    #df19_2 = pd.read_csv("./data/0825_train/occur/2019_4_7_202308251057.csv", header=0, sep=',', encoding='gbk')
+    #df19_1 = pd.read_csv("./data/0825_train/occur/2019_1_4_202308251238.csv", header=0, sep=',', encoding='gbk')
+    #df18_4 = pd.read_csv("./data/0825_train/occur/2018_10_12_202308251253.csv", header=0, sep=',', encoding='gbk')
+    #df18_3 = pd.read_csv("./data/0825_train/occur/2018_7_10_202308251257.csv", header=0, sep=',', encoding='gbk')
+    #df18_2 = pd.read_csv("./data/0825_train/occur/2018_4_7_202308251301.csv", header=0, sep=',', encoding='gbk')
+    #df18_1 = pd.read_csv("./data/0825_train/occur/2018_1_4_202308251306.csv", header=0, sep=',', encoding='gbk')
+    #df17_4 = pd.read_csv("./data/0825_train/occur/2017_10_12_202308251310.csv", header=0, sep=',', encoding='gbk')
+    #df17_3 = pd.read_csv("./data/0825_train/occur/2017_7_10_202308251313.csv", header=0, sep=',', encoding='gbk')
+    #df17_2 = pd.read_csv("./data/0825_train/occur/2017_4_7_202308251316.csv", header=0, sep=',', encoding='gbk')
+    #df17_1 = pd.read_csv("./data/0825_train/occur/2017_1_4_202308251320.csv", header=0, sep=',', encoding='gbk')
+    #df16_2 = pd.read_csv("./data/0825_train/occur/2016_7_12_202308251325.csv", header=0, sep=',', encoding='gbk')
+    #df16_1 = pd.read_csv("./data/0825_train/occur/2016_1_7_202308251331.csv", header=0, sep=',', encoding='gbk')
 
-    df_16_18 = pd.concat([df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4])
-    df_19_20 = pd.concat([df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4])
+    #df_16_18 = pd.concat([df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4])
+    #df_19_20 = pd.concat([df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4])
     df_21_23 = pd.concat([df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23])
-    print(df_16_18.shape)
-    print(df_19_20.shape)
+    #print(df_16_18.shape)
+    #print(df_19_20.shape)
     print(df_21_23.shape)
 
-    del df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4
-    del df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4
+    #del df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4
+    #del df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4
     del df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23
 
-    df_all = pd.concat([df_16_18, df_19_20, df_21_23])
+    #df_all = pd.concat([ df_19_20, df_21_23])   # df_16_18,
+    df_all = df_21_23
     print('df_all.shape:', df_all.shape)
 
-    del df_16_18, df_19_20, df_21_23
+    del   df_21_23 # df_16_18, df_19_20,
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -129,18 +130,19 @@ def train_occur_for_report():
            'RPCNT3_180_90AGE_R', 'RPCNT7_180_90AGE_R', 'RPCNT3_90_90INV_R', 'RPCNT7_90_90INV_R', 'RPCNT3_180_90INV_R',
            'RPCNT7_180_90INV_R', 'AUDIT_1YCHK_IND', 'AUDIT_5YCHKSZYD_R', 'AUDIT_10YCHKSZYD_R', 'AUDIT_5YCHKSZYDHGWF_R',
            'AUDIT_10YCHKSZYDHGWF_R', 'AUDIT_1YCHKWGWF_IND', 'AUDIT_1YCHKPCT25_IND', 'EXT_12M_R']
-
-    n_line_tail = 60  # (1-5) * 30
-    n_line_back = 7  # back 30/7
-    n_line_head = 60  # = tail
-    train_0_sample = 35000  # 30`60`90 -> 35000 120 150 ->20000
+    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
+            'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',]   # 'ICA_30'
+    n_line_tail = 30  # (1-5) * 30
+    n_line_back = 1  # back 30/7
+    n_line_head = 30  # = tail
+    train_0_sample = 1000  # 30`60`90 -> 35000 120 150 ->20000   35000
     type = 'occur'
-    date_str = datetime(2023, 9, 1).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 10).strftime("%Y%m%d")
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)  # for test  #3272 24
-    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(
-        lambda x: max(x["RDATE"]) < 20230101)  # for train valid  #43815 315
-    df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: min(x["RDATE"]) >= 20160101)  # for train valid
+    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train valid  #43815 315
+    df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: min(x["RDATE"]) >= 20220101)  # for train valid  20160101
     del df_all
     ###################### for test 1:100
     df_part1_0 = df_part1[df_part1['Y'] == 0]
@@ -150,7 +152,7 @@ def train_occur_for_report():
         reset_index(drop=True).groupby(['CUSTOMER_ID']).head(n_line_head)
     print('df_part1_1.shape:', df_part1_1.shape)
     # 从 0 中 筛选出 2400 个
-    selected_groups = df_part1_0['CUSTOMER_ID'].drop_duplicates().sample(n=2400, random_state=2400)
+    selected_groups = df_part1_0['CUSTOMER_ID'].drop_duplicates().sample(n=400, random_state=400)  # 2400
     # 获取每个选中组的所有样本
     df_part1_0_selected = df_part1_0.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
@@ -161,7 +163,7 @@ def train_occur_for_report():
     ###################### for train/valid  1:100
     df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
     # 随机选择若干个组
-    selected_groups = df_part2['CUSTOMER_ID'].drop_duplicates().sample(n=3500, random_state=3500)  # 3472 28
+    selected_groups = df_part2['CUSTOMER_ID'].drop_duplicates().sample(n=500, random_state=500)  # 3472 28   3500
     # 获取每个选中组的所有样本
     df_val = df_part2.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
@@ -172,7 +174,7 @@ def train_occur_for_report():
         reset_index(drop=True).groupby(['CUSTOMER_ID']).head(n_line_head)
     print('df_val_1.shape:', df_val_1.shape)
     df_val_0_all = df_val[df_val['Y'] == 0]
-    selected_groups_0 = df_val_0_all['CUSTOMER_ID'].drop_duplicates().sample(n=2800, random_state=2800)
+    selected_groups_0 = df_val_0_all['CUSTOMER_ID'].drop_duplicates().sample(n=400, random_state=400) #  2800
     print('selected_groups_0  length:', len(selected_groups_0))
     df_val_0 = df_val_0_all.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups_0.values else None).reset_index(drop=True)
@@ -353,12 +355,14 @@ def train_occur_for_report():
     y_test = np.array(y_test)
 
     from paddlets.transform import StandardScaler
+    import paddle.nn.functional as F
     min_max_scaler = StandardScaler()
     tsdatasets_train = min_max_scaler.fit_transform(tsdatasets_train)
     tsdatasets_val = min_max_scaler.fit_transform(tsdatasets_val)
     tsdatasets_test = min_max_scaler.fit_transform(tsdatasets_test)
 
-    network = InceptionTimeClassifier(max_epochs=50, patience=20, kernel_size=16)
+    #network = InceptionTimeClassifier(max_epochs=50, patience=20, kernel_size=16)
+    network = CNNClassifier(max_epochs=100, patience=50, kernel_size=3,loss_fn=F.sigmoid_focal_loss)
     network.fit(tsdatasets_train, y_train)
 
     from sklearn.metrics import accuracy_score, f1_score
@@ -4989,9 +4993,9 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     filter_num_ratio = 1 / 8  # 1/5
     ftr_good_year_split = 2017
     ########## model
-    epochs = 20
-    patiences = 10  # 10
-    kernelsize = 16
+    epochs = 20  # 20  50
+    patiences = 10  # 10  20
+    kernelsize = 16  # 16  3
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 200
@@ -5279,6 +5283,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     y_test_customerid = np.array(y_test_customerid)
 
     from paddlets.transform import StandardScaler
+    import paddle.nn.functional as F
     ss_scaler = StandardScaler()
     tsdatasets_train = ss_scaler.fit_transform(tsdatasets_train)
     tsdatasets_val = ss_scaler.fit_transform(tsdatasets_val)
@@ -5310,7 +5315,8 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
                                   '_fl_aug_' + str(0) + '.itc'  # default 0
                 j = 0
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
-                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(j) + '_' + str(i) + '.csv'
+                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + \
+                               str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_train[i], label_list_train[i], customersid_list_train[i])
 
@@ -5327,14 +5333,12 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
                               '_fl_aug_' + str(j) + '.itc'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(
-                    n_line_tail) + \
+                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                                   '_fl_aug_' + str(0) + '.itc'  # default 0
                 j = 0
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(
-                epochs) + '_' + str(patiences) + \
-                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(
-                n_line_tail) + '_fl_val_aug_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_val_aug_' + '_' + str(j) + \
+                               '_' + str(i) + '.csv'
             print(result_file_path)
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_val[i], label_list_val[i], customersid_list_val[i])
 
@@ -5351,14 +5355,12 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
                               '_fl_aug_' + str(j) + '.itc'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(
-                    n_line_tail) + \
+                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                                   '_fl_aug_' + str(0) + '.itc'  # default 0
                 j = 0
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(
-                epochs) + '_' + str(patiences) + \
-                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(
-                n_line_tail) + '_fl_test_aug_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + '_' + str(j) + \
+                               '_' + str(i) + '.csv'
             print(result_file_path)
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_test[i], label_list_test[i], customersid_list_test[i])
 
@@ -5835,7 +5837,7 @@ def ml_model_forward_ks_roc(model_file_path: str, result_file_path: str, dataset
     print(sorted_df.head(40))
 
     fpr, tpr, thresholds = metrics.roc_curve(y_labels, pred_val_prob, pos_label=1, )  # drop_intermediate=True
-    print('ks = ', max(tpr - fpr))
+    print('ks ={}, tpr ={}, fpr ={}', format(max(tpr - fpr),tpr,fpr))
     #for i in range(tpr.shape[0]):
         #print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
         # if tpr[i] > 0.5:
@@ -6575,8 +6577,8 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     num_leaves = 7 # 3 7  31
     n_estimators = 100 #  50 100 100
     class_weight =  'balanced' # None 'balanced' None
-    fdr_level = 0.01  # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
-    lc_c = [0.2, 0.02, 0.02] # 0.02 -> 1  0.2-> 0
+    fdr_level = 0.05  # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
+    lc_c = [0.2, 0.02, 0.02] #  0.2-> 0 0.02 -> 1
     cluster_less_train_num = 200
     cluster_less_test_num = 100
 
@@ -6591,29 +6593,68 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(i) + '_' + str(i) + '.csv'
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                              '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_train_' + \
-                              str(i) + '_' + str(i) + '.csv'
+                              '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                              '_ftr_select_train_' + str(i) + '_' + str(i) + '.csv'
         ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_' + str(i) + '_lr.pkl'
+                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
+                          str(n_line_tail) + '_' + str(i) + '_lr.pkl'
         if os.path.exists(ensemble_model_file_path):
             print('{} already exists, so no more train.'.format(ensemble_model_file_path))
             continue
         ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,lc_c[i])
     # model infer
+    # train
+    for i in range(3):
+        dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+                              '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(i) + '_' + str(i) + '.csv'
+        ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+                              '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
+                              str(n_line_tail) + '_ftr_select_train_' + str(i) + '_' + str(i) + '.csv'
+        for j in range(3):
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                                       str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + \
+                                       '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                                        str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + \
+                                        '_t' + str(n_line_tail) + '_train_' + str(j) + '_' + str(i) +'_' + str(i)+ '.csv'
+            if os.path.exists(ensemble_result_file_path) or (i != j):
+                print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
+                continue
+            print(ensemble_result_file_path)
+            ensemble_dl_ml_base_score_test(dl_result_file_path, ml_result_file_path, ensemble_model_file_path, ensemble_result_file_path)
+    # val
+    for i in range(3):
+        dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+                              '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_val_aug_' + str(i) + '_' + str(i) + '.csv'
+        ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+                              '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
+                              str(n_line_tail) + '_ftr_select_val_' + str(i) + '_' + str(i) + '.csv'
+        for j in range(3):
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + \
+                                       '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + \
+                                       ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + \
+                                        '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + \
+                                        ftr_num_str + '_t' + str(n_line_tail) + '_val_' + str(j) + '_' + str(i) + '_' + str(i) +'.csv'
+            if os.path.exists(ensemble_result_file_path) or (i != j):
+                print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
+                continue
+            print(ensemble_result_file_path)
+            ensemble_dl_ml_base_score_test(dl_result_file_path, ml_result_file_path, ensemble_model_file_path, ensemble_result_file_path)
+    # test
     for i in range(2):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(i) + '_' + str(i) + '.csv'
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                              '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_test_' + \
-                              str(i) + '_' + str(i) + '.csv'
+                              '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                              '_ftr_select_test_' + str(i) + '_' + str(i) + '.csv'
         for j in range(3):
-            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_'+ split_date_str + '_' + str(max_depth) + '_' + \
-                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_' + str(j) + '_lr.pkl'
-            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_' + str(j) + '_' + str(i) + '.csv'
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_'+ split_date_str + '_' + str(max_depth) + \
+                                       '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + \
+                                       ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + \
+                                        '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + \
+                                        ftr_num_str + '_t' + str(n_line_tail) + '_test_' + str(j) + '_' + str(i) + '_' + str(i) +'.csv'
             if os.path.exists(ensemble_result_file_path) or (i != j):
                 print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
                 continue
@@ -6631,7 +6672,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
-    augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
+    # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
     # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
