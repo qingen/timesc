@@ -5019,6 +5019,11 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     ###################### for train valid 8:2  bad augment * 180
     df_part1_0 = df_part1[df_part1['Y'] == 0]
     df_part1_1 = df_part3[df_part3['Y'] == 1]
+    #df_part1_0['CUSTOMER_ID'] = df_part1_0['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
+    #group_counts_0 = df_part1_0.groupby('CUSTOMER_ID').size()
+    #group_counts_1 = df_part1_1.groupby('CUSTOMER_ID').size()
+    #print('0-train',len(group_counts_0))
+    #print('1-train', len(group_counts_1))
     df_part1_1 = df_part1_1.groupby(['CUSTOMER_ID']).apply(
         lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
     print('df_part1_1.head:', df_part1_1.head(32))
@@ -5121,6 +5126,11 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     ###################### for test good:bad 100:1, good >= 2000  bad augment * 180
     df_part2_0 = df_part2[df_part2['Y'] == 0]
     df_part2_1 = df_part2[df_part2['Y'] == 1]
+    #df_part2_0['CUSTOMER_ID'] = df_part2_0['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
+    #group_counts_0 = df_part2_0.groupby('CUSTOMER_ID').size()
+    #group_counts_1 = df_part2_1.groupby('CUSTOMER_ID').size()
+    #print('0-test',len(group_counts_0))
+    #print('1-test', len(group_counts_1))
     df_part2_1 = df_part2_1.groupby(['CUSTOMER_ID']).apply(
         lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
     print('df_part2_1.head:', df_part2_1.head(32))
@@ -5837,12 +5847,10 @@ def ml_model_forward_ks_roc(model_file_path: str, result_file_path: str, dataset
     print(sorted_df.head(40))
 
     fpr, tpr, thresholds = metrics.roc_curve(y_labels, pred_val_prob, pos_label=1, )  # drop_intermediate=True
-    print('ks ={}, tpr ={}, fpr ={}', format(max(tpr - fpr),tpr,fpr))
-    #for i in range(tpr.shape[0]):
-        #print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
-        # if tpr[i] > 0.5:
-        #    print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
-        # break
+    print("ks =%f" % (max(tpr - fpr)))
+    for i in range(tpr.shape[0]):
+        if (tpr[i] - fpr[i] ) > (max(tpr - fpr)-0.0000001):
+            print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
     roc_auc = metrics.auc(fpr, tpr)
     plt.figure(figsize=(10, 10))
     plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
