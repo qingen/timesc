@@ -6551,6 +6551,85 @@ def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path
     joblib.dump(model, ensemble_model_file_path)
     print('train========done')
 
+def get_psi(result_file_path_a:str, result_file_path_b:str):
+    usecols = ['customerid', 'Y', 'prob', ]
+    if not os.path.exists(result_file_path_a):
+        print('a result file not exists:',result_file_path_a)
+        return
+    result_a = pd.read_csv(result_file_path_a, header=0, usecols=usecols, sep=',',encoding='gbk')
+    result_b = pd.read_csv(result_file_path_b, header=0, usecols=usecols, sep=',',encoding='gbk')
+
+    value_counts_a = result_a['Y'].value_counts()
+    count_1_a = value_counts_a.get(1, 0)
+    count_0_a = value_counts_a.get(0, 0)
+    value_counts_b = result_b['Y'].value_counts()
+    count_1_b = value_counts_b.get(1, 0)
+    count_0_b = value_counts_b.get(0, 0)
+    print(count_1_a,count_1_b)
+    if count_1_a > count_1_b:
+        result_a_0 = result_a[result_a['Y'] == 0]
+        result_a_1 = result_a[result_a['Y'] == 1]
+
+        selected_groups = result_a_0['customerid'].drop_duplicates().sample(n=count_0_b, random_state=int(count_0_b))
+        result_a_0_selected = result_a_0.groupby('customerid').apply(
+            lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
+        result_a_0_selected = result_a_0_selected.dropna(subset=['Y'])
+        selected_groups = result_a_1['customerid'].drop_duplicates().sample(n=count_1_b, random_state=int(count_1_b))
+        result_a_1_selected = result_a_1.groupby('customerid').apply(
+            lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
+        result_a_1_selected = result_a_1_selected.dropna(subset=['Y'])
+        result_a = pd.concat([result_a_0_selected, result_a_1_selected])
+
+    else:
+        result_b_0 = result_b[result_b['Y'] == 0]
+        result_b_1 = result_b[result_b['Y'] == 1]
+
+        selected_groups = result_b_0['customerid'].drop_duplicates().sample(n=count_0_a, random_state=int(count_0_a))
+        result_b_0_selected = result_b_0.groupby('customerid').apply(
+            lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
+        result_b_0_selected = result_b_0_selected.dropna(subset=['Y'])
+        selected_groups = result_b_1['customerid'].drop_duplicates().sample(n=count_1_a, random_state=int(count_1_a))
+        result_b_1_selected = result_b_1.groupby('customerid').apply(
+            lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
+        result_b_1_selected = result_b_1_selected.dropna(subset=['Y'])
+        result_b = pd.concat([result_b_0_selected, result_b_1_selected])
+
+    print('result_a.shape: ', result_a.shape)
+    print('result_b.shape: ', result_b.shape)
+
+    ytr_prob_psi = result_a['prob']
+    yte_prob_psi = result_b['prob']
+
+    num = 10
+    part = 1 / (num + 0.0)
+    intervals_1 = {'{}-{}'.format(part * x, part * (x + 1)): 0 for x in range(num)}
+    for pp in list(ytr_prob_psi):
+        for interval in intervals_1:
+            start, end = tuple(interval.split('-'))
+            if float(start) <= pp <= float(end):
+                intervals_1[interval] += 1
+                break
+    intervals_2 = {'{}-{}'.format(part * x, part * (x + 1)): 0 for x in range(num)}
+    for pp in yte_prob_psi:
+        for interval in intervals_2:
+            start, end = tuple(interval.split('-'))
+            if float(start) <= pp <= float(end):
+                intervals_2[interval] += 1
+                break
+    print(intervals_1)
+    print(intervals_2)
+    psi_list = []
+    len1 = len(ytr_prob_psi)
+    len2 = len(yte_prob_psi)
+    for interval in intervals_1:
+        pct_1 = intervals_1[interval] / (len1 + 0.0)
+        pct_2 = intervals_2[interval] / (len2 + 0.0)
+        psi_list.append((pct_2 - pct_1) * math.log((pct_2 + 0.0001) / (pct_1 + 0.0001), math.e))
+    print(psi_list)
+    psi = sum(psi_list)
+    print('psi = ', psi)
+    return psi
+
 def ensemble_dl_ml_base_score_test(dl_result_file_path:str, ml_result_file_path:str, ensemble_model_file_path:str,ensemble_result_file_path:str):
     usecols = ['customerid', 'Y', 'prob', ]
     if not os.path.exists(dl_result_file_path):
@@ -6611,7 +6690,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
             continue
         ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,lc_c[i])
     # model infer
-    # train
+    # train set
     for i in range(3):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(i) + '_' + str(i) + '.csv'
@@ -6630,7 +6709,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                 continue
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path, ml_result_file_path, ensemble_model_file_path, ensemble_result_file_path)
-    # val
+    # val set
     for i in range(3):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_val_aug_' + str(i) + '_' + str(i) + '.csv'
@@ -6649,7 +6728,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                 continue
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path, ml_result_file_path, ensemble_model_file_path, ensemble_result_file_path)
-    # test
+    # test set
     for i in range(2):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(i) + '_' + str(i) + '.csv'
@@ -6668,6 +6747,10 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                 continue
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
+            ensemble_result_file_path_val = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + \
+                                        '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + \
+                                        ftr_num_str + '_t' + str(n_line_tail) + '_val_' + str(j) + '_' + str(i) + '_' + str(i) + '.csv'
+            get_psi(ensemble_result_file_path, ensemble_result_file_path_val)
 
 if __name__ == '__main__':
     # train_occur_for_report()
@@ -6680,7 +6763,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
     # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
-    # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
+    ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
