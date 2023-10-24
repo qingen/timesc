@@ -4894,9 +4894,8 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
                          encoding='gbk')
     df16_1 = pd.read_csv("./data/0825_train/occur/2016_1_7_202308251331.csv", header=0, usecols=usecols, sep=',',
                          encoding='gbk')
-    usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30',]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
-    df_credit = pd.read_csv("./data/0825_train/credit/202309221506.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
+    usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30',]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'  202309221506
+    df_credit = pd.read_csv("./data/0825_train/credit/202310241019.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
 
     df_16_18 = pd.concat([df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4])
     df_19_20 = pd.concat([df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4])
@@ -4987,7 +4986,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     n_line_head = 30  # = tail
 
     step = 5
-    date_str = datetime(2023, 10, 10).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 24).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8  # 1/5
@@ -6744,9 +6743,9 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                                         ftr_num_str + '_t' + str(n_line_tail) + '_test_' + str(j) + '_' + str(i) + '_' + str(i) +'.csv'
             if os.path.exists(ensemble_result_file_path) or (i != j):
                 print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
-                continue
+                #continue
             print(ensemble_result_file_path)
-            ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
+            #ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
             ensemble_result_file_path_val = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + \
                                         '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + \
                                         ftr_num_str + '_t' + str(n_line_tail) + '_val_' + str(j) + '_' + str(i) + '_' + str(i) + '.csv'
@@ -6763,7 +6762,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
     # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
-    ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
+    # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
