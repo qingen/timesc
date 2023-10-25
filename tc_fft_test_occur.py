@@ -700,7 +700,7 @@ def ensemble_predict():
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
-                break
+                continue
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
 
     for i in range(len(label_list_all)):
@@ -726,7 +726,7 @@ def ensemble_predict():
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
-                break
+                continue
             df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_all_part, usecols, select_cols, fdr_level)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))

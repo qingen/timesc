@@ -5346,7 +5346,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
                                   '_fl_aug_' + str(0) + '.itc'  # default 0
                 j = 0
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
-                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_val_aug_' + '_' + str(j) + \
+                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_val_aug_' + str(j) + \
                                '_' + str(i) + '.csv'
             print(result_file_path)
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_val[i], label_list_val[i], customersid_list_val[i])
@@ -5368,7 +5368,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
                                   '_fl_aug_' + str(0) + '.itc'  # default 0
                 j = 0
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
-                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + '_' + str(j) + \
+                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(j) + \
                                '_' + str(i) + '.csv'
             print(result_file_path)
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_test[i], label_list_test[i], customersid_list_test[i])
