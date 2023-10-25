@@ -686,7 +686,7 @@ def ensemble_predict():
                                                                                                     cluster_model_file,
                                                                                                     cluster_less_train_num)
     for i in range(len(label_list_all)):
-        for j in range(3):
+        for j in range(len(label_list_all)):
             model_file_path = './model/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + \
                               str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                               '_fl_aug_' + str(j) + '.itc'
@@ -699,14 +699,14 @@ def ensemble_predict():
                                '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, so no more infer.'.format(result_file_path))
-                continue
+                print('{} already exists, but still infer.'.format(result_file_path))
+                #continue
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
 
     for i in range(len(label_list_all)):
         df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
 
-        for j in range(3):
+        for j in range(len(label_list_all)):
             model_file_path = './model/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
                               str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + \
                               '_t' + str(n_line_tail) + '_ftr_select_' + str(j) + '.pkl'
@@ -725,28 +725,33 @@ def ensemble_predict():
                                '_ftr_select_predict_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, so no more infer.'.format(result_file_path))
-                continue
+                print('{} already exists, but still infer.'.format(result_file_path))
+                #continue
             df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_all_part, usecols, select_cols, fdr_level)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
-    for i in range(2):
+    for i in range(len(label_list_all)):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + str(i) + '_' + str(i) + '.csv'
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                              '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_ftr_select_predict_' + \
-                              str(i) + '_' + str(i) + '.csv'
-        for j in range(3):
-            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_'+ split_date_str + '_' + str(max_depth) + '_' + \
-                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_' + str(j) + '_lr.pkl'
-            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                          '_predict_' + str(j) + '_' + str(i) + '.csv'
+                              '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                              '_ftr_select_predict_' + str(i) + '_' + str(i) + '.csv'
+        for j in range(len(label_list_all)):
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[j]) + '_'+ split_date_str + '_' + str(max_depth) + '_' + \
+                                    str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) +'_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
+                                    str(n_line_tail) + '_' + str(j) + '_lr.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[j]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                                    str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_'+str(fdr_level) +  '_ftr_' + ftr_num_str + '_t' + \
+                                    str(n_line_tail) + '_predict_' + str(j) + '_' + str(i) + '.csv'
+            if not os.path.exists(ensemble_model_file_path):
+                ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(max_depth) + \
+                                           '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + \
+                                           ftr_num_str + '_t' + str(n_line_tail) + '_' + str(0) + '_lr.pkl'   # default 0
+                j = 0
             if os.path.exists(ensemble_result_file_path) or (i != j):
-                print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
-                continue
+                print('{} already exists, but still infer.'.format(ensemble_result_file_path))
+                #continue
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
 
