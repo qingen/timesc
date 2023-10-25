@@ -501,9 +501,9 @@ def ensemble_predict():
     df23_2 = pd.read_csv("./data/0720_2639/2023_5_6_202309081528.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     df23_3 = pd.read_csv("./data/0720_2639/2023_6_7_202309081530.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     df23_4 = pd.read_csv("./data/0720_2639/2023_7_8_202309081532.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
-    df23_5 = pd.read_csv("./data/0720_2639/2023_8_202309081535.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
-    credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30',]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
-    df_credit = pd.read_csv("./data/0825_train/credit/202309221506.csv", header=0, usecols=credit_usecols, sep=',',encoding='gbk')
+    df23_5 = pd.read_csv("./data/0720_2639/2023_8_202310241410.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30',]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30' 2023_8_202310241410
+    df_credit = pd.read_csv("./data/0720_2639/credit/202310241401.csv", header=0, usecols=credit_usecols, sep=',',encoding='gbk')
 
     df_all = pd.concat([df23_1, df23_2, df23_3, df23_4, df23_5])
     del  df23_1, df23_2, df23_3, df23_4, df23_5
@@ -559,7 +559,7 @@ def ensemble_predict():
     n_estimators = 100 # 50 100
     class_weight =  'balanced' # 'balanced'  None
     lc_c = [0.2, 0.02, 0.02]  # 0.02 -> 1  0.2-> 0
-    fdr_level = 0.02 # 0.05(default)  0.04 0.03 0.02 0.01
+    fdr_level = 0.05 # 0.05(default)  0.04 0.03 0.02 0.01
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_' + str(ftr_good_year_split) + '_' + date_str + '/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 200
@@ -593,12 +593,14 @@ def ensemble_predict():
         size = len(group)
         # 循环切片生成新的组
         for i in range(0, size, step):  # range(0,size,2)
-            start_position = i
-            end_position = i + batch_size
+            start_position = size - i - batch_size
+            if start_position < 0:
+                break
+            end_position = size - i
             # 获取当前组的一部分数据
             batch = group.iloc[start_position:end_position].copy()
             # 修改组名
-            batch['CUSTOMER_ID'] = f'{group.iloc[i]["CUSTOMER_ID"]}_{i + 1}'
+            batch['CUSTOMER_ID'] = f'{group.iloc[i]["CUSTOMER_ID"]}_{i}'
             # 将切片后的数据添加到新的组列表中
             new_groups.append(batch)
         # 将新的组数据合并为一个 DataFrame
