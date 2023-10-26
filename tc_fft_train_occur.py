@@ -5376,6 +5376,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
 from tsfresh import extract_features, extract_relevant_features, select_features
 from tsfresh.utilities.dataframe_functions import impute
 from tsfresh.feature_extraction import ComprehensiveFCParameters
+from tsfresh.feature_selection.relevance import calculate_relevance_table
 
 from lightgbm import plot_importance
 from lightgbm import LGBMClassifier
@@ -5645,7 +5646,7 @@ def tsfresh_test():
     # 打印划分结果
     for indices in split_indices:
         df_part = pd.concat([splitted_data[i] for i in indices])
-        X_part = extract_features(df_part[col], column_id='CUSTOMER_ID', column_sort='RDATE',
+        X_part = extract_features(df_part[col], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
                              default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
         X = pd.concat([X, X_part])
 
@@ -5655,8 +5656,14 @@ def tsfresh_test():
     y = df_train.loc[:, ['CUSTOMER_ID','Y']].drop_duplicates().reset_index(drop=True)
     y_train = np.array(y['Y'])
     print(len(X),y.head(),len(y))
+    relevance_table = calculate_relevance_table(X, y_train,ml_task='classification')
+    print(relevance_table)
+    select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:59]['feature'].values
+    print(select_feats)
+    return
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     X_filtered = select_features(X, y_train,fdr_level=0.04)  # chunksize=10,n_jobs=8,fdr_level=0.05
+
     print(X_filtered.columns)
     select_cols = X_filtered.columns.tolist()
     merged = pd.merge(X_filtered, y, left_index=True, right_index=True)
@@ -6651,7 +6658,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
 
     n_line_tail = 30  # (1-5) * 30
     step = 5
-    date_str = datetime(2023, 10, 10).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 24).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '91'
     ftr_good_year_split = 2017
@@ -6728,7 +6735,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path, ml_result_file_path, ensemble_model_file_path, ensemble_result_file_path)
     # test set
-    for i in range(2):
+    for i in range(3):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(i) + '_' + str(i) + '.csv'
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
@@ -6743,9 +6750,9 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                                         ftr_num_str + '_t' + str(n_line_tail) + '_test_' + str(j) + '_' + str(i) + '_' + str(i) +'.csv'
             if os.path.exists(ensemble_result_file_path) or (i != j):
                 print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
-                #continue
+                continue
             print(ensemble_result_file_path)
-            #ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
+            ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
             ensemble_result_file_path_val = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + \
                                         '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + \
                                         ftr_num_str + '_t' + str(n_line_tail) + '_val_' + str(j) + '_' + str(i) + '_' + str(i) + '.csv'
@@ -6764,5 +6771,5 @@ if __name__ == '__main__':
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
     # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
-    augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
-    # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
+    # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
+    ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
