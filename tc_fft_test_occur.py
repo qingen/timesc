@@ -545,7 +545,7 @@ def ensemble_predict():
     n_line_head = 30  # = tail
 
     step = 5
-    date_str = datetime(2023, 10, 10).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 24).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8  # 1/5
@@ -558,7 +558,7 @@ def ensemble_predict():
     num_leaves = 7 # 3 7 15 31
     n_estimators = 100 # 50 100
     class_weight =  'balanced' # 'balanced'  None
-    lc_c = [0.2, 0.02, 0.02]  # 0.02 -> 1  0.2-> 0
+    lc_c = [0.02, 0.2, 0.2]  #
     fdr_level = 0.05 # 0.05(default)  0.04 0.03 0.02 0.01
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_' + str(ftr_good_year_split) + '_' + date_str + '/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
@@ -573,15 +573,18 @@ def ensemble_predict():
 
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230901)
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
-    print('df_all.shape:', df_all.shape)
+    print('1 df_all.shape:', df_all.shape)
 
-    selected_groups = df_all['CUSTOMER_ID'].drop_duplicates().sample(n=100)
+    df_all = df_all[df_all['CUSTOMER_ID'].isin(['SMCRWSQ2206', 'SMCRWSQ200U'])]
+    print('2 df_all.shape:', df_all.shape)
+
+    # selected_groups = df_all['CUSTOMER_ID'].drop_duplicates().sample(n=100)
     # 获取每个选中组的所有样本
-    df_all_selected = df_all.groupby('CUSTOMER_ID').apply(lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
-    df_all = df_all_selected.dropna(subset=['Y'])
-    print('df_all_selected.shape:', df_all.shape)
-
-
+    # df_all_selected = df_all.groupby('CUSTOMER_ID').apply(lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
+    # df_all = df_all_selected.dropna(subset=['Y'])
+    # print('df_all_selected.shape:', df_all.shape)
+    # 'SMCRWSQ2206' 'SMCRWSQ200U'
+    # selected_rows = df_all[df_all['CUSTOMER_ID'].isin(['SMCRWSQ2206', 'SMCRWSQ200U'])]
 
     df_all = df_all.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
 
@@ -678,13 +681,13 @@ def ensemble_predict():
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('4 group data:', formatted_time)
-
+    # cluster_less_train_num
     tsdataset_list_all, label_list_all, customersid_list_all = ts2vec_cluster_datagroup_model(tsdatasets_all,
                                                                                                     y_all,
                                                                                                     y_all_customerid,
                                                                                                     cluster_model_path,
                                                                                                     cluster_model_file,
-                                                                                                    cluster_less_train_num)
+                                                                                                    1)
     for i in range(len(label_list_all)):
         for j in range(len(label_list_all)):
             model_file_path = './model/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + \
@@ -754,8 +757,6 @@ def ensemble_predict():
                 #continue
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
-
-    return
 
 if __name__ == '__main__':
     # test_for_report()
