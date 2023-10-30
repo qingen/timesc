@@ -5614,7 +5614,7 @@ def tsfresh_test():
     # fill nan with 0
     df_all.fillna(0, inplace=True)
 
-    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230601) # 18 23
+    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20220601) # 18 23
     df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230701)  # for test
 
     df_part2_0 = df_part2[df_part2['Y'] == 0]
@@ -5650,16 +5650,18 @@ def tsfresh_test():
                              default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
         X = pd.concat([X, X_part])
 
-    print(X.head(2))
-    print(X.columns.tolist())
+    #print(X.head(2))
+    #print(X.columns.tolist())
     impute(X)
+    X = X.reset_index(drop=True)
     y = df_train.loc[:, ['CUSTOMER_ID','Y']].drop_duplicates().reset_index(drop=True)
     y_train = np.array(y['Y'])
-    print(len(X),y.head(),len(y))
-    relevance_table = calculate_relevance_table(X, y_train,ml_task='classification')
-    print(relevance_table.iloc[:5,:5])
+    print(X.iloc[:5,:5],len(X),len(X.columns.tolist()),y.head(),len(y))
+    relevance_table = calculate_relevance_table(X, y.loc[:,'Y'],ml_task='classification')  # y_train
+    print(relevance_table.iloc[:50,:5])
     print('='*16)
-    select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:19]['feature'].values
+    # select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:19]['feature'].values
+    select_feats = relevance_table.sort_values('p_value', ascending=True).iloc[:19]
     print(select_feats)
     print('end=========')
     return
