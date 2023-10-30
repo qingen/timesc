@@ -4992,8 +4992,8 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     filter_num_ratio = 1 / 8  # 1/5
     ftr_good_year_split = 2017
     ########## model
-    epochs = 10  # 20
-    patiences = 5  # 10
+    epochs = 4  # 20  10
+    patiences = 2  # 10  5
     kernelsize = 16  # 16
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
@@ -5614,7 +5614,7 @@ def tsfresh_test():
     # fill nan with 0
     df_all.fillna(0, inplace=True)
 
-    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20180101)
+    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230601) # 18 23
     df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230701)  # for test
 
     df_part2_0 = df_part2[df_part2['Y'] == 0]
@@ -5657,9 +5657,11 @@ def tsfresh_test():
     y_train = np.array(y['Y'])
     print(len(X),y.head(),len(y))
     relevance_table = calculate_relevance_table(X, y_train,ml_task='classification')
-    print(relevance_table)
-    select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:59]['feature'].values
+    print(relevance_table.iloc[:5,:5])
+    print('='*16)
+    select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:19]['feature'].values
     print(select_feats)
+    print('end=========')
     return
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     X_filtered = select_features(X, y_train,fdr_level=0.04)  # chunksize=10,n_jobs=8,fdr_level=0.05
@@ -6665,8 +6667,8 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     ftr_num_str = '91'
     ftr_good_year_split = 2017
     ########## model
-    epochs = 20
-    patiences = 10  # 10
+    epochs = 5
+    patiences = 2  # 10
     kernelsize = 16
     max_depth = 3 # 2 3  -1
     num_leaves = 7 # 3 7  31
@@ -6690,9 +6692,9 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                               '_ftr_select_train_' + str(i) + '_' + str(i) + '.csv'
-        ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                          str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
-                          str(n_line_tail) + '_' + str(i) + '_lr.pkl'
+        ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                   str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
+                                   str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(i) + '_lr.pkl'
         if os.path.exists(ensemble_model_file_path):
             print('{} already exists, so no more train.'.format(ensemble_model_file_path))
             continue
@@ -6706,12 +6708,13 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                               '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
                               str(n_line_tail) + '_ftr_select_train_' + str(i) + '_' + str(i) + '.csv'
         for j in range(3):
-            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                                       str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + \
-                                       '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
-            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                                        str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + \
-                                        '_t' + str(n_line_tail) + '_train_' + str(j) + '_' + str(i) +'_' + str(i)+ '.csv'
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                       str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
+                                       str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                       str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
+                                        str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_train_' + \
+                                        str(j) + '_' + str(i) +'_' + str(i)+ '.csv'
             if os.path.exists(ensemble_result_file_path) or (i != j):
                 print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
                 continue
@@ -6725,12 +6728,13 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                               '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
                               str(n_line_tail) + '_ftr_select_val_' + str(i) + '_' + str(i) + '.csv'
         for j in range(3):
-            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + \
-                                       '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + \
-                                       ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
-            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + \
-                                        '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + \
-                                        ftr_num_str + '_t' + str(n_line_tail) + '_val_' + str(j) + '_' + str(i) + '_' + str(i) +'.csv'
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                       str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
+                                       str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                        str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
+                                        str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_val_' + \
+                                        str(j) + '_' + str(i) + '_' + str(i) + '.csv'
             if os.path.exists(ensemble_result_file_path) or (i != j):
                 print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
                 continue
@@ -6744,20 +6748,22 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                               '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                               '_ftr_select_test_' + str(i) + '_' + str(i) + '.csv'
         for j in range(3):
-            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_'+ split_date_str + '_' + str(max_depth) + \
-                                       '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + \
-                                       ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
-            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + \
-                                        '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + \
-                                        ftr_num_str + '_t' + str(n_line_tail) + '_test_' + str(j) + '_' + str(i) + '_' + str(i) +'.csv'
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                       str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
+                                       str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
+            ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                        str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
+                                        str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_test_' + \
+                                        str(j) + '_' + str(i) + '_' + str(i) + '.csv'
             if os.path.exists(ensemble_result_file_path) or (i != j):
                 print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
                 continue
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
-            ensemble_result_file_path_val = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[i]) + '_' + split_date_str + '_' + str(max_depth) + \
-                                        '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + \
-                                        ftr_num_str + '_t' + str(n_line_tail) + '_val_' + str(j) + '_' + str(i) + '_' + str(i) + '.csv'
+            ensemble_result_file_path_val = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                        str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
+                                        str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_val_' + \
+                                        str(j) + '_' + str(i) + '_' + str(i) + '.csv'
             get_psi(ensemble_result_file_path, ensemble_result_file_path_val)
 
 if __name__ == '__main__':
@@ -6771,7 +6777,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
-    # tsfresh_test()
+    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    tsfresh_test()
     # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
     # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()

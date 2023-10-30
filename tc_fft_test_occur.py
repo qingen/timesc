@@ -551,8 +551,8 @@ def ensemble_predict():
     filter_num_ratio = 1 / 8  # 1/5
     ftr_good_year_split = 2017
     ########## model cnn dt
-    epochs = 20
-    patiences = 10  # 10
+    epochs = 5
+    patiences = 2  # 10
     kernelsize = 16
     max_depth = 3 # 2 3 4 5
     num_leaves = 7 # 3 7 15 31
@@ -699,7 +699,8 @@ def ensemble_predict():
                                   '_fl_aug_' + str(0) + '.itc'  # default 0
                 j = 0
             result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
-                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + str(j) + '_' + str(i) + '.csv'
+                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + \
+                               str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, but still infer.'.format(result_file_path))
@@ -741,16 +742,16 @@ def ensemble_predict():
                               '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                               '_ftr_select_predict_' + str(i) + '_' + str(i) + '.csv'
         for j in range(len(label_list_all)):
-            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[j]) + '_'+ split_date_str + '_' + str(max_depth) + '_' + \
-                                    str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) +'_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
-                                    str(n_line_tail) + '_' + str(j) + '_lr.pkl'
+            ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[j]) + '_'+ split_date_str + '_' + str(epochs) + '_' + \
+                                       str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + \
+                                       '_' + str(class_weight) +'_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
             ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[j]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
                                     str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_'+str(fdr_level) +  '_ftr_' + ftr_num_str + '_t' + \
                                     str(n_line_tail) + '_predict_' + str(j) + '_' + str(i) + '.csv'
             if not os.path.exists(ensemble_model_file_path):
-                ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(max_depth) + \
-                                           '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + \
-                                           ftr_num_str + '_t' + str(n_line_tail) + '_' + str(0) + '_lr.pkl'   # default 0
+                ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
+                                    str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + \
+                                    '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(0) + '_lr.pkl'   # default 0
                 j = 0
             if os.path.exists(ensemble_result_file_path) or (i != j):
                 print('{} already exists, but still infer.'.format(ensemble_result_file_path))
