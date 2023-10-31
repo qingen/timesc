@@ -5616,7 +5616,7 @@ def tsfresh_test():
     # fill nan with 0
     df_all.fillna(0, inplace=True)
 
-    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20220601) # 18 23
+    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230401) # 18 23
     df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230701)  # for test
 
     df_part2_0 = df_part2[df_part2['Y'] == 0]
@@ -5629,7 +5629,6 @@ def tsfresh_test():
     df_train = pd.concat([df_part2_0, df_part2_1])
     print('df_train.shape:', df_train.shape)
 
-    extraction_settings = ComprehensiveFCParameters()
     col.append('CUSTOMER_ID')
     col.append('RDATE')
 
@@ -5645,10 +5644,11 @@ def tsfresh_test():
     split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data)
     X = pd.DataFrame()
     # 打印划分结果
-    top_ftr_num = 190
+    top_ftr_num = 3
     kind_to_fc_parameters_file_path = './model/kind_to_fc_parameters_top'+str(top_ftr_num)+'.npy'
     saved_kind_to_fc_parameters = None
     if os.path.exists(kind_to_fc_parameters_file_path):
+        print('kind_to_fc_parameters_file exists, so load it, other than calculate_relevance_table')
         saved_kind_to_fc_parameters = np.load(kind_to_fc_parameters_file_path, allow_pickle='TRUE').item()
     for indices in split_indices:
         df_part = pd.concat([splitted_data[i] for i in indices])
@@ -5656,37 +5656,36 @@ def tsfresh_test():
                              kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=8,
         X = pd.concat([X, X_part])
     impute(X)
-    X = X.reset_index(drop=True)
+    # X = X.reset_index(drop=True)
+    print('X.shape:', X.shape)
     y = df_train.loc[:, ['CUSTOMER_ID','Y']].drop_duplicates().reset_index(drop=True)
-    y_train = np.array(y['Y'])
-    print(X.iloc[:5,:5],len(X),len(X.columns.tolist()),y.head(),len(y))
+    print(X.iloc[:5,:3],len(X),len(X.columns.tolist()),y.iloc[:5, :],len(y))
     if saved_kind_to_fc_parameters == None:
-        relevance_table = calculate_relevance_table(X, y.loc[:,'Y'],ml_task='classification')  # y_train
+        print('kind_to_fc_parameters_file not exists, so calculate it by calculate_relevance_table')
+        relevance_table = calculate_relevance_table(X, np.array(y.loc[:,'Y']),ml_task='classification')
         print(relevance_table.iloc[:5,:5])
-        print('start=========')
-        print('select_feats.shape', relevance_table[relevance_table.relevant].shape)
+        print('p_value start=========')
+        print('relevance_table[true].shape', relevance_table[relevance_table.relevant].shape)
         select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:top_ftr_num]['feature'].values
+        print('select_feats:', select_feats)
+
         kind_to_fc_parameters = feature_extraction.settings.from_columns(X[select_feats])
         print('kind_to_fc_parameters:', kind_to_fc_parameters)
         np.save(kind_to_fc_parameters_file_path, kind_to_fc_parameters)
-        print('end=========')
-    saved_kind_to_fc_parameters = np.load('./kind_to_fc_parameters_top190.npy', allow_pickle='TRUE').item()
-    X_part = extract_features(df_part[col], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
-                     kind_to_fc_parameters=saved_kind_to_fc_parameters)
-    print('X_part.shape:',X_part.shape)
-    return
-    # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
-    # X_filtered = select_features(X, y_train,fdr_level=0.04)  # chunksize=10,n_jobs=8,fdr_level=0.05
-    X_filtered =
-    print(X_filtered.columns)
-    select_cols = X_filtered.columns.tolist()
-    merged = pd.merge(X_filtered, y, left_index=True, right_index=True)
-    print(merged.head())
-    # 第二个数值是有多少个特征(列)，第一个数值是有多少行
-    print("原始数据：", len(df_train[col]), len(df_train[col].columns))
-    print("特征提取之后：", len(X), len(X.columns))
-    print("特征选择之后:", len(X_filtered), len(X_filtered.columns))
-    print("特征选择之后,合并customerid，y列之后:", len(merged), len(merged.columns))
+        X = X.loc[:, select_feats]
+        print('X.shape:', X.shape)
+        print('p_value end=========')
+
+    print('head X:', X.iloc[:2, :3])
+    X.reset_index(inplace=True)
+    X.rename(columns={'index': 'CUSTOMER_ID'}, inplace=True)
+    print('head X_filtered after  rename:', X.iloc[:2, :3])
+    merged = pd.merge(X, y, on=['CUSTOMER_ID'])
+    # merged = pd.concat([X_filtered, y], axis=1) # 按列进行连接
+    print('merge head:', merged.iloc[:1, :5])
+    print('merge tail:', merged.iloc[:1, -5:])
+    print("特征选择之后:", len(X), len(X.columns))
+    print("特征选择之后,合并 CUSTOMER_ID，Y 列之后:", len(merged), len(merged.columns))
 
     if 0:
         ts_x_trains = TSDataset.load_from_dataframe(
@@ -5793,29 +5792,34 @@ def tsfresh_test():
             print(y_test[i], y_prob[i])
 
     if 1:
-        X_full_train, X_full_test, y_train, y_test = train_test_split(X, y_train, test_size=.4, random_state=4)
-        model = CatBoostClassifier(
-            custom_loss=[metrics.Accuracy()],  # 该指标可以计算logloss，并且在该规模的数据集上更加光滑
+        X_train, X_test, y_train, y_test = train_test_split(X, np.array(y.loc[:,'Y']), test_size=.4, random_state=4)
+        X_valid, X_test, y_valid, y_test = train_test_split(X_test, y_test, test_size=.5, random_state=5)
+        cbc = CatBoostClassifier(
+            custom_metric=['AUC', 'Accuracy'],  # metrics.Accuracy() 该指标可以计算logloss，并且在该规模的数据集上更加光滑
             random_seed=4,
-            logging_level='Silent'
+            logging_level='Silent',
+            loss_function='CrossEntropy'
         )
         # 模型训练
-        model.fit(
+        cbc.fit(
             X_train, y_train,
             #cat_features=categorical_features_indices,
-            eval_set=(X_validation, y_validation),
+            eval_set=(X_valid, y_valid),
             logging_level='Verbose',  # you can uncomment this for text output
             plot=True
         );
-
-        X_filtered_train, X_filtered_test = X_full_train[X_filtered.columns], X_full_test[X_filtered.columns]
-        lc = LGBMClassifier(max_depth=2, num_leaves=3, n_estimators=50, reg_lambda=1, reg_alpha=1,
-                                objective='binary', seed=3)
-
-        model = lc.fit(X_filtered_train, y_train)
         # 保存
-        joblib.dump(model, "lgbm_model.pkl")
-        # 显示重要特征
+        cbc.save_model('catboost_model.bin')
+        cbc.load_model('catboost_model.bin')
+        print(cbc.get_params())
+        print(cbc.random_seed_)
+        predictions = cbc.predict(X_test)
+        predictions_probs = cbc.predict_proba(X_test)
+        print(predictions[:10])
+        print(predictions_probs[:10])
+        cbc.get_feature_importance(prettified=True)
+        return
+
         plot_importance(model,max_num_features=10,xlim=(0,20))
         plt.show()
         importance = model.booster_.feature_importance(importance_type='gain')
