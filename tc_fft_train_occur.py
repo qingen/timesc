@@ -4992,7 +4992,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     filter_num_ratio = 1 / 8  # 1/5
     ftr_good_year_split = 2017
     ########## model
-    epochs = 4  # 20  10
+    epochs = 3  # 20  10
     patiences = 2  # 10  5
     kernelsize = 16  # 16
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
@@ -5373,7 +5373,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
             print(result_file_path)
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_test[i], label_list_test[i], customersid_list_test[i])
 
-from tsfresh import extract_features, extract_relevant_features, select_features
+from tsfresh import extract_features, extract_relevant_features, select_features, feature_extraction
 from tsfresh.utilities.dataframe_functions import impute
 from tsfresh.feature_extraction import ComprehensiveFCParameters
 from tsfresh.feature_selection.relevance import calculate_relevance_table
@@ -5659,11 +5659,16 @@ def tsfresh_test():
     print(X.iloc[:5,:5],len(X),len(X.columns.tolist()),y.head(),len(y))
     relevance_table = calculate_relevance_table(X, y.loc[:,'Y'],ml_task='classification')  # y_train
     print(relevance_table.iloc[:50,:5])
-    print('='*16)
+    print('start='*16)
     # select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:19]['feature'].values
-    select_feats = relevance_table.sort_values('p_value', ascending=True).iloc[:19]
-    print(select_feats)
+    select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:190]
+    print('select_feats',select_feats)
+    print('select_feats.values',select_feats.values)
+    print('select_feats.shape',relevance_table[relevance_table.relevant].shape)
     print('end=========')
+    kind_to_fc_parameters = feature_extraction.settings.from_columns(X[select_feats.values])  # 抽取选择后的特征配置
+    print('kind_to_fc_parameters:',kind_to_fc_parameters)
+    np.save('../kind_to_fc_parameters_top190.npy', kind_to_fc_parameters)
     return
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     X_filtered = select_features(X, y_train,fdr_level=0.04)  # chunksize=10,n_jobs=8,fdr_level=0.05
@@ -6779,7 +6784,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
-    tsfresh_test()
+    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    # tsfresh_test()
     # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
     # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
