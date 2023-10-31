@@ -5389,6 +5389,8 @@ from sklearn.metrics import classification_report
 import joblib
 import json
 
+from catboost import CatBoostClassifier, Pool, metrics, cv
+
 def tsfresh_test():
     usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
@@ -5627,7 +5629,6 @@ def tsfresh_test():
     df_train = pd.concat([df_part2_0, df_part2_1])
     print('df_train.shape:', df_train.shape)
 
-
     extraction_settings = ComprehensiveFCParameters()
     col.append('CUSTOMER_ID')
     col.append('RDATE')
@@ -5644,35 +5645,39 @@ def tsfresh_test():
     split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data)
     X = pd.DataFrame()
     # 打印划分结果
+    top_ftr_num = 190
+    kind_to_fc_parameters_file_path = './model/kind_to_fc_parameters_top'+str(top_ftr_num)+'.npy'
+    saved_kind_to_fc_parameters = None
+    if os.path.exists(kind_to_fc_parameters_file_path):
+        saved_kind_to_fc_parameters = np.load(kind_to_fc_parameters_file_path, allow_pickle='TRUE').item()
     for indices in split_indices:
         df_part = pd.concat([splitted_data[i] for i in indices])
         X_part = extract_features(df_part[col], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
-                             default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
+                             kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=8,
         X = pd.concat([X, X_part])
-
-    #print(X.head(2))
-    #print(X.columns.tolist())
     impute(X)
     X = X.reset_index(drop=True)
     y = df_train.loc[:, ['CUSTOMER_ID','Y']].drop_duplicates().reset_index(drop=True)
     y_train = np.array(y['Y'])
     print(X.iloc[:5,:5],len(X),len(X.columns.tolist()),y.head(),len(y))
-    relevance_table = calculate_relevance_table(X, y.loc[:,'Y'],ml_task='classification')  # y_train
-    print(relevance_table.iloc[:50,:5])
-    print('start='*16)
-    # select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:19]['feature'].values
-    select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:190]
-    print('select_feats',select_feats)
-    print('select_feats.values',select_feats.values)
-    print('select_feats.shape',relevance_table[relevance_table.relevant].shape)
-    print('end=========')
-    kind_to_fc_parameters = feature_extraction.settings.from_columns(X[select_feats.values])  # 抽取选择后的特征配置
-    print('kind_to_fc_parameters:',kind_to_fc_parameters)
-    np.save('../kind_to_fc_parameters_top190.npy', kind_to_fc_parameters)
+    if saved_kind_to_fc_parameters == None:
+        relevance_table = calculate_relevance_table(X, y.loc[:,'Y'],ml_task='classification')  # y_train
+        print(relevance_table.iloc[:5,:5])
+        print('start=========')
+        print('select_feats.shape', relevance_table[relevance_table.relevant].shape)
+        select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:top_ftr_num]['feature'].values
+        kind_to_fc_parameters = feature_extraction.settings.from_columns(X[select_feats])
+        print('kind_to_fc_parameters:', kind_to_fc_parameters)
+        np.save(kind_to_fc_parameters_file_path, kind_to_fc_parameters)
+        print('end=========')
+    saved_kind_to_fc_parameters = np.load('./kind_to_fc_parameters_top190.npy', allow_pickle='TRUE').item()
+    X_part = extract_features(df_part[col], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
+                     kind_to_fc_parameters=saved_kind_to_fc_parameters)
+    print('X_part.shape:',X_part.shape)
     return
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
-    X_filtered = select_features(X, y_train,fdr_level=0.04)  # chunksize=10,n_jobs=8,fdr_level=0.05
-
+    # X_filtered = select_features(X, y_train,fdr_level=0.04)  # chunksize=10,n_jobs=8,fdr_level=0.05
+    X_filtered =
     print(X_filtered.columns)
     select_cols = X_filtered.columns.tolist()
     merged = pd.merge(X_filtered, y, left_index=True, right_index=True)
@@ -5708,7 +5713,7 @@ def tsfresh_test():
         print('load_network.predict_proba')
         print(preds)
 
-    if 1:
+    if 0:
         X_full_train, X_full_test, y_train, y_test = train_test_split(X, y_train, test_size=.4)
         # 进行特征选择（也可以直接使用特征选择后的数据而不用到这里再选择）
         X_filtered_train, X_filtered_test = X_full_train[X_filtered.columns], X_full_test[X_filtered.columns]
@@ -5718,6 +5723,94 @@ def tsfresh_test():
         # 决策树&随机森林
         # lr = tree.DecisionTreeClassifier(criterion="entropy", min_impurity_decrease=0.000001, class_weight={0:0.3, 1:0.7})
         # lr = RandomForestClassifier(n_estimators=100, criterion="entropy", min_impurity_decrease=0.00005, class_weight={0:0.2, 1:0.8})
+
+        model = lc.fit(X_filtered_train, y_train)
+        # 保存
+        joblib.dump(model, "lgbm_model.pkl")
+        # 显示重要特征
+        plot_importance(model,max_num_features=10,xlim=(0,20))
+        plt.show()
+        importance = model.booster_.feature_importance(importance_type='gain')
+        ftr_name = model.booster_.feature_name()
+        print('len importance:',len(importance))
+        importance_dict = {}
+        x_list = []
+        for x_n, im in zip(list(ftr_name), importance):
+            importance_dict[x_n] = im
+        target = 'tsfresh'
+        if importance_dict:
+            with open('%s_importance.json' % target, 'w', encoding='utf-8') as ff:
+                json.dump(importance_dict, ff, ensure_ascii=False)
+            im_df = pd.DataFrame([[x[0], x[1]] for x in importance_dict.items()])
+            im_df.to_csv('%s_importance.csv' % target, index=False)
+        # importances = lr.feature_importances_
+        # feat_labels = ['x1','x2','x3','x4','x5','x6','x7','x8','x9']
+        # indices = np.argsort(importances)[::-1]
+        # for f in range(x_train.shape[1]):
+        #     print("%2d) %-*s %f" % (f + 1, 30, feat_labels[indices[f]], importances[indices[f]]))
+
+        # 模型效果获取
+        # print('系数为：', lr.coef_)
+        # print('截距为：', lr.intercept_)
+
+        # 预测
+        #y_predict = lr.predict(X_filtered_test)  # 预测
+        y_prob = lc.predict_proba(X_filtered_test)[:, 1]
+        for i in range(len(y_prob)):
+            print(y_test[i],y_prob[i])
+        fpr, tpr, thresholds = metrics.roc_curve(y_test, y_prob, pos_label=1)
+        print('test_ks = ',max(tpr - fpr))
+
+        for i in range(tpr.shape[0]):
+            if tpr[i] > 0.5:
+                print(tpr[i], 1 - fpr[i], thresholds[i])
+                break
+        # test
+        roc_auc = metrics.auc(fpr, tpr)
+        plt.figure(figsize=(10, 10))
+        plt.plot(fpr, tpr, color='darkorange',
+                 lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver operating characteristic example(test)')
+        plt.legend(loc="lower right")
+        # plt.savefig("ROC（test）.png")
+        plt.show()
+        plt.plot(tpr, lw=2, label='tpr')
+        plt.plot(fpr, lw=2, label='fpr')
+        plt.plot(tpr - fpr, label='ks')
+        plt.title('KS = %0.2f(test)' % max(tpr - fpr))
+        plt.legend(loc="lower right")
+        # plt.savefig("KS（test）.png")
+        plt.show()
+        # 加载
+        my_model = joblib.load("lgbm_model.pkl")
+        y_prob = my_model.predict_proba(X_filtered_test)[:, 1]
+        for i in range(len(y_prob)):
+            print(y_test[i], y_prob[i])
+
+    if 1:
+        X_full_train, X_full_test, y_train, y_test = train_test_split(X, y_train, test_size=.4, random_state=4)
+        model = CatBoostClassifier(
+            custom_loss=[metrics.Accuracy()],  # 该指标可以计算logloss，并且在该规模的数据集上更加光滑
+            random_seed=4,
+            logging_level='Silent'
+        )
+        # 模型训练
+        model.fit(
+            X_train, y_train,
+            #cat_features=categorical_features_indices,
+            eval_set=(X_validation, y_validation),
+            logging_level='Verbose',  # you can uncomment this for text output
+            plot=True
+        );
+
+        X_filtered_train, X_filtered_test = X_full_train[X_filtered.columns], X_full_test[X_filtered.columns]
+        lc = LGBMClassifier(max_depth=2, num_leaves=3, n_estimators=50, reg_lambda=1, reg_alpha=1,
+                                objective='binary', seed=3)
 
         model = lc.fit(X_filtered_train, y_train)
         # 保存
@@ -6674,7 +6767,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     ftr_num_str = '91'
     ftr_good_year_split = 2017
     ########## model
-    epochs = 5
+    epochs = 4
     patiences = 2  # 10
     kernelsize = 16
     max_depth = 3 # 2 3  -1
@@ -6773,6 +6866,9 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                                         str(j) + '_' + str(i) + '_' + str(i) + '.csv'
             get_psi(ensemble_result_file_path, ensemble_result_file_path_val)
 
+def multiple_hypothesis_testing():
+    return
+
 if __name__ == '__main__':
     # train_occur_for_report()
     # train_occur_for_predict()
@@ -6784,7 +6880,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
-    # tsfresh_test()
+    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    tsfresh_test()
     # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
     # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
