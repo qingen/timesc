@@ -5662,7 +5662,10 @@ def tsfresh_test():
     print(X.iloc[:5,:3],len(X),len(X.columns.tolist()),y.iloc[:5, :],len(y))
     if saved_kind_to_fc_parameters == None:
         print('kind_to_fc_parameters_file not exists, so calculate it by calculate_relevance_table')
-        relevance_table = calculate_relevance_table(X, np.array(y.loc[:,'Y']),ml_task='classification')
+        X_tmp = X.reset_index(drop=True)
+        y_tmp = y.loc[:,'Y']
+        y_tmp = y_tmp.reset_index(drop=True)
+        relevance_table = calculate_relevance_table(X_tmp, y_tmp,ml_task='classification')
         print(relevance_table.iloc[:5,:5])
         print('p_value start=========')
         print('relevance_table[true].shape', relevance_table[relevance_table.relevant].shape)
@@ -5677,6 +5680,8 @@ def tsfresh_test():
         print('p_value end=========')
 
     print('head X:', X.iloc[:2, :3])
+    select_cols = X.columns.tolist()
+    print('select_cols:',select_cols)
     X.reset_index(inplace=True)
     X.rename(columns={'index': 'CUSTOMER_ID'}, inplace=True)
     print('head X_filtered after  rename:', X.iloc[:2, :3])
@@ -5792,7 +5797,7 @@ def tsfresh_test():
             print(y_test[i], y_prob[i])
 
     if 1:
-        X_train, X_test, y_train, y_test = train_test_split(X, np.array(y.loc[:,'Y']), test_size=.4, random_state=4)
+        X_train, X_test, y_train, y_test = train_test_split(merged.loc[:,select_cols], np.array(merged.loc[:,'Y']), test_size=.4, random_state=4)
         X_valid, X_test, y_valid, y_test = train_test_split(X_test, y_test, test_size=.5, random_state=5)
         cbc = CatBoostClassifier(
             custom_metric=['AUC', 'Accuracy'],  # metrics.Accuracy() 该指标可以计算logloss，并且在该规模的数据集上更加光滑
@@ -5803,7 +5808,7 @@ def tsfresh_test():
         # 模型训练
         cbc.fit(
             X_train, y_train,
-            #cat_features=categorical_features_indices,
+            # cat_features=categorical_features_indices,
             eval_set=(X_valid, y_valid),
             logging_level='Verbose',  # you can uncomment this for text output
             plot=True
@@ -6771,7 +6776,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     ftr_num_str = '91'
     ftr_good_year_split = 2017
     ########## model
-    epochs = 4
+    epochs = 3
     patiences = 2  # 10
     kernelsize = 16
     max_depth = 3 # 2 3  -1
