@@ -3580,9 +3580,12 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
     if not os.path.exists(file_path):
         model.fit(tsdatasets)
         model.save(model_path, repr_cluster_file_name)
+        print('ReprCluster model save done.')
     else:
         model = ReprCluster.load(model_path, repr_cluster_file_name)
+        print('ReprCluster model load done.')
     y_pred = model.predict(tsdatasets)
+    print('ReprCluster model predict done.')
     print(y_pred, y_pred.sum(), len(y_pred))
     n_class = max(y_pred) + 1
     tsdataset_list = [[] for _ in range(n_class)]
@@ -5002,13 +5005,13 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     cluster_less_test_num = 100
     type = 'occur_'+str(ftr_good_year_split)+'_addcredit_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(cluster_less_test_num)
 
-    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  #
+    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
 
-    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)
+    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101) # 20230101
     df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230701)  # for test
 
-    df_part3 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20160101)
+    df_part3 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20160101) # 20160101
     df_part3 = df_part3.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train bad
     del df_all
 
@@ -5388,8 +5391,6 @@ from sklearn.ensemble import BaggingClassifier
 from sklearn.metrics import classification_report
 import joblib
 import json
-
-from catboost import CatBoostClassifier, Pool, metrics, cv
 
 def tsfresh_test():
     usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
@@ -5797,6 +5798,7 @@ def tsfresh_test():
             print(y_test[i], y_prob[i])
 
     if 1:
+        from catboost import CatBoostClassifier
         X_train, X_test, y_train, y_test = train_test_split(merged.loc[:,select_cols], np.array(merged.loc[:,'Y']), test_size=.4, random_state=4)
         X_valid, X_test, y_valid, y_test = train_test_split(X_test, y_test, test_size=.5, random_state=5)
         cbc = CatBoostClassifier(
@@ -6210,13 +6212,13 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     cluster_less_test_num = 100
     type = 'occur_'+str(ftr_good_year_split)+'_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(cluster_less_test_num)
 
-    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101 20221201
+    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
 
-    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)
+    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)  # 20230101
     df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230701)  # for test
 
-    df_part3 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20160101)
+    df_part3 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20160101)  # 20160101
     df_part3 = df_part3.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train bad
     del df_all
 
@@ -6557,7 +6559,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
-                break
+                continue
             df_train_ftr_select_notime = tsfresh_ftr_augment_select(df_train_part, usecols, select_cols, fdr_level)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_train_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -6600,7 +6602,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
-                break
+                continue
             df_val_ftr_select_notime = tsfresh_ftr_augment_select(df_val_part, usecols, select_cols,fdr_level)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_val_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -6634,7 +6636,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
-                break
+                continue
             df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_test_part, usecols, select_cols, fdr_level)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -6889,7 +6891,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
-    tsfresh_test()
+    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    # tsfresh_test()
     # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
     # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
