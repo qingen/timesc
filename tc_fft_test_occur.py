@@ -11,16 +11,17 @@ from pandas import Series
 from sklearn.utils import shuffle
 
 import warnings
-import paddlets
 from paddlets.datasets.repository import get_dataset, dataset_list
 import matplotlib.pyplot as plt
-from paddlets.models.classify.dl.inception_time import InceptionTimeClassifier
+from typing import List
 
 from tc_fft_train_occur import ts2vec_cluster_datagroup_model,dl_model_forward_ks_roc
 from tc_fft_train_occur import tsfresh_ftr_augment_select,ml_model_forward_ks_roc
 from tc_fft_train_occur import ensemble_dl_ml_base_score_test
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
+from paddlets import TSDataset
+from paddlets.analysis import FFT
 # 显示所有列
 pd.set_option('display.max_columns', None)
 # 显示所有行
@@ -594,6 +595,143 @@ def prepare_data():
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
     print('df_all.shape: ', df_all.shape)
     return df_all
+
+def transform_data(datasets: pd.DataFrame):
+    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+           'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+           'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+           'STOCK_AGE_AVG_365',
+           'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+           'LSR_91_AVG_365',
+           'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+           'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+           'STOCK_AGE_AVG_90',
+           'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+           'FREESPANRP_180D_R', 'SDV_REPAY_60',
+           'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+           'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+           'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+           'STOCK_AGE_CHA_RATIO_180',
+           'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+           'LSR_91_AVG_60',
+           'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+           'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+           'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+           'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+           'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+           'LRR_AVG_90', 'LSR_91_AVG_30', 'ICA_30']  # 90 + 1
+
+    tsdatasets_all = TSDataset.load_from_dataframe(
+        df=datasets,
+        group_id='CUSTOMER_ID',
+        target_cols=col,
+        # known_cov_cols='CUSTOMER_ID',
+        fill_missing_dates=True,
+        fillna_method="zero",
+        static_cov_cols=['Y', 'CUSTOMER_ID'],
+    )
+
+    fft = FFT(fs=1, half=False)  # _amplitude  half
+    # cwt = CWT(scales=n_line_tail/2)
+    for data in tsdatasets_all:
+        resfft = fft(data)
+        # rescwt = cwt(data)  # coefs 63*24 complex128 x+yj
+        for x in data.columns:
+            # ----------------- fft
+            resfft[x + "_amplitude"].index = data[x].index
+            resfft[x + "_phase"].index = data[x].index
+            data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
+            data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('3 transform data:', formatted_time)
+
+    y_all = []  # fake
+    y_all_customerid = []
+    for dataset in tsdatasets_all:
+        y_all.append(dataset.static_cov['Y'])
+        y_all_customerid.append(dataset.static_cov['CUSTOMER_ID'])
+        dataset.static_cov = None
+    y_all = np.array(y_all)
+    y_all_customerid = np.array(y_all_customerid)
+
+    from paddlets.transform import StandardScaler
+    ss_scaler = StandardScaler()
+    tsdatasets_all = ss_scaler.fit_transform(tsdatasets_all)
+    return tsdatasets_all,y_all,y_all_customerid
+
+def group_data(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomersid: np.ndarray,
+                cluster_model_path: str, cluster_model_file: str = "repr-cluster-partial.pkl",
+                del_num:int = 200):
+    tsdataset_list_all, label_list_all, customersid_list_all = ts2vec_cluster_datagroup_model(tsdatasets,
+                                                                                              y_labels,
+                                                                                              y_cutomersid,
+                                                                                              cluster_model_path,
+                                                                                              cluster_model_file,
+                                                                                              del_num)
+    return tsdataset_list_all, label_list_all, customersid_list_all
+
+def dl_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_all: List,):
+    for i in range(len(label_list_all)):
+        for j in range(len(label_list_all)):
+            model_file_path = './model/' + 'xx' + str(j) + '.itc'
+            if not os.path.exists(model_file_path):
+                model_file_path = './model/' + 'xx' + str(0) + '.itc'  # default 0
+                j = 0
+            result_file_path = './result/' + 'xx' +str(j) + '_' + str(i) + '.csv'
+            print(result_file_path)
+            if os.path.exists(result_file_path):
+                print('{} already exists, but still infer.'.format(result_file_path))
+                continue
+            dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
+
+def ml_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_all: List,df_all: pd.DataFrame):
+    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+               'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+               'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+               'STOCK_AGE_AVG_365',
+               'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+               'LSR_91_AVG_365',
+               'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+               'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+               'STOCK_AGE_AVG_90',
+               'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+               'FREESPANRP_180D_R', 'SDV_REPAY_60',
+               'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+               'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+               'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+               'STOCK_AGE_CHA_RATIO_180',
+               'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+               'LSR_91_AVG_60',
+               'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+               'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+               'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+               'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+               'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+               'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols
+    fdr_level = 0.05
+    for i in range(len(label_list_all)):
+        df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
+
+        for j in range(len(label_list_all)):
+            model_file_path = './model/' + 'xx' + str(j) + '.pkl'
+            if not os.path.exists(model_file_path):
+                model_file_path = './model/' + 'xx' + str(0) + '.pkl'  # default 0
+                j = 0
+            ftr_list_file_path = './model/' + 'xx' + '.pkl'
+            print(ftr_list_file_path)
+            with open(ftr_list_file_path, 'rb') as f:
+                select_cols = pickle.load(f)
+            print('len select cols:', len(select_cols))
+            result_file_path = './result/' + 'xx' + str(j) + '_' + str(i) + '.csv'
+            print(result_file_path)
+            if os.path.exists(result_file_path):
+                print('{} already exists, but still infer.'.format(result_file_path))
+                #continue
+            df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_all_part, usecols, select_cols, fdr_level)
+            ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
+                                 np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
 def ensemble_predict():
     usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
