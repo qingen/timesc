@@ -33,8 +33,6 @@ def rmse(y_test, y):
 
 from paddlets.models.classify.dl.paddle_base import PaddleBaseClassifier
 
-
-
 def predict_weekly():
     # network = PaddleBaseClassifier.load('./model/0711_50_20_16_244_fft_p_t_SS_t30_y23_m147_v1.itc')
     # network=PaddleBaseClassifier.load('./model/0711_50_20_16_244_fft_p_t_SS_t30_y21_m11012_v1.itc')
@@ -470,6 +468,133 @@ def test_for_report():
         df.to_csv(filename, index=False)
         start_date -= timedelta(days=n_step_time)
 
+def prepare_data():
+    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+               'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+               'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+               'STOCK_AGE_AVG_365',
+               'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+               'LSR_91_AVG_365',
+               'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+               'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+               'STOCK_AGE_AVG_90',
+               'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+               'FREESPANRP_180D_R', 'SDV_REPAY_60',
+               'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+               'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+               'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+               'STOCK_AGE_CHA_RATIO_180',
+               'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+               'LSR_91_AVG_60',
+               'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+               'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+               'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+               'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+               'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+               'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols  1/8
+    df23_1 = pd.read_csv("./data/0720_2639/2023_1_5_202308171425.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df23_2 = pd.read_csv("./data/0720_2639/2023_5_6_202309081528.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df23_3 = pd.read_csv("./data/0720_2639/2023_6_7_202309081530.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df23_4 = pd.read_csv("./data/0720_2639/2023_7_8_202309081532.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df23_5 = pd.read_csv("./data/0720_2639/2023_8_202310241410.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30', ]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
+    df_credit = pd.read_csv("./data/0720_2639/credit/202310241401.csv", header=0, usecols=credit_usecols, sep=',', encoding='gbk')
+
+    df_all = pd.concat([df23_1, df23_2, df23_3, df23_4, df23_5])
+    del df23_1, df23_2, df23_3, df23_4, df23_5
+    print('df_all.shape:',df_all.shape)
+    df_all = pd.merge(df_all, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
+    print('after merge df_all.shape:', df_all.shape)
+    del df_credit
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('1 read csv :', formatted_time)
+
+    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+           'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+           'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+           'STOCK_AGE_AVG_365',
+           'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+           'LSR_91_AVG_365',
+           'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+           'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+           'STOCK_AGE_AVG_90',
+           'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+           'FREESPANRP_180D_R', 'SDV_REPAY_60',
+           'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+           'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+           'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+           'STOCK_AGE_CHA_RATIO_180',
+           'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+           'LSR_91_AVG_60',
+           'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+           'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+           'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+           'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+           'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+           'LRR_AVG_90', 'LSR_91_AVG_30', 'ICA_30']  # 90 + 1
+
+    df_all[col] = df_all[col].astype(float)
+
+    n_line_tail = 30  # (1-5) * 30
+    n_line_head = 30  # = tail
+
+    step = 5
+    ftr_num_str = '91'
+    filter_num_ratio = 1 / 8  # 1/5
+
+    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230901)
+    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
+    print('1 df_all.shape:', df_all.shape)
+
+    df_all = df_all.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
+
+    # 定义每次读取的数量
+    batch_size = n_line_head
+
+    def generate_new_groups(group):
+        new_groups = []
+        size = len(group)
+        # 循环切片生成新的组
+        for i in range(0, size, step):  # range(0,size,2)
+            start_position = size - i - batch_size
+            if start_position < 0:
+                break
+            end_position = size - i
+            # 获取当前组的一部分数据
+            batch = group.iloc[start_position:end_position].copy()
+            # 修改组名
+            batch['CUSTOMER_ID'] = f'{group.iloc[i]["CUSTOMER_ID"]}_{i}'
+            # 将切片后的数据添加到新的组列表中
+            new_groups.append(batch)
+        # 将新的组数据合并为一个 DataFrame
+        new_df = pd.concat(new_groups)
+        return new_df
+
+    # 将数据按照 CUSTOMER_ID 列的值分组，并应用函数生成新的组
+    df_all = df_all.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
+    # 输出结果
+    print('df_all.head:', df_all.head(32))
+    print('df_all.shape:', df_all.shape)
+
+    # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和; 3 -> watch out
+    count_df = df_all.groupby('CUSTOMER_ID').apply(lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
+    # 设定阈值 K
+    K = n_line_head * int(ftr_num_str) * filter_num_ratio
+    print('K:', K)
+    # 删除满足条件的组
+    filtered_groups = count_df[count_df.gt(K)].index
+    print(filtered_groups)
+    df_all = df_all[~df_all['CUSTOMER_ID'].isin(filtered_groups)]
+    print('after filter 0/null df_all.shape:', df_all.shape)
+
+    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_head)
+    df_all = df_all.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
+        reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
+    print('df_all.shape: ', df_all.shape)
+    return df_all
+
 def ensemble_predict():
     usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
@@ -551,7 +676,7 @@ def ensemble_predict():
     filter_num_ratio = 1 / 8  # 1/5
     ftr_good_year_split = 2017
     ########## model cnn dt
-    epochs = 5
+    epochs = 3
     patiences = 2  # 10
     kernelsize = 16
     max_depth = 3 # 2 3 4 5
