@@ -3571,7 +3571,8 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
                      # "sampling_stride": 200,
                      "max_epochs": 5,
                      "verbose": 1,
-                     "hidden_dims": 64, }
+                     "hidden_dims": 64,
+                     "seed": 0, }
     from paddlets.models.representation import ReprCluster
     from paddlets.models.representation import TS2Vec
     model = ReprCluster(repr_model=TS2Vec, repr_model_params=ts2vec_params)
@@ -5908,7 +5909,7 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     X = pd.DataFrame()
     for indices in split_indices:
         df_part = pd.concat([splitted_data[i] for i in indices])
-        X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
+        X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10, n_jobs=16,
                                   default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
         X = pd.concat([X, X_part])
     impute(X)
@@ -5922,7 +5923,7 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     if len(select_cols) == 0:
         print('train: select_cols is empty')
-        X_filtered = select_features(X, np.array(y['Y']), chunksize=10, fdr_level=fdr_level) # n_jobs=8,
+        X_filtered = select_features(X, np.array(y['Y']), chunksize=10, n_jobs=16, fdr_level=fdr_level) # n_jobs=8,
         select_cols[:] = X_filtered.columns.tolist().copy()
     else:
         print('val & test: select_cols directly because it is not empty')
