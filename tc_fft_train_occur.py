@@ -34,6 +34,14 @@ pd.set_option('display.max_rows', None)
 def rmse(y_test, y):
     return math.sqrt(sum((y_test - y) ** 2) / len(y))
 
+def get_num_rows(csv_file_path:str):
+    usecols = ['customerid', 'Y', 'prob', ]
+    if not os.path.exists(csv_file_path):
+        print('csv_file_path not exists:',csv_file_path)
+        return -1
+    df = pd.read_csv(csv_file_path, header=0, sep=',',encoding='gbk')
+    num_rows = df.shape[0]
+    return num_rows
 
 def train_occur_for_report():
     df23 = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, sep=',', encoding='gbk')
@@ -6787,9 +6795,10 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     n_estimators = 100 #  50 100 100
     class_weight =  'balanced' # None 'balanced' None
     fdr_level = 0.05  # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
-    lc_c = [0.02, 0.2, 0.2] #  0.2-> 0 0.02 -> 1
+    lc_c = [0.02, 0.2, 0.2, 0.2] #  0.2-> 0 0.02 -> 1
     cluster_less_train_num = 200
     cluster_less_test_num = 100
+    num_groups = 4
 
     dl_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
         cluster_less_test_num)
@@ -6798,7 +6807,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     ensemble_type = 'occur_ensemble'
 
     # model train
-    for i in range(3):
+    for i in range(num_groups):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(i) + '_' + str(i) + '.csv'
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
@@ -6813,13 +6822,13 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
         ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,lc_c[i])
     # model infer
     # train set
-    for i in range(3):
+    for i in range(num_groups):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(i) + '_' + str(i) + '.csv'
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
                               str(n_line_tail) + '_ftr_select_train_' + str(i) + '_' + str(i) + '.csv'
-        for j in range(3):
+        for j in range(num_groups):
             ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
                                        str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
                                        str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
@@ -6833,13 +6842,13 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path, ml_result_file_path, ensemble_model_file_path, ensemble_result_file_path)
     # val set
-    for i in range(3):
+    for i in range(num_groups):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_val_aug_' + str(i) + '_' + str(i) + '.csv'
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
                               str(n_line_tail) + '_ftr_select_val_' + str(i) + '_' + str(i) + '.csv'
-        for j in range(3):
+        for j in range(num_groups):
             ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
                                        str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
                                        str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
@@ -6853,13 +6862,13 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path, ml_result_file_path, ensemble_model_file_path, ensemble_result_file_path)
     # test set
-    for i in range(3):
+    for i in range(num_groups):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(i) + '_' + str(i) + '.csv'
         ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                               '_ftr_select_test_' + str(i) + '_' + str(i) + '.csv'
-        for j in range(3):
+        for j in range(num_groups):
             ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
                                        str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
                                        str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
