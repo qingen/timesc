@@ -5917,7 +5917,7 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     X = pd.DataFrame()
     for indices in split_indices:
         df_part = pd.concat([splitted_data[i] for i in indices])
-        X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=6,
+        X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
                                   default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
         X = pd.concat([X, X_part])
     impute(X)
@@ -5931,7 +5931,7 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     if len(select_cols) == 0:
         print('train: select_cols is empty')
-        X_filtered = select_features(X, np.array(y['Y']), chunksize=6, fdr_level=fdr_level) # chunksize=10, n_jobs=8,
+        X_filtered = select_features(X, np.array(y['Y']), chunksize=10, fdr_level=fdr_level) # chunksize=10, n_jobs=8,
         select_cols[:] = X_filtered.columns.tolist().copy()
     else:
         print('val & test: select_cols directly because it is not empty')
@@ -6221,6 +6221,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     cluster_less_test_num = 100     # 100
     type = 'occur_'+str(ftr_good_year_split)+'_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + \
            str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num)
+
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
 
@@ -6902,7 +6903,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
-    # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
+    augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
     # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
