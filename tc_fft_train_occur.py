@@ -3609,7 +3609,7 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
     i = 0
     while i < len(label_list):
         if len(label_list[i]) < del_num:
-            print('warning del class ', i, ' less 100 elements:',len(label_list[i]),sum(label_list[i]))
+            print('warning del class ', i, ' less ', del_num, ', elements len: ',len(label_list[i]),' sum: ',sum(label_list[i]))
             label_list.pop(i)
             tsdataset_list.pop(i)
             customersid_list.pop(i)
@@ -5009,10 +5009,11 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     kernelsize = 16  # 16
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
-    cluster_less_train_num = 200
-    cluster_less_val_num = 200
-    cluster_less_test_num = 100
-    type = 'occur_'+str(ftr_good_year_split)+'_addcredit_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(cluster_less_test_num)
+    cluster_less_train_num = 800    # 200
+    cluster_less_val_num = 200      # 200
+    cluster_less_test_num = 100     # 100
+    type = 'occur_'+str(ftr_good_year_split)+'_addcredit_step' + str(step) + '_reclass_less_' + \
+           str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num)
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
@@ -5917,7 +5918,7 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     X = pd.DataFrame()
     for indices in split_indices:
         df_part = pd.concat([splitted_data[i] for i in indices])
-        X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10, n_jobs=16,
+        X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=6,
                                   default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
         X = pd.concat([X, X_part])
     impute(X)
@@ -5931,7 +5932,7 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     if len(select_cols) == 0:
         print('train: select_cols is empty')
-        X_filtered = select_features(X, np.array(y['Y']), chunksize=10, n_jobs=16, fdr_level=fdr_level) # n_jobs=8,
+        X_filtered = select_features(X, np.array(y['Y']), chunksize=6, fdr_level=fdr_level) # chunksize=10, n_jobs=8,
         select_cols[:] = X_filtered.columns.tolist().copy()
     else:
         print('val & test: select_cols directly because it is not empty')
@@ -6216,11 +6217,11 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     fdr_level = 0.05 # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
-    cluster_less_train_num = 200
-    cluster_less_val_num = 200
-    cluster_less_test_num = 100
-    type = 'occur_'+str(ftr_good_year_split)+'_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(cluster_less_test_num)
-
+    cluster_less_train_num = 800    # 200
+    cluster_less_val_num = 200      # 200
+    cluster_less_test_num = 100     # 100
+    type = 'occur_'+str(ftr_good_year_split)+'_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + \
+           str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num)
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
 
@@ -6795,15 +6796,16 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     n_estimators = 100 #  50 100 100
     class_weight =  'balanced' # None 'balanced' None
     fdr_level = 0.05  # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
-    lc_c = [0.02, 0.2, 0.2, 0.2] #  0.2-> 0 0.02 -> 1
-    cluster_less_train_num = 200
+    lc_c = [0.02, 0.2, 0.2,] #  0.2-> 0 0.02 -> 1
+    cluster_less_train_num = 800
+    cluster_less_val_num = 200
     cluster_less_test_num = 100
-    num_groups = 4
+    num_groups = 3
 
-    dl_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
-        cluster_less_test_num)
-    ml_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
-        cluster_less_test_num)
+    dl_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_step' + str(step) + '_reclass_less_' + \
+              str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num)
+    ml_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + \
+              str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num)
     ensemble_type = 'occur_ensemble'
 
     # model train
