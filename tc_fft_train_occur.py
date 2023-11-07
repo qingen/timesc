@@ -35,7 +35,6 @@ def rmse(y_test, y):
     return math.sqrt(sum((y_test - y) ** 2) / len(y))
 
 def get_num_rows(csv_file_path:str):
-    usecols = ['customerid', 'Y', 'prob', ]
     if not os.path.exists(csv_file_path):
         print('csv_file_path not exists:',csv_file_path)
         return -1

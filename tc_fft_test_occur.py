@@ -469,7 +469,14 @@ def test_for_report():
         df.to_csv(filename, index=False)
         start_date -= timedelta(days=n_step_time)
 
-def prepare_data():
+################################### for predict online
+def prepare_data(csv_file_path_base:str, csv_file_path_credit:str):
+    '''
+    load csv data and do prepare
+    :param csv_file_path_base: CUSTOMER_ID,RDATE,Y,INV_AVG_60,INV_RATIO_90...
+    :param csv_file_path_credit: CUSTOMER_ID,RDATE,ICA_30,PCA_30,ZCA_30
+    :return: dataframe
+    '''
     usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
@@ -493,20 +500,17 @@ def prepare_data():
                'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
                'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
                'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols  1/8
-    df23_1 = pd.read_csv("./data/0720_2639/2023_1_5_202308171425.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df23_2 = pd.read_csv("./data/0720_2639/2023_5_6_202309081528.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df23_3 = pd.read_csv("./data/0720_2639/2023_6_7_202309081530.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df23_4 = pd.read_csv("./data/0720_2639/2023_7_8_202309081532.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df23_5 = pd.read_csv("./data/0720_2639/2023_8_202310241410.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    if not os.path.exists(csv_file_path_base) or not os.path.exists(csv_file_path_credit):
+        print('%s or %s not exists:'%(csv_file_path_base, csv_file_path_credit))
+        return -1
+    df_base = pd.read_csv(csv_file_path_base, header=0, usecols=usecols, sep=',', encoding='gbk')
     credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30', ]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
-    df_credit = pd.read_csv("./data/0720_2639/credit/202310241401.csv", header=0, usecols=credit_usecols, sep=',', encoding='gbk')
+    df_credit = pd.read_csv(csv_file_path_credit, header=0, usecols=credit_usecols, sep=',', encoding='gbk')
 
-    df_all = pd.concat([df23_1, df23_2, df23_3, df23_4, df23_5])
-    del df23_1, df23_2, df23_3, df23_4, df23_5
-    print('df_all.shape:',df_all.shape)
-    df_all = pd.merge(df_all, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
+    print('df_base.shape:',df_base.shape)
+    df_all = pd.merge(df_base, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
     print('after merge df_all.shape:', df_all.shape)
-    del df_credit
+    del df_credit, df_base
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -597,6 +601,11 @@ def prepare_data():
     return df_all
 
 def transform_data(datasets: pd.DataFrame):
+    '''
+    get data from prepare_data for transformation
+    :param datasets:
+    :return: transform_data, label, customer_id
+    '''
     col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
            'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
@@ -632,10 +641,8 @@ def transform_data(datasets: pd.DataFrame):
     )
 
     fft = FFT(fs=1, half=False)  # _amplitude  half
-    # cwt = CWT(scales=n_line_tail/2)
     for data in tsdatasets_all:
         resfft = fft(data)
-        # rescwt = cwt(data)  # coefs 63*24 complex128 x+yj
         for x in data.columns:
             # ----------------- fft
             resfft[x + "_amplitude"].index = data[x].index
@@ -664,6 +671,16 @@ def transform_data(datasets: pd.DataFrame):
 def group_data(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomersid: np.ndarray,
                 cluster_model_path: str, cluster_model_file: str = "repr-cluster-partial.pkl",
                 del_num:int = 200):
+    '''
+    just call function of ts2vec_cluster_datagroup_model from tc_fft_train_occur.py
+    :param tsdatasets:
+    :param y_labels:
+    :param y_cutomersid:
+    :param cluster_model_path:
+    :param cluster_model_file:
+    :param del_num:
+    :return:
+    '''
     tsdataset_list_all, label_list_all, customersid_list_all = ts2vec_cluster_datagroup_model(tsdatasets,
                                                                                               y_labels,
                                                                                               y_cutomersid,
@@ -673,6 +690,13 @@ def group_data(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomersid: 
     return tsdataset_list_all, label_list_all, customersid_list_all
 
 def dl_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_all: List,):
+    '''
+    get data of group_data and do deeplearning predict
+    :param tsdataset_list_all:
+    :param label_list_all:
+    :param customersid_list_all:
+    :return:
+    '''
     for i in range(len(label_list_all)):
         for j in range(len(label_list_all)):
             model_file_path = './model/' + 'xx' + str(j) + '.itc'
@@ -687,6 +711,14 @@ def dl_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_al
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
 
 def ml_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_all: List,df_all: pd.DataFrame):
+    '''
+    get data of group_data and do machinelearning predict
+    :param tsdataset_list_all:
+    :param label_list_all:
+    :param customersid_list_all:
+    :param df_all:
+    :return:
+    '''
     usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
