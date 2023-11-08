@@ -3648,13 +3648,14 @@ def dl_model_forward_ks_roc(model_file_path: str, result_file_path: str, tsdatas
     df.to_csv(result_file_path, index=False)
 
     fpr, tpr, thresholds = metrics.roc_curve(y_labels, pred_val_prob, pos_label=1, )  # drop_intermediate=True
-    print('ks = ', max(tpr - fpr))
+    print('ks = %0.4f' % (max(tpr - fpr)))
     #for i in range(tpr.shape[0]):
         #print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
         # if tpr[i] > 0.5:
         #    print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
         # break
     roc_auc = metrics.auc(fpr, tpr)
+    print('auc = %0.4f' % (roc_auc))
     plt.figure(figsize=(10, 10))
     plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
@@ -5003,8 +5004,8 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     filter_num_ratio = 1 / 8  # 1/5
     ftr_good_year_split = 2017
     ########## model
-    epochs = 3  # 20  10
-    patiences = 2  # 10  5
+    epochs = 2  # 20  10
+    patiences = 1  # 10  5
     kernelsize = 16  # 16
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
@@ -5917,7 +5918,7 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     X = pd.DataFrame()
     for indices in split_indices:
         df_part = pd.concat([splitted_data[i] for i in indices])
-        X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
+        X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10, n_jobs=24,
                                   default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
         X = pd.concat([X, X_part])
     impute(X)
@@ -5931,7 +5932,7 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     # Tsfresh将对每一个特征进行假设检验，以检查它是否与给定的目标相关
     if len(select_cols) == 0:
         print('train: select_cols is empty')
-        X_filtered = select_features(X, np.array(y['Y']), chunksize=10, fdr_level=fdr_level) # chunksize=10, n_jobs=8,
+        X_filtered = select_features(X, np.array(y['Y']), chunksize=10, n_jobs=24, fdr_level=fdr_level) # chunksize=10, n_jobs=8,
         select_cols[:] = X_filtered.columns.tolist().copy()
     else:
         print('val & test: select_cols directly because it is not empty')
@@ -5977,11 +5978,12 @@ def ml_model_forward_ks_roc(model_file_path: str, result_file_path: str, dataset
     print(sorted_df.head(30))
 
     fpr, tpr, thresholds = metrics.roc_curve(y_labels, pred_val_prob, pos_label=1, )  # drop_intermediate=True
-    print("ks =%f" % (max(tpr - fpr)))
+    print("ks = %0.4f" % (max(tpr - fpr)))
     for i in range(tpr.shape[0]):
         if (tpr[i] - fpr[i] ) > (max(tpr - fpr)-0.0000001):
             print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
     roc_auc = metrics.auc(fpr, tpr)
+    print('auc = %0.4f' % (roc_auc))
     plt.figure(figsize=(10, 10))
     plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
@@ -6653,8 +6655,8 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
 
 def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path:str, ensemble_model_file_path:str, lc_c:float=0.02):
     usecols = ['customerid', 'Y', 'prob', ]
-    if not os.path.exists(dl_result_file_path):
-        print('dl result file not exists:',dl_result_file_path)
+    if not os.path.exists(dl_result_file_path) or not os.path.exists(ml_result_file_path) :
+        print('%s or %s file not exists:' %(dl_result_file_path, ml_result_file_path))
         return
     df_train_dl = pd.read_csv(dl_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
     df_train_ml = pd.read_csv(ml_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
@@ -6668,10 +6670,6 @@ def ensemble_dl_ml_base_score_train(dl_result_file_path:str, ml_result_file_path
     #print(df_train.head(2),len(df_train))
 
     ########## model
-    max_depth = 2
-    num_leaves = 3
-    n_estimators = 50
-    class_weight = 'balanced'   # None  'balanced'
     select_cols = ['prob_dl','prob_ml']
     #lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
     #                    reg_alpha=1, objective='binary', class_weight=class_weight, seed=0)
@@ -6763,9 +6761,9 @@ def get_psi(result_file_path_a:str, result_file_path_b:str):
 
 def ensemble_dl_ml_base_score_test(dl_result_file_path:str, ml_result_file_path:str, ensemble_model_file_path:str,ensemble_result_file_path:str):
     usecols = ['customerid', 'Y', 'prob', ]
-    if not os.path.exists(dl_result_file_path):
-        print('dl result file not exists:',dl_result_file_path)
-        return
+    if not os.path.exists(dl_result_file_path) or not os.path.exists(ml_result_file_path) or not os.path.exists(ensemble_model_file_path):
+        print('%s or %s or %s file not exists, pls check.' % (dl_result_file_path,ml_result_file_path,ensemble_model_file_path))
+        return -1
     df_train_dl = pd.read_csv(dl_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
     df_train_ml = pd.read_csv(ml_result_file_path, header=0, usecols=usecols, sep=',',encoding='gbk')
     #print(df_train_ml.head(2))
@@ -6796,7 +6794,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     n_estimators = 100 #  50 100 100
     class_weight =  'balanced' # None 'balanced' None
     fdr_level = 0.05  # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
-    lc_c = [0.02, 0.2, 0.2,] #  0.2-> 0 0.02 -> 1
+    lc_c = [0.1, 0.02, 0.2,] #
     cluster_less_train_num = 800
     cluster_less_val_num = 200
     cluster_less_test_num = 100
@@ -6812,22 +6810,25 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     for i in range(num_groups):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(i) + '_' + str(i) + '.csv'
-        ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+        ml_result_file_path = './result/20231024_ml/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                               '_ftr_select_train_' + str(i) + '_' + str(i) + '.csv'
         ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[i]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
                                    str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
                                    str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(i) + '_lr.pkl'
         if os.path.exists(ensemble_model_file_path):
-            print('{} already exists, so no more train.'.format(ensemble_model_file_path))
-            continue
+            #print('{} already exists, so no more train.'.format(ensemble_model_file_path))
+            print('{} already exists, so just remove it and retrain.'.format(ensemble_model_file_path))
+            os.remove(ensemble_model_file_path)
+            print(f" file '{ensemble_model_file_path}' is removed。")
+            #continue
         ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,lc_c[i])
     # model infer
     # train set
     for i in range(num_groups):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_train_aug_' + str(i) + '_' + str(i) + '.csv'
-        ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+        ml_result_file_path = './result/20231024_ml/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
                               str(n_line_tail) + '_ftr_select_train_' + str(i) + '_' + str(i) + '.csv'
         for j in range(num_groups):
@@ -6838,16 +6839,21 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                                        str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
                                         str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_train_' + \
                                         str(j) + '_' + str(i) +'_' + str(i)+ '.csv'
-            if os.path.exists(ensemble_result_file_path) or (i != j):
-                print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
+            if i != j:
                 continue
-            print(ensemble_result_file_path)
+            else:
+                if os.path.exists(ensemble_result_file_path):
+                    print('%s already exists, so just remove it and reinfer.' % (ensemble_result_file_path))
+                    os.remove(ensemble_result_file_path)
+                    print(f" file '{ensemble_result_file_path}' is removed。")
+                else:
+                    print('%s not exists, so just do infer.' % (ensemble_result_file_path))
             ensemble_dl_ml_base_score_test(dl_result_file_path, ml_result_file_path, ensemble_model_file_path, ensemble_result_file_path)
     # val set
     for i in range(num_groups):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_val_aug_' + str(i) + '_' + str(i) + '.csv'
-        ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+        ml_result_file_path = './result/20231024_ml/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + \
                               str(n_line_tail) + '_ftr_select_val_' + str(i) + '_' + str(i) + '.csv'
         for j in range(num_groups):
@@ -6858,16 +6864,21 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                                         str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
                                         str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_val_' + \
                                         str(j) + '_' + str(i) + '_' + str(i) + '.csv'
-            if os.path.exists(ensemble_result_file_path) or (i != j):
-                print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
+            if i != j:
                 continue
-            print(ensemble_result_file_path)
+            else:
+                if os.path.exists(ensemble_result_file_path):
+                    print('%s already exists, so just remove it and reinfer.' % (ensemble_result_file_path))
+                    os.remove(ensemble_result_file_path)
+                    print(f" file '{ensemble_result_file_path}' is removed。")
+                else:
+                    print('%s not exists, so just do infer.' % (ensemble_result_file_path))
             ensemble_dl_ml_base_score_test(dl_result_file_path, ml_result_file_path, ensemble_model_file_path, ensemble_result_file_path)
     # test set
     for i in range(num_groups):
         dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                               '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_test_aug_' + str(i) + '_' + str(i) + '.csv'
-        ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+        ml_result_file_path = './result/20231024_ml/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
                               '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                               '_ftr_select_test_' + str(i) + '_' + str(i) + '.csv'
         for j in range(num_groups):
@@ -6878,10 +6889,15 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
                                         str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
                                         str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_test_' + \
                                         str(j) + '_' + str(i) + '_' + str(i) + '.csv'
-            if os.path.exists(ensemble_result_file_path) or (i != j):
-                print('{} already exists, so no more infer.'.format(ensemble_result_file_path))
+            if i != j:
                 continue
-            print(ensemble_result_file_path)
+            else:
+                if os.path.exists(ensemble_result_file_path):
+                    print('%s already exists, so just remove it and reinfer.' % (ensemble_result_file_path))
+                    os.remove(ensemble_result_file_path)
+                    print(f" file '{ensemble_result_file_path}' is removed。")
+                else:
+                    print('%s not exists, so just do infer.' % (ensemble_result_file_path))
             ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
             ensemble_result_file_path_val = './result/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
                                         str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + '_' + \
@@ -6903,7 +6919,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
-    augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
+    # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
     # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()

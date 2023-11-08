@@ -716,7 +716,7 @@ def ml_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_al
     :param tsdataset_list_all:
     :param label_list_all:
     :param customersid_list_all:
-    :param df_all:
+    :param df_all:  from  prepare_data()
     :return:
     '''
     usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
@@ -765,7 +765,10 @@ def ml_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_al
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
-def ensemble_predict():
+def ensemble_predict(dl_result_file_path: str,ml_result_file_path: str,ensemble_model_file_path: str, ensemble_result_file_path: str):
+    ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
+
+def ensemble_dl_ml_predict():
     usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
@@ -853,17 +856,18 @@ def ensemble_predict():
     num_leaves = 7 # 3 7 15 31
     n_estimators = 100 # 50 100
     class_weight =  'balanced' # 'balanced'  None
-    lc_c = [0.02, 0.2, 0.2]  #
+    lc_c = [0.1, 0.02, 0.2,] #
     fdr_level = 0.05 # 0.05(default)  0.04 0.03 0.02 0.01
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_' + str(ftr_good_year_split) + '_' + date_str + '/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
-    cluster_less_train_num = 200
+    cluster_less_train_num = 800
+    cluster_less_val_num = 200
     cluster_less_test_num = 100
 
-    dl_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
-        cluster_less_test_num)
-    ml_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_augmentftr_step' + str(step) + '_reclass_less' + str(cluster_less_train_num) + '_' + str(
-        cluster_less_test_num)
+    dl_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_step' + str(step) + '_reclass_less_' + \
+              str(cluster_less_train_num) + '_' + str(cluster_less_val_num)+ '_' + str(cluster_less_test_num)
+    ml_type = 'occur_' + str(ftr_good_year_split) + '_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + \
+              str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num)
     ensemble_type = 'occur_ensemble'
 
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230901)
@@ -1057,4 +1061,4 @@ def ensemble_predict():
 if __name__ == '__main__':
     # test_for_report()
     # predict_weekly()
-    ensemble_predict()
+    ensemble_dl_ml_predict()
