@@ -773,6 +773,22 @@ def ml_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_al
 def ensemble_predict(dl_result_file_path: str,ml_result_file_path: str,ensemble_model_file_path: str, ensemble_result_file_path: str):
     ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
     print('5 ensemble_predict done at :', get_cur_time())
+
+def predict_pipeline():
+    base_path = './data/0720_2639/2023_8_202310241410.csv'
+    credit_path =  './data/0720_2639/credit/202310241401.csv'
+    df = prepare_data(base_path, credit_path)
+    tsdatasets_all,y_all,y_all_customerid = transform_data(df)
+    cluster_model_path = './model/cluster_step5_credit1_90_2017_20231024/'
+    cluster_model_file = '20231024-repr-cluster-partial-train-6.pkl'
+    tsdataset_list_all, label_list_all, customersid_list_all = group_data(tsdatasets_all,
+                                                                          y_all,
+                                                                          y_all_customerid,
+                                                                          cluster_model_path,
+                                                                          cluster_model_file)
+    dl_predict(tsdataset_list_all, label_list_all, customersid_list_all)
+    ml_predict(tsdataset_list_all, label_list_all, customersid_list_all, df)
+
 ################################### for predict online end
 def ensemble_dl_ml_predict():
     usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
