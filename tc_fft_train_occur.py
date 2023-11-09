@@ -6212,9 +6212,9 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     ftr_good_year_split = 2017   #  quick start 2022, at last 2016/2017
     ########## model
     max_depth = 3 # 2 3
-    num_leaves = 7 # 3 7 
+    num_leaves = 7 # 3 7
     n_estimators = 50 # 50 100
-    class_weight =  'balanced' # 'balanced'  None
+    class_weight =  None # 'balanced'  None
     fdr_level = 0.05 # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
@@ -6921,5 +6921,5 @@ if __name__ == '__main__':
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
     # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
-    # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
-    ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
+    augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
+    # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()

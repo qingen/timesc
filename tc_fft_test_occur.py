@@ -469,7 +469,12 @@ def test_for_report():
         df.to_csv(filename, index=False)
         start_date -= timedelta(days=n_step_time)
 
-################################### for predict online
+def get_cur_time():
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    return formatted_time
+
+################################### for predict online start
 def prepare_data(csv_file_path_base:str, csv_file_path_credit:str):
     '''
     load csv data and do prepare
@@ -501,8 +506,9 @@ def prepare_data(csv_file_path_base:str, csv_file_path_credit:str):
                'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
                'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols  1/8
     if not os.path.exists(csv_file_path_base) or not os.path.exists(csv_file_path_credit):
-        print('%s or %s not exists:'%(csv_file_path_base, csv_file_path_credit))
+        print('%s or %s not exists, please check.' % (csv_file_path_base, csv_file_path_credit))
         return -1
+
     df_base = pd.read_csv(csv_file_path_base, header=0, usecols=usecols, sep=',', encoding='gbk')
     credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30', ]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
     df_credit = pd.read_csv(csv_file_path_credit, header=0, usecols=credit_usecols, sep=',', encoding='gbk')
@@ -511,10 +517,6 @@ def prepare_data(csv_file_path_base:str, csv_file_path_credit:str):
     df_all = pd.merge(df_base, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
     print('after merge df_all.shape:', df_all.shape)
     del df_credit, df_base
-
-    current_time = datetime.now()
-    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    print('1 read csv :', formatted_time)
 
     col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
@@ -549,10 +551,9 @@ def prepare_data(csv_file_path_base:str, csv_file_path_credit:str):
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8  # 1/5
 
-    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230901)
+    # df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230901)
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
-    print('1 df_all.shape:', df_all.shape)
-
+    print('after filter length df_all.shape:', df_all.shape)
     df_all = df_all.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
 
     # 定义每次读取的数量
@@ -581,23 +582,25 @@ def prepare_data(csv_file_path_base:str, csv_file_path_credit:str):
     df_all = df_all.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
     # 输出结果
     print('df_all.head:', df_all.head(32))
-    print('df_all.shape:', df_all.shape)
+    print('after generate_new_groups df_all.shape:', df_all.shape)
 
     # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和; 3 -> watch out
     count_df = df_all.groupby('CUSTOMER_ID').apply(lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
     # 设定阈值 K
     K = n_line_head * int(ftr_num_str) * filter_num_ratio
-    print('K:', K)
+    print('threshold K:', K)
     # 删除满足条件的组
     filtered_groups = count_df[count_df.gt(K)].index
     print(filtered_groups)
     df_all = df_all[~df_all['CUSTOMER_ID'].isin(filtered_groups)]
-    print('after filter 0/null df_all.shape:', df_all.shape)
+    print('after filter 0 or null df_all.shape:', df_all.shape)
 
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_head)
     df_all = df_all.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
-    print('df_all.shape: ', df_all.shape)
+    print('at last df_all.shape: ', df_all.shape)
+
+    print('1. prepare_data done at ', get_cur_time())
     return df_all
 
 def transform_data(datasets: pd.DataFrame):
@@ -650,10 +653,6 @@ def transform_data(datasets: pd.DataFrame):
             data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
             data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
 
-    current_time = datetime.now()
-    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    print('3 transform data:', formatted_time)
-
     y_all = []  # fake
     y_all_customerid = []
     for dataset in tsdatasets_all:
@@ -666,11 +665,12 @@ def transform_data(datasets: pd.DataFrame):
     from paddlets.transform import StandardScaler
     ss_scaler = StandardScaler()
     tsdatasets_all = ss_scaler.fit_transform(tsdatasets_all)
+
+    print('2. transform_data done at :', get_cur_time())
     return tsdatasets_all,y_all,y_all_customerid
 
 def group_data(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomersid: np.ndarray,
-                cluster_model_path: str, cluster_model_file: str = "repr-cluster-partial.pkl",
-                del_num:int = 200):
+                cluster_model_path: str, cluster_model_file: str, del_num:int = 1):
     '''
     just call function of ts2vec_cluster_datagroup_model from tc_fft_train_occur.py
     :param tsdatasets:
@@ -678,7 +678,7 @@ def group_data(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomersid: 
     :param y_cutomersid:
     :param cluster_model_path:
     :param cluster_model_file:
-    :param del_num:
+    :param del_num: 1 -> all test data is retained and none is deleted
     :return:
     '''
     tsdataset_list_all, label_list_all, customersid_list_all = ts2vec_cluster_datagroup_model(tsdatasets,
@@ -687,6 +687,7 @@ def group_data(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomersid: 
                                                                                               cluster_model_path,
                                                                                               cluster_model_file,
                                                                                               del_num)
+    print('3. group_data done at :', get_cur_time())
     return tsdataset_list_all, label_list_all, customersid_list_all
 
 def dl_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_all: List,):
@@ -698,17 +699,18 @@ def dl_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_al
     :return:
     '''
     for i in range(len(label_list_all)):
-        for j in range(len(label_list_all)):
-            model_file_path = './model/' + 'xx' + str(j) + '.itc'
-            if not os.path.exists(model_file_path):
-                model_file_path = './model/' + 'xx' + str(0) + '.itc'  # default 0
-                j = 0
-            result_file_path = './result/' + 'xx' +str(j) + '_' + str(i) + '.csv'
-            print(result_file_path)
-            if os.path.exists(result_file_path):
-                print('{} already exists, but still infer.'.format(result_file_path))
-                continue
-            dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
+        model_index = i
+        dataset_group_index = i
+        model_file_path = './model/20231024_occur_2017_addcredit_step5_reclass_less_800_200_100_' \
+                          '20230101_2_1_16_ftr_91_t30_fl_aug_' + str(model_index) + '.itc'
+        if not os.path.exists(model_file_path):  #  model 0 must exist
+            model_file_path = './model/20231024_occur_2017_addcredit_step5_reclass_less_800_200_100_' \
+                          '20230101_2_1_16_ftr_91_t30_fl_aug_0.itc'
+            model_index = 0
+        result_file_path = './result/' + 'dl_' +str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
+
+    print('4.a dl_predict done at :', get_cur_time())
 
 def ml_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_all: List,df_all: pd.DataFrame):
     '''
@@ -744,30 +746,34 @@ def ml_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_al
                'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols
     fdr_level = 0.05
     for i in range(len(label_list_all)):
+        model_index = i
+        dataset_group_index = i
         df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
-
-        for j in range(len(label_list_all)):
-            model_file_path = './model/' + 'xx' + str(j) + '.pkl'
-            if not os.path.exists(model_file_path):
-                model_file_path = './model/' + 'xx' + str(0) + '.pkl'  # default 0
-                j = 0
-            ftr_list_file_path = './model/' + 'xx' + '.pkl'
-            print(ftr_list_file_path)
-            with open(ftr_list_file_path, 'rb') as f:
-                select_cols = pickle.load(f)
-            print('len select cols:', len(select_cols))
-            result_file_path = './result/' + 'xx' + str(j) + '_' + str(i) + '.csv'
-            print(result_file_path)
-            if os.path.exists(result_file_path):
-                print('{} already exists, but still infer.'.format(result_file_path))
-                #continue
-            df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_all_part, usecols, select_cols, fdr_level)
-            ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
+        model_file_path = './model/20231024_occur_2017_addcredit_augmentftr_step5_reclass_less_800_200_100_' \
+                            '20230101_3_7_100_balanced_0.05_ftr_91_t30_ftr_select_' + str(model_index) + '.pkl'
+        if not os.path.exists(model_file_path): #  model 0 must exist
+            model_file_path = './model/20231024_occur_2017_addcredit_augmentftr_step5_reclass_less_800_200_100_' \
+                            '20230101_3_7_100_balanced_0.05_ftr_91_t30_ftr_select_0.pkl'
+            model_index = 0
+        ftr_list_file_path = './model/20231024_occur_2017_addcredit_augmentftr_step5_reclass_less_800_200_100_' \
+                                 '20230101_0.05_ftr_list_'+ str(model_index) + '.pkl'
+        if not os.path.exists(ftr_list_file_path):
+            print('{} not exists, please check.'.format(ftr_list_file_path))
+            return -1
+        with open(ftr_list_file_path, 'rb') as f:
+            select_cols = pickle.load(f)
+        print('length of select cols is:', len(select_cols))
+        result_file_path = './result/' + 'ml_' +str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_all_part, usecols, select_cols, fdr_level)
+        ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
+
+    print('4.b ml_predict done at :', get_cur_time())
 
 def ensemble_predict(dl_result_file_path: str,ml_result_file_path: str,ensemble_model_file_path: str, ensemble_result_file_path: str):
     ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
-
+    print('5 ensemble_predict done at :', get_cur_time())
+################################### for predict online end
 def ensemble_dl_ml_predict():
     usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
