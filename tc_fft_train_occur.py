@@ -6205,7 +6205,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     n_line_head = 30  # = tail
 
     step = 5
-    date_str = datetime(2023, 10, 24).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 25).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8
@@ -6921,5 +6921,5 @@ if __name__ == '__main__':
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
     # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
-    # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
-    ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
+    augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
+    # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()

@@ -892,12 +892,17 @@ def ensemble_dl_ml_predict():
               str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num)
     ensemble_type = 'occur_ensemble'
 
-    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20231001)
+    def filter_func(x):
+        return x[(x['RDATE'] > 20230701) & (x['RDATE'] < 20230801)]
+    df_all = df_all.groupby(['CUSTOMER_ID']).apply(filter_func).reset_index(drop=True)
+    print('1 df_all.shape:', df_all.shape)
+    print('df_all.head:', df_all.head(2))
+    #df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20231001)
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
     print('1 df_all.shape:', df_all.shape)
 
-    df_all = df_all[df_all['CUSTOMER_ID'].isin(['SMCRWSQ2206', 'SMCRWSQ200U'])]
-    print('2 df_all.shape:', df_all.shape)
+    #df_all = df_all[df_all['CUSTOMER_ID'].isin(['SMCRWSQ2206', 'SMCRWSQ200U'])]
+    #print('2 df_all.shape:', df_all.shape)
 
     # selected_groups = df_all['CUSTOMER_ID'].drop_duplicates().sample(n=100)
     # 获取每个选中组的所有样本
@@ -932,9 +937,9 @@ def ensemble_dl_ml_predict():
         return new_df
 
     # 将数据按照 CUSTOMER_ID 列的值分组，并应用函数生成新的组
-    df_all = df_all.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
+    #df_all = df_all.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
     # 输出结果
-    print('df_all.head:', df_all.head(32))
+    print('df_all.head:', df_all.head(2))
     print('df_all.shape:', df_all.shape)
 
     # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和; 3 -> watch out
