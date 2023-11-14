@@ -3579,7 +3579,7 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
                      "max_epochs": 5,
                      "verbose": 1,
                      "hidden_dims": 64,
-                     "seed": 0, }
+                     "seed": 1, }
     from paddlets.models.representation import ReprCluster
     from paddlets.models.representation import TS2Vec
     model = ReprCluster(repr_model=TS2Vec, repr_model_params=ts2vec_params)
@@ -4998,13 +4998,13 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
     n_line_head = 30  # = tail
 
     step = 5
-    date_str = datetime(2023, 10, 24).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 25).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8  # 1/5
     ftr_good_year_split = 2017
     ########## model
-    epochs = 1  # 20  10
+    epochs = 2  # 20  10
     patiences = 1  # 10  5
     kernelsize = 4  # 16
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
@@ -6215,7 +6215,7 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     num_leaves = 3 # 3 7
     n_estimators = 50 # 50 100
     class_weight =  None # 'balanced'  None
-    fdr_level = 0.0001 # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
+    fdr_level = 0.000001 # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 800    # 200
@@ -6786,15 +6786,15 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     ftr_num_str = '91'
     ftr_good_year_split = 2017
     ########## model
-    epochs = 2    # 3
-    patiences = 1  # 2
+    epochs = 2    #
+    patiences = 1  #
     kernelsize = 4
-    max_depth = 2 # 2 3  -1
-    num_leaves = 3 # 3 7  31
-    n_estimators = 50 #  50 100 100
-    class_weight =  None # None 'balanced' None
-    fdr_level = 0.001  # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
-    lc_c = [0.06, 0.03, 2.0,] #
+    max_depth = 2 # 2
+    num_leaves = 3 # 3
+    n_estimators = 50 #  50
+    class_weight =  None # None
+    fdr_level = 0.00001  # 0.001
+    lc_c = [0.06, 0.03, 2.0,] # 0.06, 0.03, 2.0,
     cluster_less_train_num = 800
     cluster_less_val_num = 200
     cluster_less_test_num = 100
@@ -6820,7 +6820,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
             #print('{} already exists, so no more train.'.format(ensemble_model_file_path))
             print('{} already exists, so just remove it and retrain.'.format(ensemble_model_file_path))
             os.remove(ensemble_model_file_path)
-            print(f" file '{ensemble_model_file_path}' is removed。")
+            print(f" file '{ensemble_model_file_path}' is removed.")
             #continue
         ensemble_dl_ml_base_score_train(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,lc_c[i])
     # model infer

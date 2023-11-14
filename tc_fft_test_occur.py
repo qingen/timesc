@@ -871,15 +871,15 @@ def ensemble_dl_ml_predict():
     filter_num_ratio = 1 / 8  # 1/5
     ftr_good_year_split = 2017
     ########## model cnn dt
-    epochs = 3
-    patiences = 2  # 10
-    kernelsize = 16
-    max_depth = 3 # 2 3 4 5
-    num_leaves = 7 # 3 7 15 31
-    n_estimators = 100 # 50 100
-    class_weight =  'balanced' # 'balanced'  None
-    lc_c = [0.1, 0.02, 0.2,] #
-    fdr_level = 0.05 # 0.05(default)  0.04 0.03 0.02 0.01
+    epochs = 2
+    patiences = 1  # 10
+    kernelsize = 4
+    max_depth = 2 # 2 3 4 5
+    num_leaves = 3 # 3 7 15 31
+    n_estimators = 50 # 50 100
+    class_weight =  None # 'balanced'  None
+    lc_c = [0.06, 0.03, 2.0,] #
+    fdr_level = 0.001 # 0.05(default)  0.04 0.03 0.02 0.01
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_' + str(ftr_good_year_split) + '_' + date_str + '/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 800
@@ -892,7 +892,7 @@ def ensemble_dl_ml_predict():
               str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num)
     ensemble_type = 'occur_ensemble'
 
-    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230901)
+    df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20231001)
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
     print('1 df_all.shape:', df_all.shape)
 
@@ -1010,36 +1010,27 @@ def ensemble_dl_ml_predict():
                                                                                                     cluster_model_file,
                                                                                                     1)
     for i in range(len(label_list_all)):
-        for j in range(len(label_list_all)):
+        for j in range(len(lc_c)):
             model_file_path = './model/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + \
                               str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
                               '_fl_aug_' + str(j) + '.itc'
-            if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                                  str(patiences) + '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                                  '_fl_aug_' + str(0) + '.itc'  # default 0
-                j = 0
             result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
                                '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + \
                                str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, but still infer.'.format(result_file_path))
-                #continue
+                print('{} already exists, so just remove it and still infer.'.format(result_file_path))
+                os.remove(result_file_path)
+                print(f" file '{result_file_path}' is removed.")
             dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
 
     for i in range(len(label_list_all)):
         df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
 
-        for j in range(len(label_list_all)):
+        for j in range(len(lc_c)):
             model_file_path = './model/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
                               str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + \
                               '_t' + str(n_line_tail) + '_ftr_select_' + str(j) + '.pkl'
-            if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) +'_'+str(fdr_level) +  '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_ftr_select_' + str(0) + '.pkl'  # default 0
-                j = 0
             ftr_list_file_path = './model/' + date_str + '_' + ml_type + '_' + split_date_str+ '_'+str(fdr_level) +'_ftr_list_' + str(j) + '.pkl'
             print(ftr_list_file_path)
             with open(ftr_list_file_path, 'rb') as f:
@@ -1050,33 +1041,29 @@ def ensemble_dl_ml_predict():
                                '_ftr_select_predict_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, but still infer.'.format(result_file_path))
-                #continue
+                print('{} already exists, so just remove it and still infer.'.format(result_file_path))
+                os.remove(result_file_path)
+                print(f" file '{result_file_path}' is removed.")
             df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_all_part, usecols, select_cols, fdr_level)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
     for i in range(len(label_list_all)):
-        dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
-                              '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + str(i) + '_' + str(i) + '.csv'
-        ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                              '_' + str(n_estimators) + '_' + str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                              '_ftr_select_predict_' + str(i) + '_' + str(i) + '.csv'
-        for j in range(len(label_list_all)):
+        for j in range(len(lc_c)):
+            dl_result_file_path = './result/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + str(patiences) + \
+                                  '_' + str(kernelsize) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_fl_predict_aug_' + str(j) + '_' + str(i) + '.csv'
+            ml_result_file_path = './result/' + date_str + '_' + ml_type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
+                                  '_' + str(n_estimators) + '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                                  '_ftr_select_predict_' + str(j) + '_' + str(i) + '.csv'
             ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' +str(lc_c[j]) + '_'+ split_date_str + '_' + str(epochs) + '_' + \
                                        str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + \
                                        '_' + str(class_weight) +'_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(j) + '_lr.pkl'
             ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[j]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
                                     str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_'+str(fdr_level) +  '_ftr_' + ftr_num_str + '_t' + \
                                     str(n_line_tail) + '_predict_' + str(j) + '_' + str(i) + '.csv'
-            if not os.path.exists(ensemble_model_file_path):
-                ensemble_model_file_path = './model/' + date_str + '_' + ensemble_type + '_' + str(lc_c[j]) + '_' + split_date_str + '_' + str(epochs) + '_' + \
-                                    str(patiences) + '_' + str(kernelsize) + '_' + str(max_depth) + '_' + str(num_leaves) + '_' + str(n_estimators) + \
-                                    '_' + str(class_weight) + '_' + str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + '_' + str(0) + '_lr.pkl'   # default 0
-                j = 0
-            if os.path.exists(ensemble_result_file_path) or (i != j):
-                print('{} already exists, but still infer.'.format(ensemble_result_file_path))
-                #continue
+            #if os.path.exists(ensemble_result_file_path) or (i != j):
+            #    print('{} already exists, but still infer.'.format(ensemble_result_file_path))
+            #    continue
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
 
