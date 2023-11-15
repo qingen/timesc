@@ -6211,11 +6211,11 @@ def augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occu
     filter_num_ratio = 1 / 8
     ftr_good_year_split = 2017   #  quick start 2022, at last 2016/2017
     ########## model
-    max_depth = 2 # 2 3
-    num_leaves = 3 # 3 7
-    n_estimators = 50 # 50 100
+    max_depth = 2 # 2
+    num_leaves = 3 # 3
+    n_estimators = 50 # 50
     class_weight =  None # 'balanced'  None
-    fdr_level = 0.000001 # 0.05(default)  0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
+    fdr_level = 0.00000001 # 0.05 0.04 0.03 0.02 0.01 0.001 0.0001 0.00001
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 800    # 200

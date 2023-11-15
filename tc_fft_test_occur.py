@@ -871,12 +871,12 @@ def ensemble_dl_ml_predict():
     filter_num_ratio = 1 / 8  # 1/5
     ftr_good_year_split = 2017
     ########## model cnn dt
-    epochs = 2
-    patiences = 1  # 10
-    kernelsize = 4
-    max_depth = 2 # 2 3 4 5
-    num_leaves = 3 # 3 7 15 31
-    n_estimators = 50 # 50 100
+    epochs = 2 #
+    patiences = 1  #
+    kernelsize = 4 #
+    max_depth = 2 # 2
+    num_leaves = 3 # 3
+    n_estimators = 50 # 50
     class_weight =  None # 'balanced'  None
     lc_c = [0.06, 0.03, 2.0,] #
     fdr_level = 0.001 # 0.05(default)  0.04 0.03 0.02 0.01
@@ -893,7 +893,7 @@ def ensemble_dl_ml_predict():
     ensemble_type = 'occur_ensemble'
 
     def filter_func(x):
-        return x[(x['RDATE'] > 20230701) & (x['RDATE'] < 20230801)]
+        return x[(x['RDATE'] >= 20230801) & (x['RDATE'] < 20230901)]
     df_all = df_all.groupby(['CUSTOMER_ID']).apply(filter_func).reset_index(drop=True)
     print('1 df_all.shape:', df_all.shape)
     print('df_all.head:', df_all.head(2))
@@ -1066,9 +1066,10 @@ def ensemble_dl_ml_predict():
             ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[j]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
                                     str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_'+str(fdr_level) +  '_ftr_' + ftr_num_str + '_t' + \
                                     str(n_line_tail) + '_predict_' + str(j) + '_' + str(i) + '.csv'
-            #if os.path.exists(ensemble_result_file_path) or (i != j):
-            #    print('{} already exists, but still infer.'.format(ensemble_result_file_path))
-            #    continue
+            if os.path.exists(ensemble_result_file_path):
+                print('{} already exists, but still infer.'.format(ensemble_result_file_path))
+                os.remove(ensemble_result_file_path)
+                print(f" file '{ensemble_result_file_path}' is removed.")
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
 
