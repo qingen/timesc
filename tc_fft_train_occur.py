@@ -5432,7 +5432,7 @@ def tsfresh_test():
                'LRR_CHA_30','LRR_CHA_60','LRR_CHA_7','LRR_CHA_90','LOAN_REPAY_RATIO','LRR_CHA_15','LSR_121_AVG_30','LSR_121_AVG_15',
                'LSR_121_AVG_7','STOCK_OVER_121_RATIO','LSR_121_CHA_180','LSR_121_CHA_90','LSR_121_CHA_30','LSR_121_CHA_15',
                'LSR_121_CHA_15','LSR_121_CHA_7','LSR_121_CHA_60']  # 128 cols 1/5
-    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
                'STOCK_AGE_AVG_365',
@@ -5455,32 +5455,30 @@ def tsfresh_test():
                'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
                'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
                'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols  1/8
-    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60','GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
                'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7']  # 18 cols
-    df23 = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, usecols=usecols, sep=',',
-                       encoding='gbk')
-    df22_4 = pd.read_csv("./data/0825_train/occur/2022_10_12_202308250913.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df22_3 = pd.read_csv("./data/0825_train/occur/2022_7_10_202308250922.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df22_2 = pd.read_csv("./data/0825_train/occur/2022_4_7_202308250927.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df22_1 = pd.read_csv("./data/0825_train/occur/2022_1_4_202308250931.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df21_4 = pd.read_csv("./data/0825_train/occur/2021_10_12_202308250937.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df21_3 = pd.read_csv("./data/0825_train/occur/2021_7_10_202308251006.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df21_2 = pd.read_csv("./data/0825_train/occur/2021_4_7_202308251012.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df21_1 = pd.read_csv("./data/0825_train/occur/2021_1_4_202308251017.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df20_4 = pd.read_csv("./data/0825_train/occur/2020_10_12_202308251023.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df20_3 = pd.read_csv("./data/0825_train/occur/2020_7_10_202308251033.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df20_2 = pd.read_csv("./data/0825_train/occur/2020_4_7_202308251037.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df20_1 = pd.read_csv("./data/0825_train/occur/2020_1_4_202308251042.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df19_4 = pd.read_csv("./data/0825_train/occur/2019_10_12_202308251047.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df19_3 = pd.read_csv("./data/0825_train/occur/2019_7_10_202308251052.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df19_2 = pd.read_csv("./data/0825_train/occur/2019_4_7_202308251057.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df19_1 = pd.read_csv("./data/0825_train/occur/2019_1_4_202308251238.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df18_4 = pd.read_csv("./data/0825_train/occur/2018_10_12_202308251253.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df18_3 = pd.read_csv("./data/0825_train/occur/2018_7_10_202308251257.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df18_2 = pd.read_csv("./data/0825_train/occur/2018_4_7_202308251301.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
-    df18_1 = pd.read_csv("./data/0825_train/occur/2018_1_4_202308251306.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df23 = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    #df22_4 = pd.read_csv("./data/0825_train/occur/2022_10_12_202308250913.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    #df22_3 = pd.read_csv("./data/0825_train/occur/2022_7_10_202308250922.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df22_2 = pd.read_csv("./data/0825_train/occur/2022_4_7_202308250927.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df22_1 = pd.read_csv("./data/0825_train/occur/2022_1_4_202308250931.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df21_4 = pd.read_csv("./data/0825_train/occur/2021_10_12_202308250937.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df21_3 = pd.read_csv("./data/0825_train/occur/2021_7_10_202308251006.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df21_2 = pd.read_csv("./data/0825_train/occur/2021_4_7_202308251012.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df21_1 = pd.read_csv("./data/0825_train/occur/2021_1_4_202308251017.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df20_4 = pd.read_csv("./data/0825_train/occur/2020_10_12_202308251023.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df20_3 = pd.read_csv("./data/0825_train/occur/2020_7_10_202308251033.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df20_2 = pd.read_csv("./data/0825_train/occur/2020_4_7_202308251037.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df20_1 = pd.read_csv("./data/0825_train/occur/2020_1_4_202308251042.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df19_4 = pd.read_csv("./data/0825_train/occur/2019_10_12_202308251047.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df19_3 = pd.read_csv("./data/0825_train/occur/2019_7_10_202308251052.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df19_2 = pd.read_csv("./data/0825_train/occur/2019_4_7_202308251057.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df19_1 = pd.read_csv("./data/0825_train/occur/2019_1_4_202308251238.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df18_4 = pd.read_csv("./data/0825_train/occur/2018_10_12_202308251253.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df18_3 = pd.read_csv("./data/0825_train/occur/2018_7_10_202308251257.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df18_2 = pd.read_csv("./data/0825_train/occur/2018_4_7_202308251301.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    #df18_1 = pd.read_csv("./data/0825_train/occur/2018_1_4_202308251306.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
     #df17_4 = pd.read_csv("./data/0825_train/occur/2017_10_12_202308251310.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
     #df17_3 = pd.read_csv("./data/0825_train/occur/2017_7_10_202308251313.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
     #df17_2 = pd.read_csv("./data/0825_train/occur/2017_4_7_202308251316.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
@@ -5489,9 +5487,9 @@ def tsfresh_test():
     #df16_1 = pd.read_csv("./data/0825_train/occur/2016_1_7_202308251331.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
 
     #df_16_18 = pd.concat([df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4])
-    df_16_18 = pd.concat([df18_1, df18_2, df18_3, df18_4])
-    df_19_20 = pd.concat([df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4])
-    df_21_23 = pd.concat([df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23])
+    #df_16_18 = pd.concat([df18_1, df18_2, df18_3, df18_4])
+    #df_19_20 = pd.concat([df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4])
+    #df_21_23 = pd.concat([df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23])
     #df_22_23 = pd.concat([df22_1, df22_2, df22_3, df22_4, df23])
     # print(df_16_18.shape)
     # print(df_19_20.shape)
@@ -5500,13 +5498,14 @@ def tsfresh_test():
     #del df22_4, df23
 
     #df_all = df_22_23
-    df_all = pd.concat([df_16_18, df_19_20, df_21_23])
+    #df_all = pd.concat([df_16_18, df_19_20, df_21_23])
+    df_all = df23
     print('df_all.shape:', df_all.shape)
 
     #del df_22_23
-    del df_16_18,df_19_20, df_21_23
-    del df18_1, df18_2, df18_3, df18_4, df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4,
-    del df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23
+    #del df_16_18,df_19_20, df_21_23
+    #del df18_1, df18_2, df18_3, df18_4, df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4,
+    #del df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('1 read csv :', formatted_time)
@@ -5585,7 +5584,7 @@ def tsfresh_test():
            'LRR_CHA_30','LRR_CHA_60','LRR_CHA_7','LRR_CHA_90','LOAN_REPAY_RATIO','LRR_CHA_15','LSR_121_AVG_30','LSR_121_AVG_15',
            'LSR_121_AVG_7','STOCK_OVER_121_RATIO','LSR_121_CHA_180','LSR_121_CHA_90','LSR_121_CHA_30',
            'LSR_121_CHA_15','LSR_121_CHA_7','LSR_121_CHA_60',]  # 127 + 1
-    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
            'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
            'STOCK_AGE_AVG_365',
@@ -5617,7 +5616,7 @@ def tsfresh_test():
            'GRP_CNT',
            'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM', 'STOCK_AGE_AVG_90', 'LSR_91_AVG_180']  # 40
 
-    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
            'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7']  # 18
 
@@ -5654,13 +5653,15 @@ def tsfresh_test():
     splitted_data = [group for _, group in grouped_data]
     split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data)
     X = pd.DataFrame()
-    # 打印划分结果
-    top_ftr_num = 3
+    top_ftr_num = 10  # get top ftr from selection sets
     kind_to_fc_parameters_file_path = './model/kind_to_fc_parameters_top'+str(top_ftr_num)+'.npy'
     saved_kind_to_fc_parameters = None
     if os.path.exists(kind_to_fc_parameters_file_path):
         print('kind_to_fc_parameters_file exists, so load it, other than calculate_relevance_table')
         saved_kind_to_fc_parameters = np.load(kind_to_fc_parameters_file_path, allow_pickle='TRUE').item()
+        print('saved_kind_to_fc_parameters is: ',saved_kind_to_fc_parameters)
+    else:
+        print('kind_to_fc_parameters_file not exists, so extract_features all first and then select')
     for indices in split_indices:
         df_part = pd.concat([splitted_data[i] for i in indices])
         X_part = extract_features(df_part[col], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
@@ -5823,11 +5824,11 @@ def tsfresh_test():
             # cat_features=categorical_features_indices,
             eval_set=(X_valid, y_valid),
             logging_level='Verbose',  # you can uncomment this for text output
-            plot=True
+            # plot=True
         );
         # 保存
-        cbc.save_model('catboost_model.bin')
-        cbc.load_model('catboost_model.bin')
+        cbc.save_model('./model/catboost_model.bin')
+        cbc.load_model('./model/catboost_model.bin')
         print(cbc.get_params())
         print(cbc.random_seed_)
         predictions = cbc.predict(X_test)
@@ -6781,7 +6782,7 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
 
     n_line_tail = 30  # (1-5) * 30
     step = 5
-    date_str = datetime(2023, 10, 24).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 25).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '91'
     ftr_good_year_split = 2017
@@ -6793,8 +6794,8 @@ def ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score():
     num_leaves = 3 # 3
     n_estimators = 50 #  50
     class_weight =  None # None
-    fdr_level = 0.00001  # 0.001
-    lc_c = [0.06, 0.03, 2.0,] # 0.06, 0.03, 2.0,
+    fdr_level = 0.00000001  # 0.001  0.00001  0.00000001
+    lc_c = [0.06, 0.04, 0.1,] # 0.06, 0.03, 2.0] 0.1, 0.05, 0.1,]
     cluster_less_train_num = 800
     cluster_less_val_num = 200
     cluster_less_test_num = 100
@@ -6919,7 +6920,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
     # tsfresh_test()
     augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
-    # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
+    ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()

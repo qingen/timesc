@@ -551,7 +551,12 @@ def prepare_data(csv_file_path_base:str, csv_file_path_credit:str):
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8  # 1/5
 
-    # df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230901)
+    def filter_func(x):
+        return x[(x['RDATE'] >= 20230901) & (x['RDATE'] < 20231001)]
+    df_all = df_all.groupby(['CUSTOMER_ID']).apply(filter_func).reset_index(drop=True)
+    print('1 df_all.shape:', df_all.shape)
+    print('df_all.head:', df_all.head(2))
+
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
     print('after filter length df_all.shape:', df_all.shape)
     df_all = df_all.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
@@ -581,7 +586,7 @@ def prepare_data(csv_file_path_base:str, csv_file_path_credit:str):
     # 将数据按照 CUSTOMER_ID 列的值分组，并应用函数生成新的组
     df_all = df_all.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
     # 输出结果
-    print('df_all.head:', df_all.head(32))
+    print('df_all.head:', df_all.head(2))
     print('after generate_new_groups df_all.shape:', df_all.shape)
 
     # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和; 3 -> watch out
@@ -699,14 +704,13 @@ def dl_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_al
     :return:
     '''
     for i in range(len(label_list_all)):
-        model_index = i
+        model_index = i if i < 3 else 0  # 3 models
         dataset_group_index = i
-        model_file_path = './model/20231024_occur_2017_addcredit_step5_reclass_less_800_200_100_' \
-                          '20230101_2_1_16_ftr_91_t30_fl_aug_' + str(model_index) + '.itc'
+        model_file_path = './model/20231025_occur_2017_addcredit_step5_reclass_less_800_200_100_' \
+                          '20230101_2_1_4_ftr_91_t30_fl_aug_' + str(model_index) + '.itc'
         if not os.path.exists(model_file_path):  #  model 0 must exist
-            model_file_path = './model/20231024_occur_2017_addcredit_step5_reclass_less_800_200_100_' \
-                          '20230101_2_1_16_ftr_91_t30_fl_aug_0.itc'
-            model_index = 0
+            print('%s not exists, please check.' % (model_file_path))
+            return -1
         result_file_path = './result/' + 'dl_' +str(model_index) + '_' + str(dataset_group_index) + '.csv'
         dl_model_forward_ks_roc(model_file_path, result_file_path, tsdataset_list_all[i], label_list_all[i], customersid_list_all[i])
 
@@ -746,17 +750,16 @@ def ml_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_al
                'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols
     fdr_level = 0.05
     for i in range(len(label_list_all)):
-        model_index = i
+        model_index = i if i < 3 else 0  # 3 models
         dataset_group_index = i
         df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
-        model_file_path = './model/20231024_occur_2017_addcredit_augmentftr_step5_reclass_less_800_200_100_' \
-                            '20230101_3_7_100_balanced_0.05_ftr_91_t30_ftr_select_' + str(model_index) + '.pkl'
-        if not os.path.exists(model_file_path): #  model 0 must exist
-            model_file_path = './model/20231024_occur_2017_addcredit_augmentftr_step5_reclass_less_800_200_100_' \
-                            '20230101_3_7_100_balanced_0.05_ftr_91_t30_ftr_select_0.pkl'
-            model_index = 0
-        ftr_list_file_path = './model/20231024_occur_2017_addcredit_augmentftr_step5_reclass_less_800_200_100_' \
-                                 '20230101_0.05_ftr_list_'+ str(model_index) + '.pkl'
+        model_file_path = './model/20231025_occur_2017_addcredit_augmentftr_step5_reclass_less_800_200_100_' \
+                            '20230101_2_3_50_None_1e-05_ftr_91_t30_ftr_select_' + str(model_index) + '.pkl'
+        if not os.path.exists(model_file_path): #  3 models
+            print('%s not exists, please check.' % (model_file_path))
+            return -1
+        ftr_list_file_path = './model/20231025_occur_2017_addcredit_augmentftr_step5_reclass_less_800_200_100_' \
+                                 '20230101_1e-05_ftr_list_'+ str(model_index) + '.pkl'
         if not os.path.exists(ftr_list_file_path):
             print('{} not exists, please check.'.format(ftr_list_file_path))
             return -1
@@ -779,8 +782,8 @@ def predict_pipeline():
     credit_path =  './data/0720_2639/credit/202310241401.csv'
     df = prepare_data(base_path, credit_path)
     tsdatasets_all,y_all,y_all_customerid = transform_data(df)
-    cluster_model_path = './model/cluster_step5_credit1_90_2017_20231024/'
-    cluster_model_file = '20231024-repr-cluster-partial-train-6.pkl'
+    cluster_model_path = './model/cluster_step5_credit1_90_2017_20231025/'
+    cluster_model_file = '20231025-repr-cluster-partial-train-6.pkl'
     tsdataset_list_all, label_list_all, customersid_list_all = group_data(tsdatasets_all,
                                                                           y_all,
                                                                           y_all_customerid,
@@ -788,6 +791,16 @@ def predict_pipeline():
                                                                           cluster_model_file)
     dl_predict(tsdataset_list_all, label_list_all, customersid_list_all)
     ml_predict(tsdataset_list_all, label_list_all, customersid_list_all, df)
+    lc_c = [0.1, 0.05, 0.1, ]
+    for i in range(len(label_list_all)):
+        model_index = i if i < 3 else 0  # 3 models
+        dataset_group_index = i
+        dl_result_file_path = './result/' + 'dl_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        ml_result_file_path = './result/' + 'ml_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        ensemble_result_file_path = './result/' + 'ensemble_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        ensemble_model_file_path = './model/' + '20231025_occur_ensemble_' + str(lc_c[model_index]) + \
+                                   '_20230101_2_1_4_2_3_50_None_1e-05_ftr_91_t30_0_lr.pkl'
+        ensemble_predict(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
 
 ################################### for predict online end
 def ensemble_dl_ml_predict():
@@ -865,7 +878,7 @@ def ensemble_dl_ml_predict():
     n_line_head = 30  # = tail
 
     step = 5
-    date_str = datetime(2023, 10, 24).strftime("%Y%m%d")
+    date_str = datetime(2023, 10, 25).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8  # 1/5
@@ -878,8 +891,8 @@ def ensemble_dl_ml_predict():
     num_leaves = 3 # 3
     n_estimators = 50 # 50
     class_weight =  None # 'balanced'  None
-    lc_c = [0.06, 0.03, 2.0,] #
-    fdr_level = 0.001 # 0.05(default)  0.04 0.03 0.02 0.01
+    lc_c = [0.1, 0.05, 0.1,] # 0.06, 0.03, 2.0,
+    fdr_level = 0.00001 # 0.05 0.04 0.03 0.02 0.01
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_' + str(ftr_good_year_split) + '_' + date_str + '/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 800
@@ -893,13 +906,13 @@ def ensemble_dl_ml_predict():
     ensemble_type = 'occur_ensemble'
 
     def filter_func(x):
-        return x[(x['RDATE'] >= 20230801) & (x['RDATE'] < 20230901)]
+        return x[(x['RDATE'] >= 20230901) & (x['RDATE'] < 20231001)]
     df_all = df_all.groupby(['CUSTOMER_ID']).apply(filter_func).reset_index(drop=True)
     print('1 df_all.shape:', df_all.shape)
     print('df_all.head:', df_all.head(2))
     #df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20231001)
     df_all = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
-    print('1 df_all.shape:', df_all.shape)
+    print('after filter length df_all.shape:', df_all.shape)
 
     #df_all = df_all[df_all['CUSTOMER_ID'].isin(['SMCRWSQ2206', 'SMCRWSQ200U'])]
     #print('2 df_all.shape:', df_all.shape)
@@ -1077,3 +1090,4 @@ if __name__ == '__main__':
     # test_for_report()
     # predict_weekly()
     ensemble_dl_ml_predict()
+    # predict_pipeline()
