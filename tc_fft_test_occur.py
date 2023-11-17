@@ -748,7 +748,7 @@ def ml_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_al
                'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
                'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
                'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols
-    fdr_level = 0.05
+    fdr_level = 0.00000001
     for i in range(len(label_list_all)):
         model_index = i if i < 3 else 0  # 3 models
         dataset_group_index = i
@@ -791,7 +791,7 @@ def predict_pipeline():
                                                                           cluster_model_file)
     dl_predict(tsdataset_list_all, label_list_all, customersid_list_all)
     ml_predict(tsdataset_list_all, label_list_all, customersid_list_all, df)
-    lc_c = [0.1, 0.05, 0.1, ]
+    lc_c = [0.06, 0.04, 0.1, ] # 0.1, 0.05, 0.1,
     for i in range(len(label_list_all)):
         model_index = i if i < 3 else 0  # 3 models
         dataset_group_index = i
@@ -799,7 +799,7 @@ def predict_pipeline():
         ml_result_file_path = './result/' + 'ml_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
         ensemble_result_file_path = './result/' + 'ensemble_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
         ensemble_model_file_path = './model/' + '20231025_occur_ensemble_' + str(lc_c[model_index]) + \
-                                   '_20230101_2_1_4_2_3_50_None_1e-05_ftr_91_t30_0_lr.pkl'
+                                   '_20230101_2_1_4_2_3_50_None_1e-08_ftr_91_t30_0_lr.pkl'
         ensemble_predict(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
 
 ################################### for predict online end
@@ -891,8 +891,8 @@ def ensemble_dl_ml_predict():
     num_leaves = 3 # 3
     n_estimators = 50 # 50
     class_weight =  None # 'balanced'  None
-    lc_c = [0.1, 0.05, 0.1,] # 0.06, 0.03, 2.0,
-    fdr_level = 0.00001 # 0.05 0.04 0.03 0.02 0.01
+    lc_c = [0.06, 0.04, 0.1, ] # 0.06, 0.03, 2.0,   0.1, 0.05, 0.1,
+    fdr_level = 0.00000001 # 0.05 0.04 0.03 0.02 0.01
     cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_' + str(ftr_good_year_split) + '_' + date_str + '/'
     cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
     cluster_less_train_num = 800
@@ -1089,5 +1089,5 @@ def ensemble_dl_ml_predict():
 if __name__ == '__main__':
     # test_for_report()
     # predict_weekly()
-    ensemble_dl_ml_predict()
-    # predict_pipeline()
+    # ensemble_dl_ml_predict()
+    predict_pipeline()
