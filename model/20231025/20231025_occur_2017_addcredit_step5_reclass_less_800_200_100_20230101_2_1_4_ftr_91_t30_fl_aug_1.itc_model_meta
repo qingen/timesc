@@ -1,0 +1,1 @@
+{"ancestor_classname_set": ["InceptionTimeClassifier", "PaddleBaseClassifier", "BaseClassifier", "ABC", "object"], "modulename": "paddlets.models.classify.dl.inception_time"}
