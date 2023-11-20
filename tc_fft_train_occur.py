@@ -5827,45 +5827,20 @@ def tsfresh_test():
             # plot=True
         );
         # 保存
-        cbc.save_model('./model/catboost_model.bin')
-        cbc.load_model('./model/catboost_model.bin')
+        #cbc.save_model('./model/catboost_model.bin')
+        #cbc.load_model('./model/catboost_model.bin')
         print(cbc.get_params())
         print(cbc.random_seed_)
         predictions = cbc.predict(X_test)
         predictions_probs = cbc.predict_proba(X_test)
         print(predictions[:10])
         print(predictions_probs[:10])
-        cbc.get_feature_importance(prettified=True)
-        return
+        print('ftr importance',cbc.get_feature_importance(prettified=True))
 
-        plot_importance(model,max_num_features=10,xlim=(0,20))
-        plt.show()
-        importance = model.booster_.feature_importance(importance_type='gain')
-        ftr_name = model.booster_.feature_name()
-        print('len importance:',len(importance))
-        importance_dict = {}
-        x_list = []
-        for x_n, im in zip(list(ftr_name), importance):
-            importance_dict[x_n] = im
-        target = 'tsfresh'
-        if importance_dict:
-            with open('%s_importance.json' % target, 'w', encoding='utf-8') as ff:
-                json.dump(importance_dict, ff, ensure_ascii=False)
-            im_df = pd.DataFrame([[x[0], x[1]] for x in importance_dict.items()])
-            im_df.to_csv('%s_importance.csv' % target, index=False)
-        # importances = lr.feature_importances_
-        # feat_labels = ['x1','x2','x3','x4','x5','x6','x7','x8','x9']
-        # indices = np.argsort(importances)[::-1]
-        # for f in range(x_train.shape[1]):
-        #     print("%2d) %-*s %f" % (f + 1, 30, feat_labels[indices[f]], importances[indices[f]]))
+        #plot_importance(cbc,max_num_features=10,xlim=(0,20))
+        #plt.show()
 
-        # 模型效果获取
-        # print('系数为：', lr.coef_)
-        # print('截距为：', lr.intercept_)
-
-        # 预测
-        #y_predict = lr.predict(X_filtered_test)  # 预测
-        y_prob = lc.predict_proba(X_filtered_test)[:, 1]
+        y_prob = cbc.predict_proba(X_test)[:, 1]
         for i in range(len(y_prob)):
             print(y_test[i],y_prob[i])
         fpr, tpr, thresholds = metrics.roc_curve(y_test, y_prob, pos_label=1)
@@ -5896,16 +5871,11 @@ def tsfresh_test():
         plt.legend(loc="lower right")
         # plt.savefig("KS（test）.png")
         plt.show()
-        # 加载
-        my_model = joblib.load("lgbm_model.pkl")
-        y_prob = my_model.predict_proba(X_filtered_test)[:, 1]
-        for i in range(len(y_prob)):
-            print(y_test[i], y_prob[i])
 
 # origin_cols , include customer,rdate,y,ftr
 def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_cols:List[str],fdr_level:float=0.05):
     extraction_settings = ComprehensiveFCParameters()
-    print('head df :',df[origin_cols].head())
+    print('head df :',df[origin_cols].head(2))
     data_cols = origin_cols[:]
     data_cols.remove('Y')
     df.fillna(0, inplace=True)
@@ -5917,11 +5887,16 @@ def tsfresh_ftr_augment_select(df: pd.DataFrame,origin_cols:List[str],select_col
     splitted_data = [group for _, group in grouped_data]
     split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data) # num < 500 -> 0
     X = pd.DataFrame()
-    for indices in split_indices:
-        df_part = pd.concat([splitted_data[i] for i in indices])
-        X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10, n_jobs=32,
+    print('length split_indices is: ', len(split_indices), split_indices)
+    if(len(split_indices) > 2):
+        for indices in split_indices:
+            df_part = pd.concat([splitted_data[i] for i in indices])
+            X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10, n_jobs=32,
+                                      default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
+            X = pd.concat([X, X_part])
+    else:
+        X = extract_features(df[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10, n_jobs=32,
                                   default_fc_parameters=extraction_settings, impute_function=impute)  # chunksize=10,n_jobs=8,
-        X = pd.concat([X, X_part])
     impute(X)
     print('head X:',X.iloc[:2, :5])
     print('columns X:',X.columns,'\n length X:',len(X))
@@ -6920,7 +6895,7 @@ if __name__ == '__main__':
     # ts2vec_relabel()
     # augment_bad_data_relabel_train_occur_continue_for_report()
     # augment_bad_data_relabel_multiclass_train_occur_continue_for_report()
-    augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
-    # tsfresh_test()
-    augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
-    ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
+    # augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_report()
+    tsfresh_test()
+    # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
+    # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
