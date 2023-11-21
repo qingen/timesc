@@ -7531,6 +7531,7 @@ def multiple_hypothesis_testing():
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('6 group data:', formatted_time)
+
     label_list_val = []
     customersid_list_val = []
     label_list_val_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_label_list_val.pkl'
@@ -7561,65 +7562,70 @@ def multiple_hypothesis_testing():
     for i in range(len(label_list_val)):
         select_cols = []
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
-
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) +'_'+str(fdr_level) + '_ftr_' + ftr_num_str + \
-                              '_t' + str(n_line_tail) + '_ftr_select_' + str(j) + '.pkl'
+            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
+                              '_t' + str(n_line_tail) + '_cbc_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_ftr_select_' + str(0) + '.pkl'  # default 0
+                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
+                                  '_t' + str(n_line_tail) + '_cbc_' + str(0) + '.cbm'
                 j = 0
-            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_'+str(fdr_level) + '_ftr_list_' + str(j) + '.pkl'
-            print(ftr_list_file_path)
-            with open(ftr_list_file_path, 'rb') as f:
-                select_cols = pickle.load(f)
-            print('len select cols:',len(select_cols))
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                               '_' + str(n_estimators)+'_' +str(class_weight) + '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                               '_ftr_select_val_' + str(j) + '_' + str(i) + '.csv'
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
+                                              '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                               '_cbc_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
                 continue
-            df_val_ftr_select_notime = tsfresh_ftr_augment_select(df_val_part, usecols, select_cols,fdr_level)
+            df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_val_ftr_select_notime.loc[:,'CUSTOMER_ID']))
 
-    tsdataset_list_test, label_list_test, customersid_list_test = ts2vec_cluster_datagroup_model(tsdatasets_test,
-                                                                                                 y_test,
-                                                                                                 y_test_customerid,
-                                                                                                 cluster_model_path,
-                                                                                                 cluster_model_file,
-                                                                                                 cluster_less_test_num)
-    for i in range(len(label_list_test)):
-        df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
+    label_list_test = []
+    customersid_list_test = []
+    label_list_test_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_label_list_test.pkl'
+    customersid_list_test_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_customersid_list_test.pkl'
+    if not os.path.exists(label_list_test_file_path):
+        tsdataset_list_test, label_list_test, customersid_list_test = ts2vec_cluster_datagroup_model(tsdatasets_test,
+                                                                                                     y_test,
+                                                                                                     y_test_customerid,
+                                                                                                     cluster_model_path,
+                                                                                                     cluster_model_file,
+                                                                                                     cluster_less_test_num)
+        with open(label_list_test_file_path, 'wb') as f:
+            pickle.dump(label_list_test, f)
+        with open(customersid_list_test_file_path, 'wb') as f:
+            pickle.dump(customersid_list_test, f)
+        print('label_list_test and customersid_list_test dump done.')
+    else:
+        with open(label_list_test_file_path, 'rb') as f:
+            label_list_test = pickle.load(f)
+        with open(customersid_list_test_file_path, 'rb') as f:
+            customersid_list_test = pickle.load(f)
+        print('label_list_test and customersid_list_test load done.')
 
+    for i in range(len(label_list_test)):
+        select_cols = []
+        df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                              str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + \
-                              '_t' + str(n_line_tail) + '_ftr_select_' + str(j) + '.pkl'
+            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
+                              '_t' + str(n_line_tail) + '_cbc_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + \
-                                  str(num_leaves) + '_' + str(n_estimators)+'_' +str(class_weight) +'_'+str(fdr_level) +  '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_ftr_select_' + str(0) + '.pkl'  # default 0
+                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
+                                  '_t' + str(n_line_tail) + '_cbc_' + str(0) + '.cbm'
                 j = 0
-            ftr_list_file_path = './model/' + date_str + '_' + type + '_' + split_date_str+ '_'+str(fdr_level) +'_ftr_list_' + str(j) + '.pkl'
-            print(ftr_list_file_path)
-            with open(ftr_list_file_path, 'rb') as f:
-                select_cols = pickle.load(f)
-            print('len select cols:', len(select_cols))
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_' + str(max_depth) + '_' + str(num_leaves) + \
-                               '_' + str(n_estimators)+'_' +str(class_weight)+ '_'+str(fdr_level) + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                               '_ftr_select_test_' + str(j) + '_' + str(i) + '.csv'
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
+                                              '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                               '_cbc_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
                 continue
-            df_test_ftr_select_notime = tsfresh_ftr_augment_select(df_test_part, usecols, select_cols, fdr_level)
+            df_test_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
+
 if __name__ == '__main__':
     # train_occur_for_report()
     # train_occur_for_predict()
