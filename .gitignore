@@ -1,4 +1,8 @@
 # exp
+*.itc*
+*.pkl
+*.npy
+*.bin
 *.csv
 *.txt
 *.png

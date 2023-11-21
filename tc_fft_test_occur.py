@@ -754,7 +754,7 @@ def ml_predict(tsdataset_list_all: List,label_list_all: List,customersid_list_al
         dataset_group_index = i
         df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
         model_file_path = './model/20231025_occur_2017_addcredit_augmentftr_step5_reclass_less_800_200_100_' \
-                            '20230101_2_3_50_None_1e-05_ftr_91_t30_ftr_select_' + str(model_index) + '.pkl'
+                            '20230101_2_3_50_None_1e-08_ftr_91_t30_ftr_select_' + str(model_index) + '.pkl'
         if not os.path.exists(model_file_path): #  3 models
             print('%s not exists, please check.' % (model_file_path))
             return -1
@@ -784,11 +784,7 @@ def predict_pipeline():
     tsdatasets_all,y_all,y_all_customerid = transform_data(df)
     cluster_model_path = './model/cluster_step5_credit1_90_2017_20231025/'
     cluster_model_file = '20231025-repr-cluster-partial-train-6.pkl'
-    tsdataset_list_all, label_list_all, customersid_list_all = group_data(tsdatasets_all,
-                                                                          y_all,
-                                                                          y_all_customerid,
-                                                                          cluster_model_path,
-                                                                          cluster_model_file)
+    tsdataset_list_all, label_list_all, customersid_list_all = group_data(tsdatasets_all,y_all,y_all_customerid,cluster_model_path,cluster_model_file)
     dl_predict(tsdataset_list_all, label_list_all, customersid_list_all)
     ml_predict(tsdataset_list_all, label_list_all, customersid_list_all, df)
     lc_c = [0.06, 0.04, 0.1, ]
@@ -801,6 +797,17 @@ def predict_pipeline():
         ensemble_model_file_path = './model/' + '20231025_occur_ensemble_' + str(lc_c[model_index]) + \
                                    '_20230101_2_1_4_2_3_50_None_1e-08_ftr_91_t30_'+ str(model_index)+'_lr.pkl'
         ensemble_predict(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
+    X = pd.DataFrame()
+    for i in range(len(label_list_all)):
+        model_index = i if i < 3 else 0  # 3 models
+        dataset_group_index = i
+        ensemble_result_file_path = './result/' + 'ensemble_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        X_part = pd.read_csv(ensemble_result_file_path, header=0, sep=',', encoding='gbk')
+        X = pd.concat([X, X_part])
+    X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
+    X.sort_values(by='prob', ascending=False, inplace=True)
+    X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
+    print('after sort:',X.head(20))
 
 ################################### for predict online end
 def ensemble_dl_ml_predict():
@@ -831,15 +838,15 @@ def ensemble_dl_ml_predict():
     #df227 = pd.read_csv("./data/0720_2639/22_7_202307201610.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     #df23_1 = pd.read_csv("./data/0720_2639/2023_1_5_202308171425.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     #df23_2 = pd.read_csv("./data/0720_2639/2023_5_6_202309081528.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
-    #df23_3 = pd.read_csv("./data/0720_2639/2023_6_7_202309081530.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
-    #df23_4 = pd.read_csv("./data/0720_2639/2023_7_8_202309081532.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    df23_3 = pd.read_csv("./data/0720_2639/2023_6_7_202309081530.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
+    df23_4 = pd.read_csv("./data/0720_2639/2023_7_8_202309081532.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     df23_5 = pd.read_csv("./data/0720_2639/2023_8_202310241410.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30',]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30' 2023_8_202310241410
     df_credit = pd.read_csv("./data/0720_2639/credit/202310241401.csv", header=0, usecols=credit_usecols, sep=',',encoding='gbk')
 
-    # df_all = pd.concat([df23_1, df23_2, df23_3, df23_4, df23_5])
+    df_all = pd.concat([df23_3, df23_4, df23_5])
     # del  df23_1, df23_2, df23_3, df23_4, df23_5
-    df_all = df23_5
+    # df_all = df23_5
     print(df_all.shape)
     df_all = pd.merge(df_all, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
     print('after merge df_all.shape:', df_all.shape)
@@ -906,7 +913,7 @@ def ensemble_dl_ml_predict():
     ensemble_type = 'occur_ensemble'
 
     def filter_func(x):
-        return x[(x['RDATE'] >= 20230918) & (x['RDATE'] < 20231018)]
+        return x[(x['RDATE'] >= 20230618) & (x['RDATE'] < 20230718)]
     df_all = df_all.groupby(['CUSTOMER_ID']).apply(filter_func).reset_index(drop=True)
     print('1 df_all.shape:', df_all.shape)
     print('df_all.head:', df_all.head(2))
@@ -1026,7 +1033,7 @@ def ensemble_dl_ml_predict():
                                                                                                     y_all_customerid,
                                                                                                     cluster_model_path,
                                                                                                     cluster_model_file,
-                                                                                                    1)
+                                                                                                    20)
     for i in range(len(label_list_all)):
         for j in range(len(lc_c)):
             model_file_path = './model/' + date_str + '_' + dl_type + '_' + split_date_str + '_' + str(epochs) + '_' + \
@@ -1085,9 +1092,22 @@ def ensemble_dl_ml_predict():
                 print(f" file '{ensemble_result_file_path}' is removed.")
             print(ensemble_result_file_path)
             ensemble_dl_ml_base_score_test(dl_result_file_path,ml_result_file_path,ensemble_model_file_path,ensemble_result_file_path)
+    X = pd.DataFrame()
+    for i in range(len(label_list_all)):
+        model_index = i if i < 3 else 0  # 3 models
+        dataset_group_index = i
+        ensemble_result_file_path = './result/' + date_str + '_' + ensemble_type + '_'+str(lc_c[model_index]) + '_' + split_date_str + '_' + str(max_depth) + '_' + \
+                                    str(num_leaves) + '_' + str(n_estimators) + '_' + str(class_weight) + '_'+str(fdr_level) +  '_ftr_' + ftr_num_str + '_t' + \
+                                    str(n_line_tail) + '_predict_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        X_part = pd.read_csv(ensemble_result_file_path, header=0, sep=',', encoding='gbk')
+        X = pd.concat([X, X_part])
+    X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
+    X.sort_values(by='prob', ascending=False, inplace=True)
+    X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
+    print('after sort:',X.head(20))
 
 if __name__ == '__main__':
     # test_for_report()
     # predict_weekly()
-    #ensemble_dl_ml_predict()
-    predict_pipeline()
+    ensemble_dl_ml_predict()
+    #predict_pipeline()
