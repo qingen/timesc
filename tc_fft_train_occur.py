@@ -7444,9 +7444,28 @@ def multiple_hypothesis_testing():
 
     from paddlets.transform import StandardScaler
     ss_scaler = StandardScaler()
-    tsdatasets_train = ss_scaler.fit_transform(tsdatasets_train)
-    tsdatasets_val = ss_scaler.fit_transform(tsdatasets_val)
-    tsdatasets_test = ss_scaler.fit_transform(tsdatasets_test)
+    tsdataset_list_train_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_list_train.pkl'
+    tsdataset_list_val_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_list_val.pkl'
+    tsdataset_list_test_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_list_test.pkl'
+    if not os.path.exists(tsdataset_list_train_file_path):
+        tsdatasets_train = ss_scaler.fit_transform(tsdatasets_train)
+        tsdatasets_val = ss_scaler.fit_transform(tsdatasets_val)
+        tsdatasets_test = ss_scaler.fit_transform(tsdatasets_test)
+        with open(tsdataset_list_train_file_path, 'wb') as f:
+            pickle.dump(tsdatasets_train, f)
+        with open(tsdataset_list_val_file_path, 'wb') as f:
+            pickle.dump(tsdatasets_val, f)
+        with open(tsdataset_list_test_file_path, 'wb') as f:
+            pickle.dump(tsdatasets_test, f)
+        print('tsdatasets_train, tsdatasets_val and tsdatasets_test dump done.')
+    else:
+        with open(tsdataset_list_train_file_path, 'rb') as f:
+            tsdatasets_train = pickle.load(f)
+        with open(tsdataset_list_val_file_path, 'rb') as f:
+            tsdatasets_val = pickle.load(f)
+        with open(tsdataset_list_test_file_path, 'rb') as f:
+            tsdatasets_test = pickle.load(f)
+        print('tsdatasets_train, tsdatasets_val and tsdatasets_test load done.')
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
