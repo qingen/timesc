@@ -7352,36 +7352,37 @@ def multiple_hypothesis_testing():
     ######################
     from paddlets import TSDataset
     from paddlets.analysis import FFT, CWT
-    tsdatasets_train = TSDataset.load_from_dataframe(
-        df=df_train,
-        group_id='CUSTOMER_ID',
-        target_cols=col,
-        # known_cov_cols='CUSTOMER_ID',
-        fill_missing_dates=True,
-        fillna_method="zero",
-        static_cov_cols=['Y', 'CUSTOMER_ID'],
-    )
-    tsdatasets_val = TSDataset.load_from_dataframe(
-        df=df_val,
-        group_id='CUSTOMER_ID',
-        target_cols=col,
-        fill_missing_dates=True,
-        fillna_method="zero",
-        static_cov_cols=['Y', 'CUSTOMER_ID'],
-    )
-    tsdatasets_test = TSDataset.load_from_dataframe(
-        df=df_test,
-        group_id='CUSTOMER_ID',
-        target_cols=col,
-        fill_missing_dates=True,
-        fillna_method="zero",
-        static_cov_cols=['Y', 'CUSTOMER_ID'],
-    )
 
     tsdataset_list_train_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_fft_list_train.pkl'
     tsdataset_list_val_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_fft_list_val.pkl'
     tsdataset_list_test_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_fft_list_test.pkl'
     if not os.path.exists(tsdataset_list_train_file_path):
+        tsdatasets_train = TSDataset.load_from_dataframe(
+            df=df_train,
+            group_id='CUSTOMER_ID',
+            target_cols=col,
+            # known_cov_cols='CUSTOMER_ID',
+            fill_missing_dates=True,
+            fillna_method="zero",
+            static_cov_cols=['Y', 'CUSTOMER_ID'],
+        )
+        tsdatasets_val = TSDataset.load_from_dataframe(
+            df=df_val,
+            group_id='CUSTOMER_ID',
+            target_cols=col,
+            fill_missing_dates=True,
+            fillna_method="zero",
+            static_cov_cols=['Y', 'CUSTOMER_ID'],
+        )
+        tsdatasets_test = TSDataset.load_from_dataframe(
+            df=df_test,
+            group_id='CUSTOMER_ID',
+            target_cols=col,
+            fill_missing_dates=True,
+            fillna_method="zero",
+            static_cov_cols=['Y', 'CUSTOMER_ID'],
+        )
+
         fft = FFT(fs=1, half=False)  # _amplitude  half
         # cwt = CWT(scales=n_line_tail/2)
         for data in tsdatasets_train:
