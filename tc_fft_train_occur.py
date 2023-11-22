@@ -6955,7 +6955,9 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
         print('p_value end=========')
 
     print('head X:', X.iloc[:2, :3])
-    select_cols = X.columns.tolist()
+    tmp = X.columns.tolist()
+    for i in range(len(tmp)):
+        select_cols[i] = tmp[i]
     print('select_cols:', select_cols)
     X.reset_index(inplace=True)
     X.rename(columns={'index': 'CUSTOMER_ID'}, inplace=True)
@@ -7181,7 +7183,7 @@ def multiple_hypothesis_testing():
     df_part1_1 = df_part3[df_part3['Y'] == 1]
     df_part1_1 = df_part1_1.groupby(['CUSTOMER_ID']).apply(
         lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
-    print('df_part1_1.head:', df_part1_1.head(32))
+    print('df_part1_1.head:', df_part1_1.head(2))
     print('df_part1_1.shape:', df_part1_1.shape)
     # 使用 groupby 方法按照 CUSTOMER_ID 列的值分组，并应用函数去除最后一行
     df_part1_1 = df_part1_1.groupby('CUSTOMER_ID').apply(remove_last_row).reset_index(drop=True)
@@ -7378,40 +7380,62 @@ def multiple_hypothesis_testing():
         static_cov_cols=['Y', 'CUSTOMER_ID'],
     )
 
-    fft = FFT(fs=1, half=False)  # _amplitude  half
-    # cwt = CWT(scales=n_line_tail/2)
-    for data in tsdatasets_train:
-        resfft = fft(data)
-        # rescwt = cwt(data)  # coefs 63*24 complex128 x+yj
-        for x in data.columns:
-            # ----------------- fft
-            resfft[x + "_amplitude"].index = data[x].index
-            resfft[x + "_phase"].index = data[x].index
-            data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
-            data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
-            # --------------- cwt
+    tsdataset_list_train_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_fft_list_train.pkl'
+    tsdataset_list_val_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_fft_list_val.pkl'
+    tsdataset_list_test_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_fft_list_test.pkl'
+    if not os.path.exists(tsdataset_list_train_file_path):
+        fft = FFT(fs=1, half=False)  # _amplitude  half
+        # cwt = CWT(scales=n_line_tail/2)
+        for data in tsdatasets_train:
+            resfft = fft(data)
+            # rescwt = cwt(data)  # coefs 63*24 complex128 x+yj
+            for x in data.columns:
+                # ----------------- fft
+                resfft[x + "_amplitude"].index = data[x].index
+                resfft[x + "_phase"].index = data[x].index
+                data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
+                data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
+                # --------------- cwt
 
-    for data in tsdatasets_val:
-        resfft = fft(data)
-        # rescwt = cwt(data)
-        for x in data.columns:
-            # ----------------- fft
-            resfft[x + "_amplitude"].index = data[x].index
-            resfft[x + "_phase"].index = data[x].index
-            data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
-            data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
-            # ----------------- cwt
+        for data in tsdatasets_val:
+            resfft = fft(data)
+            # rescwt = cwt(data)
+            for x in data.columns:
+                # ----------------- fft
+                resfft[x + "_amplitude"].index = data[x].index
+                resfft[x + "_phase"].index = data[x].index
+                data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
+                data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
+                # ----------------- cwt
 
-    for data in tsdatasets_test:
-        resfft = fft(data)
-        # rescwt = cwt(data)
-        for x in data.columns:
-            # ----------------- fft
-            resfft[x + "_amplitude"].index = data[x].index
-            resfft[x + "_phase"].index = data[x].index
-            data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
-            data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
-            # ----------------- cwt
+        for data in tsdatasets_test:
+            resfft = fft(data)
+            # rescwt = cwt(data)
+            for x in data.columns:
+                # ----------------- fft
+                resfft[x + "_amplitude"].index = data[x].index
+                resfft[x + "_phase"].index = data[x].index
+                data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
+                data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
+                # ----------------- cwt
+
+        with open(tsdataset_list_train_file_path, 'wb') as f:
+            pickle.dump(tsdatasets_train, f)
+        with open(tsdataset_list_val_file_path, 'wb') as f:
+            pickle.dump(tsdatasets_val, f)
+        with open(tsdataset_list_test_file_path, 'wb') as f:
+            pickle.dump(tsdatasets_test, f)
+        print('tsdatasets_fft_train, tsdatasets_fft_val and tsdatasets_fft_test dump done.')
+    else:
+        with open(tsdataset_list_train_file_path, 'rb') as f:
+            tsdatasets_train = pickle.load(f)
+        with open(tsdataset_list_val_file_path, 'rb') as f:
+            tsdatasets_val = pickle.load(f)
+        with open(tsdataset_list_test_file_path, 'rb') as f:
+            tsdatasets_test = pickle.load(f)
+        print('tsdatasets_fft_train, tsdatasets_fft_val and tsdatasets_fft_test load done.')
+
+
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -7498,7 +7522,7 @@ def multiple_hypothesis_testing():
     print('5 classifier train:', formatted_time)
 
     for i in range(len(label_list_train)):
-        select_cols = []
+        select_cols = [None] * top_ftr_num
         model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
                           '_t' + str(n_line_tail) + '_cbc_' + str(i) + '.cbm'
         if os.path.exists(model_file_path):
@@ -7508,7 +7532,7 @@ def multiple_hypothesis_testing():
                           '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
-
+        print('out select_cols:', select_cols)
         from catboost import CatBoostClassifier
         cbc = CatBoostClassifier(random_seed=1)
         #cbc = CatBoostClassifier(learning_rate=0.03,depth=6,custom_metric=['AUC', 'Accuracy'],random_seed=4,logging_level='Silent',loss_function='CrossEntropy',use_best_model=True,)
@@ -7526,7 +7550,7 @@ def multiple_hypothesis_testing():
         print('ftr importance', cbc.get_feature_importance(prettified=True))
 
     for i in range(len(label_list_train)):
-        select_cols = []
+        select_cols = [None] * top_ftr_num
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
@@ -7579,7 +7603,7 @@ def multiple_hypothesis_testing():
     print('7 classifier test:', formatted_time)
 
     for i in range(len(label_list_val)):
-        select_cols = []
+        select_cols = [None] * top_ftr_num
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
@@ -7624,7 +7648,7 @@ def multiple_hypothesis_testing():
         print('label_list_test and customersid_list_test load done.')
 
     for i in range(len(label_list_test)):
-        select_cols = []
+        select_cols = [None] * top_ftr_num
         df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
