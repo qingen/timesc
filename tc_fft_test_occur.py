@@ -1105,6 +1105,7 @@ def ensemble_dl_ml_predict():
     X.sort_values(by='prob', ascending=False, inplace=True)
     X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
     print('after sort:',X.head(20))
+    print('all rows is:',len(X['customerid']))
 
 if __name__ == '__main__':
     # test_for_report()
