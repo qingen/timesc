@@ -6916,7 +6916,7 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     else:
         print('kind_to_fc_parameters_file not exists, so extract_features all first and then select')
     X = pd.DataFrame()
-    print('length split_indices is: ', len(split_indices), split_indices)
+    #print('length split_indices is: ', len(split_indices), split_indices)
     if(len(split_indices) > 2):
         for indices in split_indices:
             df_part = pd.concat([splitted_data[i] for i in indices])
@@ -6958,7 +6958,6 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     tmp = X.columns.tolist()
     for i in range(len(tmp)):
         select_cols[i] = tmp[i]
-    print('select_cols:', select_cols)
     X.reset_index(inplace=True)
     X.rename(columns={'index': 'CUSTOMER_ID'}, inplace=True)
     print('head X after rename:', X.iloc[:2, :3])
@@ -6998,8 +6997,7 @@ def multiple_hypothesis_testing():
                'LSR_121_AVG_90','FREESPANRP_30D_R','JH_60_CNT','LSR_91_CHA_30','LSR_91_CHA_7','LSR_91_CHA_15','LSR_91_CHA_60',
                'LSR_91_CHA_180','LRR_AVG_15','LSR_91_CHA_365','LSR_91_CHA_90','LRR_AVG_7','LSR_121_AVG_60','LRR_CHA_365','LRR_CHA_180',
                'LRR_CHA_30','LRR_CHA_60','LRR_CHA_7','LRR_CHA_90','LOAN_REPAY_RATIO','LRR_CHA_15','LSR_121_AVG_30','LSR_121_AVG_15',
-               'LSR_121_AVG_7','STOCK_OVER_121_RATIO','LSR_121_CHA_180','LSR_121_CHA_90','LSR_121_CHA_30','LSR_121_CHA_15',
-               'LSR_121_CHA_15','LSR_121_CHA_7','LSR_121_CHA_60']  # 128 cols 1/5
+               'LSR_121_AVG_7','STOCK_OVER_121_RATIO','LSR_121_CHA_180','LSR_121_CHA_90','LSR_121_CHA_30','LSR_121_CHA_15','LSR_121_CHA_7','LSR_121_CHA_60']  # 128 cols 1/5
     usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
@@ -7435,8 +7433,6 @@ def multiple_hypothesis_testing():
             tsdatasets_test = pickle.load(f)
         print('tsdatasets_fft_train, tsdatasets_fft_val and tsdatasets_fft_test load done.')
 
-
-
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('3 transform data:', formatted_time)
@@ -7532,7 +7528,7 @@ def multiple_hypothesis_testing():
                           '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
-        print('out select_cols:', select_cols)
+        print('select_cols:', select_cols)
         from catboost import CatBoostClassifier
         cbc = CatBoostClassifier(random_seed=1)
         #cbc = CatBoostClassifier(learning_rate=0.03,depth=6,custom_metric=['AUC', 'Accuracy'],random_seed=4,logging_level='Silent',loss_function='CrossEntropy',use_best_model=True,)
