@@ -7523,7 +7523,7 @@ def multiple_hypothesis_testing():
                           '_t' + str(n_line_tail) + '_cbc_' + str(i) + '.cbm'
         if os.path.exists(model_file_path):
             print('{} already exists, so no more train.'.format(model_file_path))
-            break
+            continue
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
                           '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
