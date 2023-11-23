@@ -6920,12 +6920,12 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     if(len(split_indices) > 2):
         for indices in split_indices:
             df_part = pd.concat([splitted_data[i] for i in indices])
-            X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10, n_jobs=32,
-                                      kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=8,
+            X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
+                                      kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32,
             X = pd.concat([X, X_part])
     else:
-        X = extract_features(df[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10, n_jobs=32,
-                                  kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=8,
+        X = extract_features(df[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
+                                  kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32,
     impute(X)
     print('head X:',X.iloc[:2, :5])
     print('columns X:',X.columns,'\n length X:',len(X))
@@ -7149,7 +7149,7 @@ def multiple_hypothesis_testing():
     filter_num_ratio = 1 / 8
     ftr_good_year_split = 2017   #  quick start 2022, at last 2016/2017
     ########## model
-    top_ftr_num = 10
+    top_ftr_num = 40
     max_depth = 2 # 2
     num_leaves = 3 # 3
     n_estimators = 50 # 50
@@ -7521,7 +7521,7 @@ def multiple_hypothesis_testing():
     for i in range(len(label_list_train)):
         select_cols = [None] * top_ftr_num
         model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                          '_t' + str(n_line_tail) + '_cbc_' + str(i) + '.cbm'
+                          '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(i) + '.cbm'
         if os.path.exists(model_file_path):
             print('{} already exists, so no more train.'.format(model_file_path))
             continue
@@ -7551,15 +7551,15 @@ def multiple_hypothesis_testing():
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                              '_t' + str(n_line_tail) + '_cbc_' + str(j) + '.cbm'
+                              '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_cbc_' + str(0) + '.cbm'
+                                  '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
                                               '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                               '_cbc_train_' + str(j) + '_' + str(i) + '.csv'
+                               '_cbc_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
@@ -7604,15 +7604,15 @@ def multiple_hypothesis_testing():
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                              '_t' + str(n_line_tail) + '_cbc_' + str(j) + '.cbm'
+                              '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_'+ str(j) + '.cbm'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_cbc_' + str(0) + '.cbm'
+                                  '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
                                               '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                               '_cbc_val_' + str(j) + '_' + str(i) + '.csv'
+                               '_cbc_top' + str(top_ftr_num) +'_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
@@ -7649,15 +7649,15 @@ def multiple_hypothesis_testing():
         df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                              '_t' + str(n_line_tail) + '_cbc_' + str(j) + '.cbm'
+                              '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_cbc_' + str(0) + '.cbm'
+                                  '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
                                               '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                               '_cbc_test_' + str(j) + '_' + str(i) + '.csv'
+                               '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so no more infer.'.format(result_file_path))
