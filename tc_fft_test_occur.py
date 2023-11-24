@@ -1190,7 +1190,7 @@ def multiple_hypothesis_testing_predict():
     filter_num_ratio = 1 / 8  # 1/5
     ftr_good_year_split = 2017
     ########## model cnn dt
-    top_ftr_num = 10
+    top_ftr_num = 480
     epochs = 2 #
     patiences = 1  #
     kernelsize = 4 #
@@ -1255,7 +1255,7 @@ def multiple_hypothesis_testing_predict():
         return new_df
 
     # 将数据按照 CUSTOMER_ID 列的值分组，并应用函数生成新的组
-    #df_all = df_all.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
+    df_all = df_all.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
     # 输出结果
     print('df_all.head:', df_all.head(2))
     print('df_all.shape:', df_all.shape)

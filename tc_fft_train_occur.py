@@ -7149,7 +7149,7 @@ def multiple_hypothesis_testing():
     filter_num_ratio = 1 / 8
     ftr_good_year_split = 2017   #  quick start 2022, at last 2016/2017
     ########## model
-    top_ftr_num = 40
+    top_ftr_num = 480
     max_depth = 2 # 2
     num_leaves = 3 # 3
     n_estimators = 50 # 50
@@ -7531,7 +7531,7 @@ def multiple_hypothesis_testing():
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
         print('select_cols:', select_cols)
         from catboost import CatBoostClassifier
-        cbc = CatBoostClassifier(random_seed=1)
+        cbc = CatBoostClassifier(random_seed=1,loss_function='CrossEntropy',od_type='Iter',)
         #cbc = CatBoostClassifier(learning_rate=0.03,depth=6,custom_metric=['AUC', 'Accuracy'],random_seed=4,logging_level='Silent',loss_function='CrossEntropy',use_best_model=True,)
         #lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
         #                    reg_alpha=1,objective='binary', class_weight=class_weight, seed=0)
@@ -7539,7 +7539,9 @@ def multiple_hypothesis_testing():
         # 决策树&随机森林
         # lr = tree.DecisionTreeClassifier(criterion="entropy", min_impurity_decrease=0.000001, class_weight={0:0.3, 1:0.7})
         # lr = RandomForestClassifier(n_estimators=100, criterion="entropy", min_impurity_decrease=0.00005, class_weight={0:0.2, 1:0.8})
-        cbc.fit(df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']), logging_level='Verbose',)
+        cbc.fit(df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']), logging_level='Verbose',
+                use_best_model=True, eval_set=(df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y'])),
+                plot=True, early_stopping_rounds=100)
         cbc.save_model(model_file_path)
         # cbc.load_model('./model/catboost_model.bin')
         print(cbc.get_params())
@@ -7665,6 +7667,55 @@ def multiple_hypothesis_testing():
             df_test_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
+import optuna
+def objective(trial):
+    x = trial.suggest_uniform('x', -10, 10)
+    y = trial.suggest_uniform('y', -10, 10)
+    return (x + y) ** 2
+
+def optuna_test():
+    study = optuna.create_study(study_name='test',direction='maximize',
+                                storage='sqlite:///db.sqlite3',load_if_exists=True)
+    study.optimize(objective, n_trials=10)
+
+    print(study.best_params)
+    print(study.best_value)
+
+    from optuna.visualization import plot_contour
+    from optuna.visualization import plot_intermediate_values
+    from optuna.visualization import plot_optimization_history
+    from optuna.visualization import plot_parallel_coordinate
+    from optuna.visualization import plot_param_importances
+    from optuna.visualization import plot_slice
+
+    # Visualize the optimization history.
+    #plot_optimization_history(study).show()
+    #optuna.visualization.plot_contour(study).show(host='10.116.85.107:8088')
+    return
+    # Visualize the learning curves of the trials.
+    #plot_intermediate_values(study).show()
+
+    # Visualize high-dimensional parameter relationships.
+    plot_parallel_coordinate(study).show()
+
+    # Select parameters to visualize.
+    plot_parallel_coordinate(study, params=["x", "y"]).show()
+
+    # Visualize hyperparameter relationships.
+    plot_contour(study).show()
+
+    # Select parameters to visualize.
+    plot_contour(study, params=["x", "y"]).show()
+
+    # Visualize individual hyperparameters.
+    plot_slice(study).show()
+
+    # Select parameter
+    # Visualize parameter importances.
+    plot_param_importances(study).show()
+
+def multiple_hypothesis_testing_optuna():
+    return
 
 if __name__ == '__main__':
     # train_occur_for_report()
@@ -7681,4 +7732,5 @@ if __name__ == '__main__':
     # tsfresh_test()
     # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
     # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
-    multiple_hypothesis_testing()
+    # multiple_hypothesis_testing()
+    optuna_test()
