@@ -1,5 +1,6 @@
 # coding=utf-8
 import sys, os, time
+import shutil
 import cmath
 import math
 import pickle
@@ -5942,6 +5943,9 @@ def ml_model_forward_ks_roc(model_file_path: str, result_file_path: str, dataset
         from catboost import CatBoostClassifier
         model = CatBoostClassifier()
         model.load_model(model_file_path)
+        print(model.get_params())
+        print(model.random_seed_)
+        print('ftr importance', model.get_feature_importance(prettified=True))
     else:
         print("file not end with cbm, so this is not catboost model")
         model = joblib.load(model_file_path)
@@ -8330,107 +8334,6 @@ def multiple_hypothesis_testing_optuna():
             customersid_list_train = pickle.load(f)
         print('label_list_train and customersid_list_train load done.')
 
-    current_time = datetime.now()
-    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    print('5 classifier train:', formatted_time)
-
-    def objective(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, model_file_path) -> float:
-        param = {
-            "objective": trial.suggest_categorical("objective", ["Logloss", "CrossEntropy"]),
-            "colsample_bylevel": trial.suggest_float("colsample_bylevel", 0.01, 0.1, log=True),
-            "depth": trial.suggest_int("depth", 1, 12),  # 6
-            "boosting_type": trial.suggest_categorical("boosting_type", ["Ordered", "Plain"]),
-            "bootstrap_type": trial.suggest_categorical(
-                "bootstrap_type", ["Bayesian", "Bernoulli", "MVS"]
-            ),
-            "l2_leaf_reg": trial.suggest_float("l2_leaf_reg", low=1.0, high=12.0),  # 3.0
-            "random_strength": trial.suggest_float("random_strength", low=1.0, high=12.0),  # 1.0
-            # "used_ram_limit": "3gb",
-            "eval_metric": "Accuracy",
-        }
-        if param["bootstrap_type"] == "Bayesian":
-            param["bagging_temperature"] = trial.suggest_float("bagging_temperature", 0, 1)  # [0,1]
-        elif param["bootstrap_type"] == "Bernoulli":
-            param["subsample"] = trial.suggest_float("subsample", 0.1, 1, log=True)
-        gbm = cb.CatBoostClassifier(**param)
-        pruning_callback = CatBoostPruningCallback(trial, "Accuracy")
-        gbm.fit(
-            train_x,
-            train_y,
-            eval_set=[(valid_x, valid_y)],
-            verbose=0,
-            early_stopping_rounds=100,
-            callbacks=[pruning_callback],
-        )
-
-        # evoke pruning manually.
-        pruning_callback.check_pruned()
-        # Save a trained model to a file.
-        model_file_path = model_file_path + '_' + str(trial.number) + '.cbm'
-        gbm.save_model(model_file_path)
-        with open("{}.pickle".format(trial.number), "wb") as fout:
-            pickle.dump(gbm, fout)
-        preds = gbm.predict(valid_x)
-        pred_labels = np.rint(preds)
-        accuracy = accuracy_score(valid_y, pred_labels)
-
-        return accuracy
-    for i in range(len(label_list_train)):
-        select_cols = [None] * top_ftr_num
-        model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                          '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(i)
-        if os.path.exists(model_file_path):
-            print('{} already exists, so no more train.'.format(model_file_path))
-            continue
-        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
-                          '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
-        df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
-        df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
-        print('select_cols:', select_cols)
-        from catboost import CatBoostClassifier
-        cbc = CatBoostClassifier(random_seed=1,loss_function='CrossEntropy',od_type='Iter',)
-        #cbc = CatBoostClassifier(learning_rate=0.03,depth=6,custom_metric=['AUC', 'Accuracy'],random_seed=4,logging_level='Silent',loss_function='CrossEntropy',use_best_model=True,)
-        #lc = LGBMClassifier(max_depth=max_depth, num_leaves=num_leaves, n_estimators=n_estimators, reg_lambda=1,
-        #                    reg_alpha=1,objective='binary', class_weight=class_weight, seed=0)
-        # lr = lgb.LGBMClassifier(objective='binary')
-        # 决策树&随机森林
-        # lr = tree.DecisionTreeClassifier(criterion="entropy", min_impurity_decrease=0.000001, class_weight={0:0.3, 1:0.7})
-        # lr = RandomForestClassifier(n_estimators=100, criterion="entropy", min_impurity_decrease=0.00005, class_weight={0:0.2, 1:0.8})
-        cbc.fit(df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']), logging_level='Verbose',
-                use_best_model=True, eval_set=(df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y'])),
-                plot=True, early_stopping_rounds=100)
-        cbc.save_model(model_file_path)
-        # cbc.load_model('./model/catboost_model.bin')
-        print(cbc.get_params())
-        print(cbc.random_seed_)
-        print('ftr importance', cbc.get_feature_importance(prettified=True))
-
-    for i in range(len(label_list_train)):
-        select_cols = [None] * top_ftr_num
-        df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
-        for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                              '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
-            if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
-                j = 0
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
-                                              '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                               '_cbc_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
-            print(result_file_path)
-            if os.path.exists(result_file_path):
-                print('{} already exists, so no more infer.'.format(result_file_path))
-                continue
-            df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
-            ml_model_forward_ks_roc(model_file_path, result_file_path, df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']),
-                                 np.array(df_train_ftr_select_notime.loc[:,'CUSTOMER_ID']))
-
-    current_time = datetime.now()
-    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    print('6 group data:', formatted_time)
-
     label_list_val = []
     customersid_list_val = []
     label_list_val_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_label_list_val.pkl'
@@ -8456,6 +8359,112 @@ def multiple_hypothesis_testing_optuna():
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('5 classifier train:', formatted_time)
+
+    def objective(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, ) -> float:
+        param = {
+            "objective": trial.suggest_categorical("objective", ["Logloss", "CrossEntropy"]),
+            "colsample_bylevel": trial.suggest_float("colsample_bylevel", 0.01, 0.1, log=True),
+            "depth": trial.suggest_int("depth", 1, 12),  # 6
+            "boosting_type": trial.suggest_categorical("boosting_type", ["Ordered", "Plain"]),
+            "bootstrap_type": trial.suggest_categorical(
+                "bootstrap_type", ["Bayesian", "Bernoulli", "MVS"]
+            ),
+            "l2_leaf_reg": trial.suggest_float("l2_leaf_reg", low=1.0, high=12.0),  # 3.0
+            "random_strength": trial.suggest_float("random_strength", low=1.0, high=12.0),  # 1.0
+            # "used_ram_limit": "3gb",
+            "eval_metric": "Accuracy",
+        }
+        if param["bootstrap_type"] == "Bayesian":
+            param["bagging_temperature"] = trial.suggest_float("bagging_temperature", 0, 1)  # [0,1]
+        elif param["bootstrap_type"] == "Bernoulli":
+            param["subsample"] = trial.suggest_float("subsample", 0.1, 1, log=True)
+        gbm = cb.CatBoostClassifier(**param, random_seed=1,)
+        pruning_callback = CatBoostPruningCallback(trial, "Accuracy")
+        gbm.fit(
+            train_x,
+            train_y,
+            eval_set=[(valid_x, valid_y)],
+            verbose=0,
+            early_stopping_rounds=100,
+            callbacks=[pruning_callback],
+        )
+
+        # evoke pruning manually.
+        pruning_callback.check_pruned()
+        # Save a trained model to a file.
+        model_file_path = './model/tmp/' + str(trial.number) + '.cbm'
+        gbm.save_model(model_file_path)
+
+        pred_val_prob = gbm.predict_proba(valid_x)[:, 1]
+        fpr, tpr, thresholds = metrics.roc_curve(valid_y, pred_val_prob, pos_label=1, )  # drop_intermediate=True
+        ks = max(tpr - fpr)
+        print("ks = %0.4f" % (ks))
+        return ks
+
+    for i in range(len(label_list_train)):
+        select_cols = [None] * top_ftr_num
+        model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
+                          '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(i) + '.cbm'
+        if os.path.exists(model_file_path):
+            print('{} already exists, so just remove it and retrain.'.format(model_file_path))
+            os.remove(model_file_path)
+            print(f" file '{model_file_path}' is removed.")
+            #continue
+        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
+                          '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
+        df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
+        df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
+        print('select_cols:', select_cols)
+        df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
+        df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
+        study_name = date_str + '_' + str(i)
+        sampler = optuna.samplers.TPESampler(seed=1)
+        study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),
+                                    direction="maximize", study_name=study_name, storage='sqlite:///db.sqlite3',
+                                    load_if_exists=True,)
+        study.optimize(lambda trial: objective(trial, df_train_ftr_select_notime.loc[:,select_cols],np.array(df_train_ftr_select_notime.loc[:,'Y']),
+                                               df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y'])),
+                       n_trials=100, timeout=600, n_jobs=1, show_progress_bar=True)
+        print("Number of finished trials: {}".format(len(study.trials)))
+        print("Best trial:")
+        trial = study.best_trial
+        # save the best model.
+        source_path = './model/tmp/' + str(study.best_trial.number) + '.cbm'
+        shutil.move(source_path, model_file_path)
+        print("  Value: {}".format(trial.value))
+        print("  Params: ")
+        for key, value in trial.params.items():
+            print("    {}: {}".format(key, value))
+
+
+    for i in range(len(label_list_train)):
+        select_cols = [None] * top_ftr_num
+        df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
+        for j in range(len(label_list_train)):
+            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
+                              '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
+            if not os.path.exists(model_file_path):
+                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
+                                  '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
+                j = 0
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
+                                              '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+                               '_cbc_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
+            print(result_file_path)
+            if os.path.exists(result_file_path):
+                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
+                os.remove(result_file_path)
+                print(f" file '{result_file_path}' is removed.")
+                #print('{} already exists, so no more infer.'.format(result_file_path))
+                #continue
+            df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
+            ml_model_forward_ks_roc(model_file_path, result_file_path, df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']),
+                                 np.array(df_train_ftr_select_notime.loc[:,'CUSTOMER_ID']))
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('7 classifier test:', formatted_time)
 
     for i in range(len(label_list_val)):
@@ -8474,8 +8483,11 @@ def multiple_hypothesis_testing_optuna():
                                '_cbc_top' + str(top_ftr_num) +'_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, so no more infer.'.format(result_file_path))
-                continue
+                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
+                os.remove(result_file_path)
+                print(f" file '{result_file_path}' is removed.")
+                #print('{} already exists, so no more infer.'.format(result_file_path))
+                #continue
             df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_val_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -8519,8 +8531,11 @@ def multiple_hypothesis_testing_optuna():
                                '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, so no more infer.'.format(result_file_path))
-                continue
+                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
+                os.remove(result_file_path)
+                print(f" file '{result_file_path}' is removed.")
+                #print('{} already exists, so no more infer.'.format(result_file_path))
+                #continue
             df_test_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -8542,4 +8557,5 @@ if __name__ == '__main__':
     # augment_bad_data_add_credit_relabel_multiclass_augment_ftr_select_train_occur_continue_for_report()
     # ensemble_data_augment_group_ts_dl_ftr_select_nts_ml_base_score()
     # multiple_hypothesis_testing()
-    optuna_test()
+    # optuna_test()
+    multiple_hypothesis_testing_optuna()
