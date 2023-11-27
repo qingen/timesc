@@ -6905,12 +6905,12 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     data_cols.remove('Y')
     df.fillna(0, inplace=True)
     grouped_data = df.groupby('CUSTOMER_ID')
-    if (len(grouped_data) > 500):
-        num_groups_per_data = 500
+    if (len(grouped_data) > 1000):
+        num_groups_per_data = 1000
     else:
         num_groups_per_data = len(grouped_data) / 2
     splitted_data = [group for _, group in grouped_data]
-    split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data) # num < 500 -> 0
+    split_indices = np.array_split(np.arange(len(splitted_data)), len(splitted_data) // num_groups_per_data) # num < 1000 -> 0
     #top_ftr_num = 10  # get top ftr from selection sets
     saved_kind_to_fc_parameters = None
     if os.path.exists(kind_to_fc_parameters_file_path):
@@ -8373,14 +8373,14 @@ def multiple_hypothesis_testing_optuna():
             "l2_leaf_reg": trial.suggest_float("l2_leaf_reg", low=1.0, high=12.0),  # 3.0
             "random_strength": trial.suggest_float("random_strength", low=1.0, high=12.0),  # 1.0
             # "used_ram_limit": "3gb",
-            "eval_metric": "Accuracy",
+            "eval_metric": "Accuracy", # Accuracy  AUC
         }
         if param["bootstrap_type"] == "Bayesian":
             param["bagging_temperature"] = trial.suggest_float("bagging_temperature", 0, 1)  # [0,1]
         elif param["bootstrap_type"] == "Bernoulli":
             param["subsample"] = trial.suggest_float("subsample", 0.1, 1, log=True)
         gbm = cb.CatBoostClassifier(**param, random_seed=1,)
-        pruning_callback = CatBoostPruningCallback(trial, "Accuracy")
+        pruning_callback = CatBoostPruningCallback(trial, "Accuracy")  # Accuracy AUC
         gbm.fit(
             train_x,
             train_y,
@@ -8407,9 +8407,9 @@ def multiple_hypothesis_testing_optuna():
         model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
                           '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(i) + '.cbm'
         if os.path.exists(model_file_path):
-            print('{} already exists, so just remove it and retrain.'.format(model_file_path))
-            os.remove(model_file_path)
-            print(f" file '{model_file_path}' is removed.")
+            print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
+            #os.remove(model_file_path)
+            #print(f" file '{model_file_path}' is removed.")
             #continue
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
                           '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
@@ -8418,14 +8418,15 @@ def multiple_hypothesis_testing_optuna():
         print('select_cols:', select_cols)
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
-        study_name = date_str + '_' + str(i)
+        n_trials = 100
+        study_name = date_str + '_' + str(i) + '_Accuracy_' + str(n_trials)  # AUC
         sampler = optuna.samplers.TPESampler(seed=1)
         study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),
                                     direction="maximize", study_name=study_name, storage='sqlite:///db.sqlite3',
                                     load_if_exists=True,)
         study.optimize(lambda trial: objective(trial, df_train_ftr_select_notime.loc[:,select_cols],np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                                df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y'])),
-                       n_trials=100, timeout=600, n_jobs=1, show_progress_bar=True)
+                       n_trials=100, n_jobs=1, show_progress_bar=True)  # timeout=600,
         print("Number of finished trials: {}".format(len(study.trials)))
         print("Best trial:")
         trial = study.best_trial
