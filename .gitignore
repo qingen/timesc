@@ -3,6 +3,7 @@
 *.pkl
 *.npy
 *.bin
+*.cbm
 *.csv
 *.txt
 *.png

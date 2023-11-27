@@ -6924,11 +6924,11 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     if(len(split_indices) > 2):
         for indices in split_indices:
             df_part = pd.concat([splitted_data[i] for i in indices])
-            X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
+            X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE',
                                       kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32,
             X = pd.concat([X, X_part])
     else:
-        X = extract_features(df[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE', chunksize=10,
+        X = extract_features(df[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE',
                                   kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32,
     impute(X)
     print('head X:',X.iloc[:2, :5])
@@ -7756,7 +7756,7 @@ def opt_test():
 def optuna_test():
     study = optuna.create_study(study_name='test',direction='maximize',
                                 storage='sqlite:///db.sqlite3',load_if_exists=True)
-    study.optimize(objective, n_trials=10)
+    study.optimize(objectives, n_trials=10)
 
     print(study.best_params)
     print(study.best_value)
@@ -7770,7 +7770,7 @@ def optuna_test():
 
     # Visualize the optimization history.
     #plot_optimization_history(study).show()
-    #optuna.visualization.plot_contour(study).show(host='10.116.85.107:8088')
+    #optuna.visualization.plot_contour(study).show(host='10.116.85.107:10005')
     return
     # Visualize the learning curves of the trials.
     #plot_intermediate_values(study).show()
@@ -8385,7 +8385,7 @@ def multiple_hypothesis_testing_optuna():
             train_x,
             train_y,
             eval_set=[(valid_x, valid_y)],
-            verbose=0,
+            verbose=1,
             early_stopping_rounds=100,
             callbacks=[pruning_callback],
         )
