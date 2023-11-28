@@ -7966,8 +7966,8 @@ def multiple_hypothesis_testing_optuna():
 
     df_all[col] = df_all[col].astype(float)
 
-    n_line_tail = 32  # 32 64 128
-    n_line_head = 32  # == tail
+    n_line_tail = 128  # 32 64 128
+    n_line_head = 128  # == tail
 
     step = 5
     date_str = datetime(2023, 11, 25).strftime("%Y%m%d")
@@ -8175,9 +8175,9 @@ def multiple_hypothesis_testing_optuna():
     from paddlets import TSDataset
     from paddlets.analysis import FFT, CWT
 
-    tsdataset_list_train_file_path = './model/' + date_str + '_' + type + '_' + '_tsdataset_fft_list_train.pkl'
-    tsdataset_list_val_file_path = './model/' + date_str + '_' + type + '_' + '_tsdataset_fft_list_val.pkl'
-    tsdataset_list_test_file_path = './model/' + date_str + '_' + type + '_' + '_tsdataset_fft_list_test.pkl'
+    tsdataset_list_train_file_path = './model/' + date_str + '_' + type  + '_tsdataset_fft_list_train.pkl'
+    tsdataset_list_val_file_path = './model/' + date_str + '_' + type + '_tsdataset_fft_list_val.pkl'
+    tsdataset_list_test_file_path = './model/' + date_str + '_' + type  + '_tsdataset_fft_list_test.pkl'
     if not os.path.exists(tsdataset_list_train_file_path):
         tsdatasets_train = TSDataset.load_from_dataframe(
             df=df_train,
