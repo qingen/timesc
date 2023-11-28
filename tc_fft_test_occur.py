@@ -1180,35 +1180,24 @@ def multiple_hypothesis_testing_predict():
 
     df_all[col] = df_all[col].astype(float)
 
-    n_line_tail = 30  # (1-5) * 30
-    n_line_head = 30  # = tail
+    n_line_tail = 32  # 32 64 128
+    n_line_head = 32  # = tail
 
     step = 5
     date_str = datetime(2023, 11, 25).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8  # 1/5
-    ftr_good_year_split = 2017
-    ########## model cnn dt
-    top_ftr_num = 480
-    epochs = 2 #
-    patiences = 1  #
-    kernelsize = 4 #
-    max_depth = 2 # 2
-    num_leaves = 3 # 3
-    n_estimators = 50 # 50
-    class_weight =  None # 'balanced'  None
-    lc_c = [0.06, 0.04, 0.1, ] # 0.06, 0.03, 2.0,   0.1, 0.05, 0.1,
-    fdr_level = 0.00000001 # 0.05 0.04 0.03 0.02 0.01
+    ########## model
     model_num = 3
-    cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_' + str(ftr_good_year_split) + '_' + date_str + '/'
-    cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
-    cluster_less_train_num = 800
-    cluster_less_val_num = 200
-    cluster_less_test_num = 100
-
-    type = 'occur_' + str(ftr_good_year_split) + '_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + \
-              str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num)
+    top_ftr_num = 32  # 32 64 128
+    cluster_model_path = './model/cluster_' + date_str + 'step' + str(step) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail) + '/'
+    cluster_model_file = 'repr-cluster-train-6.pkl'
+    cluster_less_train_num = 200  # 200
+    cluster_less_val_num = 200  # 200
+    cluster_less_test_num = 10  # 100
+    type = 'occur_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + str(cluster_less_train_num) + '_' + \
+           str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail)
 
     def filter_func(x):
         return x[(x['RDATE'] >= 20230618) & (x['RDATE'] < 20231018)]
@@ -1331,21 +1320,22 @@ def multiple_hypothesis_testing_predict():
                                                                                                     y_all_customerid,
                                                                                                     cluster_model_path,
                                                                                                     cluster_model_file,
-                                                                                                    20)
+                                                                                                    20,
+                                                                                              n_line_tail)
 
     for i in range(len(label_list_all)):
         select_cols = [None] * top_ftr_num
         df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
         for j in range(model_num):
-            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                              '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                              '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
+                model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                              '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
-                                              '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                                              '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
                                '_cbc_top' + str(top_ftr_num) + '_predict_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
