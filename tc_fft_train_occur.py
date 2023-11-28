@@ -3572,14 +3572,16 @@ def ts2vec_relabel(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomers
 
 def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomersid: np.ndarray,
                                    model_path: str, repr_cluster_file_name: str = "repr-cluster-partial.pkl",
-                                   del_num:int = 200):
-    ts2vec_params = {"segment_size": 30,
+                                   del_num:int = 100, ts_len:int = 32):
+    segment_size = ts_len
+    hidden_dims = ts_len * 2
+    ts2vec_params = {"segment_size": segment_size,  # 32
                      "repr_dims": 320,  # 320
                      "batch_size": 128,
                      # "sampling_stride": 200,
                      "max_epochs": 5,
                      "verbose": 1,
-                     "hidden_dims": 64,
+                     "hidden_dims": hidden_dims,  # 64
                      "seed": 1, }
     from paddlets.models.representation import ReprCluster
     from paddlets.models.representation import TS2Vec
@@ -3608,7 +3610,7 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
 
     i = 0
     while i < len(label_list):
-        if len(label_list[i]) < del_num:
+        if len(label_list[i]) < del_num or (sum(label_list[i]) == 0 or sum(label_list[i]) == len(label_list[i])):
             print('warning del class ', i, ' less ', del_num, ', elements len: ',len(label_list[i]),' sum: ',sum(label_list[i]))
             for id in customersid_list[i]:
                 print(id)
@@ -6937,15 +6939,15 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     y = df.loc[:, ['CUSTOMER_ID','Y']].drop_duplicates().reset_index(drop=True)
     #print(y.head(2))
     #y = np.array(y['Y'])
-    print('y:',y.iloc[:5,:],len(y))
-    print(X.iloc[:5, :3], len(X), len(X.columns.tolist()))
+    print('y:',y.iloc[:2,:],len(y))
+    print(X.iloc[:2, :3], len(X), len(X.columns.tolist()))
     if saved_kind_to_fc_parameters == None:
         print('kind_to_fc_parameters_file not exists, so calculate it by calculate_relevance_table')
         X_tmp = X.reset_index(drop=True)
         y_tmp = y.loc[:, 'Y']
         y_tmp = y_tmp.reset_index(drop=True)
         relevance_table = calculate_relevance_table(X_tmp, y_tmp, ml_task='classification')
-        print(relevance_table.iloc[:5, :5])
+        print(relevance_table.iloc[:2, :5])
         print('p_value start=========')
         print('relevance_table[true].shape', relevance_table[relevance_table.relevant].shape)
         select_feats = relevance_table[relevance_table.relevant].sort_values('p_value', ascending=True).iloc[:top_ftr_num]['feature'].values
@@ -7684,7 +7686,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
 
-def objective(trial: optuna.Trial, train_x,train_y,valid_x,valid_y) -> float:
+def objective(trial: optuna.Trial,) -> float:
     data, target = load_breast_cancer(return_X_y=True)
     train_x, valid_x, train_y, valid_y = train_test_split(data, target, test_size=0.25)
 
@@ -7964,24 +7966,22 @@ def multiple_hypothesis_testing_optuna():
 
     df_all[col] = df_all[col].astype(float)
 
-    n_line_tail = 30  # (1-5) * 30
-    n_line_head = 30  # = tail
+    n_line_tail = 32  # 32 64 128
+    n_line_head = 32  # == tail
 
     step = 5
     date_str = datetime(2023, 11, 25).strftime("%Y%m%d")
-    split_date_str = '20230101'
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8
-    ftr_good_year_split = 2017   #  quick start 2022, at last 2016/2017
     ########## model
-    top_ftr_num = 480
-    cluster_model_path = './model/cluster_step' + str(step) + '_credit1_90_'+str(ftr_good_year_split)+ '_'+date_str +'/'
-    cluster_model_file = date_str + '-repr-cluster-partial-train-6.pkl'
-    cluster_less_train_num = 800    # 200
+    top_ftr_num = 32  # 10 20 40 120 240 480   # 32 64 128
+    cluster_model_path = './model/cluster_'+ date_str +'step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
+    cluster_model_file = 'repr-cluster-train-6.pkl'
+    cluster_less_train_num = 200    # 200
     cluster_less_val_num = 200      # 200
-    cluster_less_test_num = 100     # 100
-    type = 'occur_'+str(ftr_good_year_split)+'_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + \
-           str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num)
+    cluster_less_test_num = 10     # 100
+    type = 'occur_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + str(cluster_less_train_num) + '_' + \
+           str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
@@ -8015,12 +8015,14 @@ def multiple_hypothesis_testing_optuna():
         size = len(group)
         # 循环切片生成新的组
         for i in range(0, size, step):  # range(0,size,2)
-            start_position = i
-            end_position = i + batch_size
+            start_position = size - i - batch_size
+            if start_position < 0:
+                break
+            end_position = size - i
             # 获取当前组的一部分数据
             batch = group.iloc[start_position:end_position].copy()
             # 修改组名
-            batch['CUSTOMER_ID'] = f'{group.iloc[i]["CUSTOMER_ID"]}_{i + 1}'
+            batch['CUSTOMER_ID'] = f'{group.iloc[i]["CUSTOMER_ID"]}_{i}'
             # 将切片后的数据添加到新的组列表中
             new_groups.append(batch)
         # 将新的组数据合并为一个 DataFrame
@@ -8173,9 +8175,9 @@ def multiple_hypothesis_testing_optuna():
     from paddlets import TSDataset
     from paddlets.analysis import FFT, CWT
 
-    tsdataset_list_train_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_fft_list_train.pkl'
-    tsdataset_list_val_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_fft_list_val.pkl'
-    tsdataset_list_test_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_fft_list_test.pkl'
+    tsdataset_list_train_file_path = './model/' + date_str + '_' + type + '_' + '_tsdataset_fft_list_train.pkl'
+    tsdataset_list_val_file_path = './model/' + date_str + '_' + type + '_' + '_tsdataset_fft_list_val.pkl'
+    tsdataset_list_test_file_path = './model/' + date_str + '_' + type + '_' + '_tsdataset_fft_list_test.pkl'
     if not os.path.exists(tsdataset_list_train_file_path):
         tsdatasets_train = TSDataset.load_from_dataframe(
             df=df_train,
@@ -8285,9 +8287,9 @@ def multiple_hypothesis_testing_optuna():
 
     from paddlets.transform import StandardScaler
     ss_scaler = StandardScaler()
-    tsdataset_list_train_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_list_train.pkl'
-    tsdataset_list_val_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_list_val.pkl'
-    tsdataset_list_test_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_tsdataset_list_test.pkl'
+    tsdataset_list_train_file_path = './model/' + date_str + '_' + type + '_tsdataset_transform_list_train.pkl'
+    tsdataset_list_val_file_path = './model/' + date_str + '_' + type + '_tsdataset_transform_list_val.pkl'
+    tsdataset_list_test_file_path = './model/' + date_str + '_' + type + '_tsdataset_transform_list_test.pkl'
     if not os.path.exists(tsdataset_list_train_file_path):
         tsdatasets_train = ss_scaler.fit_transform(tsdatasets_train)
         tsdatasets_val = ss_scaler.fit_transform(tsdatasets_val)
@@ -8313,15 +8315,16 @@ def multiple_hypothesis_testing_optuna():
     print('4 group data:', formatted_time)
     label_list_train = []
     customersid_list_train = []
-    label_list_train_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_label_list_train.pkl'
-    customersid_list_train_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_customersid_list_train.pkl'
+    label_list_train_file_path = './model/' + date_str + '_' + type + '_label_list_train.pkl'
+    customersid_list_train_file_path = './model/' + date_str + '_' + type + '_customersid_list_train.pkl'
     if not os.path.exists(label_list_train_file_path):
         tsdataset_list_train, label_list_train, customersid_list_train = ts2vec_cluster_datagroup_model(tsdatasets_train,
                                                                                                         y_train,
                                                                                                         y_train_customerid,
                                                                                                         cluster_model_path,
                                                                                                         cluster_model_file,
-                                                                                                        cluster_less_train_num)
+                                                                                                        cluster_less_train_num,
+                                                                                                        n_line_tail)
         with open(label_list_train_file_path, 'wb') as f:
             pickle.dump(label_list_train, f)
         with open(customersid_list_train_file_path, 'wb') as f:
@@ -8336,15 +8339,16 @@ def multiple_hypothesis_testing_optuna():
 
     label_list_val = []
     customersid_list_val = []
-    label_list_val_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_label_list_val.pkl'
-    customersid_list_val_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_customersid_list_val.pkl'
+    label_list_val_file_path = './model/' + date_str + '_' + type + '_label_list_val.pkl'
+    customersid_list_val_file_path = './model/' + date_str + '_' + type + '_customersid_list_val.pkl'
     if not os.path.exists(label_list_val_file_path):
         tsdataset_list_val, label_list_val, customersid_list_val = ts2vec_cluster_datagroup_model(tsdatasets_val,
                                                                                                   y_val,
                                                                                                   y_val_customerid,
                                                                                                   cluster_model_path,
                                                                                                   cluster_model_file,
-                                                                                                  cluster_less_val_num)
+                                                                                                  cluster_less_val_num,
+                                                                                                  n_line_tail)
         with open(label_list_val_file_path, 'wb') as f:
             pickle.dump(label_list_val, f)
         with open(customersid_list_val_file_path, 'wb') as f:
@@ -8373,19 +8377,19 @@ def multiple_hypothesis_testing_optuna():
             "l2_leaf_reg": trial.suggest_float("l2_leaf_reg", low=1.0, high=12.0),  # 3.0
             "random_strength": trial.suggest_float("random_strength", low=1.0, high=12.0),  # 1.0
             # "used_ram_limit": "3gb",
-            "eval_metric": "Accuracy", # Accuracy  AUC
+            "eval_metric": "AUC", # Accuracy  AUC
         }
         if param["bootstrap_type"] == "Bayesian":
             param["bagging_temperature"] = trial.suggest_float("bagging_temperature", 0, 1)  # [0,1]
         elif param["bootstrap_type"] == "Bernoulli":
             param["subsample"] = trial.suggest_float("subsample", 0.1, 1, log=True)
         gbm = cb.CatBoostClassifier(**param, random_seed=1,)
-        pruning_callback = CatBoostPruningCallback(trial, "Accuracy")  # Accuracy AUC
+        pruning_callback = CatBoostPruningCallback(trial, "AUC")  # Accuracy AUC
         gbm.fit(
             train_x,
             train_y,
             eval_set=[(valid_x, valid_y)],
-            verbose=1,
+            verbose=0,
             early_stopping_rounds=100,
             callbacks=[pruning_callback],
         )
@@ -8404,29 +8408,29 @@ def multiple_hypothesis_testing_optuna():
 
     for i in range(len(label_list_train)):
         select_cols = [None] * top_ftr_num
-        model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                          '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(i) + '.cbm'
+        model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                          '_cbc_top' + str(top_ftr_num) + '_' + str(i) + '.cbm'
         if os.path.exists(model_file_path):
             print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
             #os.remove(model_file_path)
             #print(f" file '{model_file_path}' is removed.")
             #continue
-        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
-                          '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
+        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + '_ftr_' + ftr_num_str + '_ts' + \
+                                          str(n_line_tail) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
         print('select_cols:', select_cols)
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
-        n_trials = 100
-        study_name = date_str + '_' + str(i) + '_Accuracy_' + str(n_trials)  # AUC
+        n_trials = 1000
+        study_name = date_str + '_model' + str(i) + '_AUC_' + str(n_trials) + '_top' + str(top_ftr_num) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail) # AUC Accuracy
         sampler = optuna.samplers.TPESampler(seed=1)
         study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),
                                     direction="maximize", study_name=study_name, storage='sqlite:///db.sqlite3',
                                     load_if_exists=True,)
         study.optimize(lambda trial: objective(trial, df_train_ftr_select_notime.loc[:,select_cols],np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                                df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y'])),
-                       n_trials=100, n_jobs=1, show_progress_bar=True)  # timeout=600,
+                       n_trials=n_trials, n_jobs=1, show_progress_bar=True)  # timeout=600,
         print("Number of finished trials: {}".format(len(study.trials)))
         print("Best trial:")
         trial = study.best_trial
@@ -8443,15 +8447,15 @@ def multiple_hypothesis_testing_optuna():
         select_cols = [None] * top_ftr_num
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                              '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                              '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
+                model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                                  '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
-                                              '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + '_ftr_' + ftr_num_str +'_ts' + str(n_line_tail) + \
+                                              '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
                                '_cbc_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
@@ -8472,15 +8476,15 @@ def multiple_hypothesis_testing_optuna():
         select_cols = [None] * top_ftr_num
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                              '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_'+ str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                              '_cbc_top' + str(top_ftr_num) + '_'+ str(j) + '.cbm'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
+                model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                                  '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
-                                              '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str +'_ts' + str(n_line_tail) + \
+                                              '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
                                '_cbc_top' + str(top_ftr_num) +'_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
@@ -8495,15 +8499,16 @@ def multiple_hypothesis_testing_optuna():
 
     label_list_test = []
     customersid_list_test = []
-    label_list_test_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_label_list_test.pkl'
-    customersid_list_test_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_customersid_list_test.pkl'
+    label_list_test_file_path = './model/' + date_str + '_' + type + '_label_list_test.pkl'
+    customersid_list_test_file_path = './model/' + date_str + '_' + type + '_customersid_list_test.pkl'
     if not os.path.exists(label_list_test_file_path):
         tsdataset_list_test, label_list_test, customersid_list_test = ts2vec_cluster_datagroup_model(tsdatasets_test,
                                                                                                      y_test,
                                                                                                      y_test_customerid,
                                                                                                      cluster_model_path,
                                                                                                      cluster_model_file,
-                                                                                                     cluster_less_test_num)
+                                                                                                     cluster_less_test_num,
+                                                                                                     n_line_tail)
         with open(label_list_test_file_path, 'wb') as f:
             pickle.dump(label_list_test, f)
         with open(customersid_list_test_file_path, 'wb') as f:
@@ -8520,15 +8525,15 @@ def multiple_hypothesis_testing_optuna():
         select_cols = [None] * top_ftr_num
         df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                              '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                              '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + \
-                                  '_t' + str(n_line_tail) + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
+                model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                                  '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + split_date_str + '_' + '_ftr_' + ftr_num_str + \
-                                              '_t' + str(n_line_tail) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
+                                              '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
                                '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
