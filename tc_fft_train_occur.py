@@ -7966,20 +7966,20 @@ def multiple_hypothesis_testing_optuna():
 
     df_all[col] = df_all[col].astype(float)
 
-    n_line_tail = 128  # 32 64 128
-    n_line_head = 128  # == tail
+    n_line_tail = 64  # 32 64 128
+    n_line_head = 64  # == tail
 
     step = 5
     date_str = datetime(2023, 11, 25).strftime("%Y%m%d")
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8
     ########## model
-    top_ftr_num = 32  # 10 20 40 120 240 480   # 32 64 128
-    cluster_model_path = './model/cluster_'+ date_str +'step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
+    top_ftr_num = 32  # 32 64 128
+    cluster_model_path = './model/cluster_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-6.pkl'
     cluster_less_train_num = 200    # 200
-    cluster_less_val_num = 200      # 200
-    cluster_less_test_num = 10     # 100
+    cluster_less_val_num = 100      # 100
+    cluster_less_test_num = 10     # 10
     type = 'occur_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + str(cluster_less_train_num) + '_' + \
            str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
 
@@ -8408,22 +8408,20 @@ def multiple_hypothesis_testing_optuna():
 
     for i in range(len(label_list_train)):
         select_cols = [None] * top_ftr_num
-        model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                          '_cbc_top' + str(top_ftr_num) + '_' + str(i) + '.cbm'
+        model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(i) + '.cbm'
         if os.path.exists(model_file_path):
             print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
             #os.remove(model_file_path)
             #print(f" file '{model_file_path}' is removed.")
             #continue
-        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + '_ftr_' + ftr_num_str + '_ts' + \
-                                          str(n_line_tail) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
+        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
         print('select_cols:', select_cols)
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
         n_trials = 1000
-        study_name = date_str + '_model' + str(i) + '_AUC_' + str(n_trials) + '_top' + str(top_ftr_num) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail) # AUC Accuracy
+        study_name = 'ts' + str(n_line_tail) + '_ftr' + str(ftr_num_str)  + '_top' + str(top_ftr_num) + '_auc_' + str(n_trials) + '_model' + str(i) + '_' + date_str # AUC Accuracy
         sampler = optuna.samplers.TPESampler(seed=1)
         study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),
                                     direction="maximize", study_name=study_name, storage='sqlite:///db.sqlite3',
@@ -8447,16 +8445,13 @@ def multiple_hypothesis_testing_optuna():
         select_cols = [None] * top_ftr_num
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                              '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
                 model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
                                   '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_' + '_ftr_' + ftr_num_str +'_ts' + str(n_line_tail) + \
-                                              '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                               '_cbc_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
@@ -8476,16 +8471,12 @@ def multiple_hypothesis_testing_optuna():
         select_cols = [None] * top_ftr_num
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                              '_cbc_top' + str(top_ftr_num) + '_'+ str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_'+ str(j) + '.cbm'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                                  '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
+                model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str +'_ts' + str(n_line_tail) + \
-                                              '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                               '_cbc_top' + str(top_ftr_num) +'_val_' + str(j) + '_' + str(i) + '.csv'
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) +'_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
@@ -8525,16 +8516,12 @@ def multiple_hypothesis_testing_optuna():
         select_cols = [None] * top_ftr_num
         df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                              '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                                  '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
+                model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                                              '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                               '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
