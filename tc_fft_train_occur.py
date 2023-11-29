@@ -7966,8 +7966,8 @@ def multiple_hypothesis_testing_optuna():
 
     df_all[col] = df_all[col].astype(float)
 
-    n_line_tail = 64  # 32 64 128
-    n_line_head = 64  # == tail
+    n_line_tail = 32  # 32 64 128
+    n_line_head = 32  # == tail
 
     step = 5
     date_str = datetime(2023, 11, 25).strftime("%Y%m%d")
@@ -8420,12 +8420,11 @@ def multiple_hypothesis_testing_optuna():
         print('select_cols:', select_cols)
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
-        n_trials = 1000
+        n_trials = 128
         study_name = 'ts' + str(n_line_tail) + '_ftr' + str(ftr_num_str)  + '_top' + str(top_ftr_num) + '_auc_' + str(n_trials) + '_model' + str(i) + '_' + date_str # AUC Accuracy
         sampler = optuna.samplers.TPESampler(seed=1)
-        study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),
-                                    direction="maximize", study_name=study_name, storage='sqlite:///db.sqlite3',
-                                    load_if_exists=True,)
+        study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),direction="maximize",
+                                    study_name=study_name, storage='sqlite:///db.sqlite3', load_if_exists=True,)
         study.optimize(lambda trial: objective(trial, df_train_ftr_select_notime.loc[:,select_cols],np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                                df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y'])),
                        n_trials=n_trials, n_jobs=1, show_progress_bar=True)  # timeout=600,
@@ -8447,8 +8446,7 @@ def multiple_hypothesis_testing_optuna():
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                                  '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
+                model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
