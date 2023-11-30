@@ -7966,22 +7966,26 @@ def multiple_hypothesis_testing_optuna():
 
     df_all[col] = df_all[col].astype(float)
 
+    ######### ftr
     n_line_tail = 32  # 32 64 128
     n_line_head = 32  # == tail
-
     step = 5
     date_str = datetime(2023, 11, 25).strftime("%Y%m%d")
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8
     ########## model
-    top_ftr_num = 32  # 32 64 128
+    top_ftr_num = 128  # 32 64 128 256
     cluster_model_path = './model/cluster_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-6.pkl'
     cluster_less_train_num = 200    # 200
     cluster_less_val_num = 100      # 100
-    cluster_less_test_num = 10     # 10
+    cluster_less_test_num = 50     # 50
     type = 'occur_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + str(cluster_less_train_num) + '_' + \
            str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
+    ######## optuna
+    n_trials = 1024
+    max_depth = 6
+
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
@@ -8368,14 +8372,14 @@ def multiple_hypothesis_testing_optuna():
     def objective(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, ) -> float:
         param = {
             "objective": trial.suggest_categorical("objective", ["Logloss", "CrossEntropy"]),
-            "colsample_bylevel": trial.suggest_float("colsample_bylevel", 0.01, 0.1, log=True),
-            "depth": trial.suggest_int("depth", 1, 12),  # 6
+            "colsample_bylevel": trial.suggest_float("colsample_bylevel", 0.01, 1),  # (0,1] rsm
+            "depth": trial.suggest_int("depth", 1, max_depth),  # 6
             "boosting_type": trial.suggest_categorical("boosting_type", ["Ordered", "Plain"]),
             "bootstrap_type": trial.suggest_categorical(
                 "bootstrap_type", ["Bayesian", "Bernoulli", "MVS"]
             ),
-            "l2_leaf_reg": trial.suggest_float("l2_leaf_reg", low=1.0, high=12.0),  # 3.0
-            "random_strength": trial.suggest_float("random_strength", low=1.0, high=12.0),  # 1.0
+            "l2_leaf_reg": trial.suggest_float("l2_leaf_reg", low=0.0, high=6.0),  # 3.0  [0,+inf)
+            "random_strength": trial.suggest_float("random_strength", low=0.1, high=2.0),  # 1.0
             # "used_ram_limit": "3gb",
             "eval_metric": "AUC", # Accuracy  AUC
         }
@@ -8420,8 +8424,9 @@ def multiple_hypothesis_testing_optuna():
         print('select_cols:', select_cols)
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
-        n_trials = 128
-        study_name = 'ts' + str(n_line_tail) + '_ftr' + str(ftr_num_str)  + '_top' + str(top_ftr_num) + '_auc_' + str(n_trials) + '_model' + str(i) + '_' + date_str # AUC Accuracy
+
+        study_name = 'ts' + str(n_line_tail) + '_ftr' + str(ftr_num_str) + '_top' + str(top_ftr_num) + '_auc_' + \
+                     str(n_trials) + '_model' + str(i) + '_' + date_str  # AUC Accuracy
         sampler = optuna.samplers.TPESampler(seed=1)
         study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),direction="maximize",
                                     study_name=study_name, storage='sqlite:///db.sqlite3', load_if_exists=True,)
