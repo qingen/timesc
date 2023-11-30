@@ -7974,7 +7974,7 @@ def multiple_hypothesis_testing_optuna():
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8
     ########## model
-    top_ftr_num = 128  # 32 64 128 256
+    top_ftr_num = 32  # 2 4 8 16 32 64 128 256
     cluster_model_path = './model/cluster_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-6.pkl'
     cluster_less_train_num = 200    # 200
@@ -8404,11 +8404,16 @@ def multiple_hypothesis_testing_optuna():
         model_file_path = './model/tmp/' + str(trial.number) + '.cbm'
         gbm.save_model(model_file_path)
 
+        pred_train_prob = gbm.predict_proba(train_x)[:, 1]
+        fpr, tpr, thresholds = metrics.roc_curve(train_y, pred_train_prob, pos_label=1, )  # drop_intermediate=True
+        ks1 = max(tpr - fpr)
+
         pred_val_prob = gbm.predict_proba(valid_x)[:, 1]
         fpr, tpr, thresholds = metrics.roc_curve(valid_y, pred_val_prob, pos_label=1, )  # drop_intermediate=True
-        ks = max(tpr - fpr)
-        print("ks = %0.4f" % (ks))
-        return ks
+        ks2 = max(tpr - fpr)
+        print("train ks = %0.4f, valid ks = %0.4f" % (ks1,ks2))
+        maximize = ks2 - abs(ks1 - ks2)
+        return maximize
 
     for i in range(len(label_list_train)):
         select_cols = [None] * top_ftr_num
@@ -8428,7 +8433,7 @@ def multiple_hypothesis_testing_optuna():
         study_name = 'ts' + str(n_line_tail) + '_ftr' + str(ftr_num_str) + '_top' + str(top_ftr_num) + '_auc_' + \
                      str(n_trials) + '_model' + str(i) + '_' + date_str  # AUC Accuracy
         sampler = optuna.samplers.TPESampler(seed=1)
-        study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),direction="maximize",
+        study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),direction="maximize", # minimize
                                     study_name=study_name, storage='sqlite:///db.sqlite3', load_if_exists=True,)
         study.optimize(lambda trial: objective(trial, df_train_ftr_select_notime.loc[:,select_cols],np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                                df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y'])),
