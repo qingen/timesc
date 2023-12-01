@@ -7974,7 +7974,7 @@ def multiple_hypothesis_testing_optuna():
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8
     ########## model
-    top_ftr_num = 32  # 2 4 8 16 32 64 128 256
+    top_ftr_num = 256  # 2 4 8 16 32 64 128 256
     cluster_model_path = './model/cluster_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-6.pkl'
     cluster_less_train_num = 200    # 200
@@ -8540,6 +8540,18 @@ def multiple_hypothesis_testing_optuna():
             df_test_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
+    X = pd.DataFrame()
+    for i in range(len(label_list_test)):
+        model_index = i if i < len(label_list_train) else 0  #  models num
+        dataset_group_index = i
+        result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
+        X = pd.concat([X, X_part])
+    X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
+    X.sort_values(by='prob', ascending=False, inplace=True)
+    X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
+    print('after sort:', X.head(20))
+    print('all rows is:', len(X['customerid']))
 
 
 if __name__ == '__main__':
