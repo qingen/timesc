@@ -7974,7 +7974,7 @@ def multiple_hypothesis_testing_optuna():
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8
     ########## model
-    top_ftr_num = 256  # 2 4 8 16 32 64 128 256
+    top_ftr_num = 64  # 2 4 8 16 32 64 128 256 512 1024
     cluster_model_path = './model/cluster_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-6.pkl'
     cluster_less_train_num = 200    # 200

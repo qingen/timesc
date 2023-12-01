@@ -1180,22 +1180,22 @@ def multiple_hypothesis_testing_predict():
 
     df_all[col] = df_all[col].astype(float)
 
+    ######### ftr
     n_line_tail = 32  # 32 64 128
     n_line_head = 32  # = tail
-
     step = 5
     date_str = datetime(2023, 11, 25).strftime("%Y%m%d")
     split_date_str = '20230101'
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8  # 1/5
     ########## model
-    model_num = 3
-    top_ftr_num = 32  # 32 64 128
-    cluster_model_path = './model/cluster_' + date_str + 'step' + str(step) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail) + '/'
+    model_num = 4
+    top_ftr_num = 128  # 32 64 128
+    cluster_model_path = './model/cluster_' + date_str + '_step' + str(step) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail) + '/'
     cluster_model_file = 'repr-cluster-train-6.pkl'
     cluster_less_train_num = 200  # 200
-    cluster_less_val_num = 200  # 200
-    cluster_less_test_num = 10  # 100
+    cluster_less_val_num = 100  # 100
+    cluster_less_test_num = 50  # 50
     type = 'occur_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + str(cluster_less_train_num) + '_' + \
            str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail)
 
@@ -1327,20 +1327,17 @@ def multiple_hypothesis_testing_predict():
         select_cols = [None] * top_ftr_num
         df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
         for j in range(model_num):
-            model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                              '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
             if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                              '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
+                model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
                 j = 0
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                                              '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_ftr_' + ftr_num_str + '_ts' + str(n_line_tail) + \
-                               '_cbc_top' + str(top_ftr_num) + '_predict_' + str(j) + '_' + str(i) + '.csv'
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_predict_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, so just remove it and still infer.'.format(result_file_path))
+                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
                 os.remove(result_file_path)
+                print(f" file '{result_file_path}' is removed.")
             df_test_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_all_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:, select_cols],
                                     np.array(df_test_ftr_select_notime.loc[:, 'Y']),
@@ -1348,10 +1345,9 @@ def multiple_hypothesis_testing_predict():
 
     X = pd.DataFrame()
     for i in range(len(label_list_all)):
-        model_index = i if i < 3 else 0  # 3 models
+        model_index = i if i < model_num else 0  # 3 models
         dataset_group_index = i
-        result_file_path = './result/' + date_str + '_' + type + '_' + split_date_str + '_ftr_' + ftr_num_str + '_t' + str(n_line_tail) + \
-                           '_cbc_top' + str(top_ftr_num) + '_predict_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_predict_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
         X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
         X = pd.concat([X, X_part])
     X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
