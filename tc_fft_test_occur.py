@@ -1328,9 +1328,6 @@ def multiple_hypothesis_testing_predict():
         df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
         for j in range(model_num):
             model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
-            if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
-                j = 0
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_predict_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
@@ -1353,8 +1350,20 @@ def multiple_hypothesis_testing_predict():
     X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
     X.sort_values(by='prob', ascending=False, inplace=True)
     X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
-    print('after sort:',X.head(20))
+    print('get same index, after sort:',X.head(20))
     print('all rows is:',len(X['customerid']))
+
+    X = pd.DataFrame()
+    for i in range(len(label_list_all)):
+        for j in range(model_num):
+            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_predict_' + str(j) + '_' + str(i) + '.csv'
+            X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
+            X = pd.concat([X, X_part])
+    X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
+    X.sort_values(by='prob', ascending=False, inplace=True)
+    X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
+    print('get top result, after sort:', X.head(20))
+    print('all rows is:', len(X['customerid']))
 
 if __name__ == '__main__':
     # test_for_report()

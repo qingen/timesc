@@ -7974,7 +7974,7 @@ def multiple_hypothesis_testing_optuna():
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8
     ########## model
-    top_ftr_num = 64  # 2 4 8 16 32 64 128 256 512 1024
+    top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
     cluster_model_path = './model/cluster_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-6.pkl'
     cluster_less_train_num = 200    # 200
@@ -8455,9 +8455,6 @@ def multiple_hypothesis_testing_optuna():
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
-            if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
-                j = 0
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
@@ -8480,9 +8477,6 @@ def multiple_hypothesis_testing_optuna():
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_'+ str(j) + '.cbm'
-            if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
-                j = 0
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) +'_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
@@ -8525,9 +8519,6 @@ def multiple_hypothesis_testing_optuna():
         df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
-            if not os.path.exists(model_file_path):
-                model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(0) + '.cbm'
-                j = 0
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
@@ -8550,7 +8541,19 @@ def multiple_hypothesis_testing_optuna():
     X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
     X.sort_values(by='prob', ascending=False, inplace=True)
     X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
-    print('after sort:', X.head(20))
+    print('get same index, after sort:', X.head(20))
+    print('all rows is:', len(X['customerid']))
+
+    X = pd.DataFrame()
+    for i in range(len(label_list_test)):
+        for j in range(len(label_list_train)):
+            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
+            X = pd.concat([X, X_part])
+    X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
+    X.sort_values(by='prob', ascending=False, inplace=True)
+    X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
+    print('get top result, after sort:', X.head(20))
     print('all rows is:', len(X['customerid']))
 
 
