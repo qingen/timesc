@@ -9255,29 +9255,40 @@ def multiple_hypothesis_testing_y_optuna():
     df_part1_1 = df_part1_1[~df_part1_1['CUSTOMER_ID'].isin(filtered_groups)]
     print('after filter 0/null df_part1_1.shape:', df_part1_1.shape)
 
-
     df_y_0 = df_y[df_y['Y'] == 0]
     df_y_1 = df_y[df_y['Y'] == 1]
-    df_part1_1 = df_part1_1[df_part1_1['CUSTOMER_ID'].isin(df_y_1['CUSTOMER_ID'])]
-    print('after filter y df_part1_1.shape:', df_part1_1.shape)
+    df_part1_1_1 = df_part1_1[df_part1_1['CUSTOMER_ID'].isin(df_y_1['CUSTOMER_ID'])]
+    print('after filter y df_part1_1_1.shape:', df_part1_1_1.shape)
     df_part1_1_0 = df_part1_1[df_part1_1['CUSTOMER_ID'].isin(df_y_0['CUSTOMER_ID'])]
     df_part1_1_0['Y'] = 0
     print('after filter y df_part1_1_0.shape:', df_part1_1_0.shape)
+    print('head df_part1_1_0:', df_part1_1_0.iloc[:2, :3])
 
-    train_1_num_sample = int(df_part1_1.shape[0] / n_line_head * 0.8)
+    train_1_0_num_sample = int(df_part1_1_0.shape[0] / n_line_head * 0.8)
+    print('train_1_0_num_sample:', train_1_0_num_sample)
+    selected_groups = df_part1_1_0['CUSTOMER_ID'].drop_duplicates().sample(n=train_1_0_num_sample, random_state=int(
+        train_1_0_num_sample + n_line_head))
+    # 获取每个选中组的所有样本
+    train_1_0_selected = df_part1_1_0.groupby('CUSTOMER_ID').apply(
+        lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
+    train_1_0_selected = train_1_0_selected.dropna(subset=['Y'])
+    print('train_1_0_selected.shape:', train_1_0_selected.shape)
+    # 获取剩余的组
+    valid_1_0_selected = df_part1_1_0[~df_part1_1_0['CUSTOMER_ID'].isin(selected_groups)]
+    print('valid_1_0_selected.shape:', valid_1_0_selected.shape)
+
+    train_1_num_sample = int(df_part1_1_1.shape[0] / n_line_head * 0.8)
     print('train_1_num_sample:', train_1_num_sample)
-    selected_groups = df_part1_1['CUSTOMER_ID'].drop_duplicates().sample(n=train_1_num_sample, random_state=int(
+    selected_groups = df_part1_1_1['CUSTOMER_ID'].drop_duplicates().sample(n=train_1_num_sample, random_state=int(
         train_1_num_sample + n_line_head))
     # 获取每个选中组的所有样本
-    train_1_selected = df_part1_1.groupby('CUSTOMER_ID').apply(
+    train_1_selected = df_part1_1_1.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     train_1_selected = train_1_selected.dropna(subset=['Y'])
     print('train_1_selected.shape:', train_1_selected.shape)
     # 获取剩余的组
-    valid_1_selected = df_part1_1[~df_part1_1['CUSTOMER_ID'].isin(selected_groups)]
+    valid_1_selected = df_part1_1_1[~df_part1_1_1['CUSTOMER_ID'].isin(selected_groups)]
     print('valid_1_selected.shape:', valid_1_selected.shape)
-
-
 
     df_part1_0 = df_part1_0.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
@@ -9299,10 +9310,10 @@ def multiple_hypothesis_testing_y_optuna():
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     train_0_selected = train_0_selected.dropna(subset=['Y'])
     print('train_0_selected.shape:', train_0_selected.shape)
-    df_train = pd.concat([train_0_selected, train_1_selected])
+    df_train = pd.concat([train_0_selected, train_1_selected, train_1_0_selected])
     print('df_train.shape: ', df_train.shape)
 
-    del train_0_selected, train_1_selected
+    del train_0_selected, train_1_selected, train_1_0_selected
 
     # valid_0_num_sample = int(valid_1_selected.shape[0] / n_line_head * 10)  # down to 10
     valid_0_num_sample = int(df_part1_0.shape[0] / n_line_head * 0.2)
@@ -9315,23 +9326,21 @@ def multiple_hypothesis_testing_y_optuna():
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     valid_0_selected = valid_0_selected.dropna(subset=['Y'])
     print('valid_0_selected.shape:', valid_0_selected.shape)
-    df_val = pd.concat([valid_0_selected, valid_1_selected])
+    df_val = pd.concat([valid_0_selected, valid_1_selected, valid_1_0_selected])
 
-    del df_part1_0, df_part1_1, valid_0_remain, valid_0_selected, valid_1_selected
+    del df_part1_0, df_part1_1, valid_0_remain, valid_0_selected, valid_1_selected, valid_1_0_selected
 
     ###################### for test good:bad 100:1, good >= 2000  bad augment * 180
     df_part2_0 = df_part2[df_part2['Y'] == 0]
     df_part2_1 = df_part2[df_part2['Y'] == 1]
-    df_part2_1 = df_part2_1.groupby(['CUSTOMER_ID']).apply(
-        lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
+    df_part2_1 = df_part2_1.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
     print('df_part2_1.head:', df_part2_1.head(2))
     print('df_part2_1.shape:', df_part2_1.shape)
     df_part2_1 = df_part2_1.groupby('CUSTOMER_ID').apply(remove_last_row).reset_index(drop=True)
     print('after del last row df_part2_1.shape:', df_part2_1.shape)
 
     # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
-    count_df = df_part2_1.groupby('CUSTOMER_ID').apply(
-        lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
+    count_df = df_part2_1.groupby('CUSTOMER_ID').apply(lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
     # 删除满足条件的组
     filtered_groups = count_df[count_df.gt(K)].index
     print(filtered_groups)
@@ -9341,29 +9350,35 @@ def multiple_hypothesis_testing_y_optuna():
     df_part2_1 = df_part2_1.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
 
-    test_0_num_sample = int(df_part2_1.shape[0] / n_line_head * 100) if int(
-        df_part2_1.shape[0] / n_line_head * 100) < 2400 else 2400
+    df_part2_1_1 = df_part2_1[df_part2_1['CUSTOMER_ID'].isin(df_y_1['CUSTOMER_ID'])]
+    print('after filter y df_part2_1_1.shape:', df_part2_1_1.shape)
+    df_part2_1_0 = df_part2_1[df_part2_1['CUSTOMER_ID'].isin(df_y_0['CUSTOMER_ID'])]
+    df_part2_1_0['Y'] = 0
+    print('after filter y df_part2_1_0.shape:', df_part2_1_0.shape)
+    print('head df_part2_1_0:', df_part2_1_0.iloc[:2, :3])
+
+
+
+
+
+    test_0_num_sample = int(df_part2_1.shape[0] / n_line_head * 100) if int(df_part2_1.shape[0] / n_line_head * 100) < 2400 else 2400
     print('test_0_num_sample:', test_0_num_sample)
 
     df_part2_0 = df_part2_0.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
     print('df_part2_0.shape:', df_part2_0.shape)
     # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
-    count_df = df_part2_0.groupby('CUSTOMER_ID').apply(
-        lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
+    count_df = df_part2_0.groupby('CUSTOMER_ID').apply(lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
     # 删除满足条件的组
     filtered_groups = count_df[count_df.gt(K)].index
     print(filtered_groups)
     df_part2_0 = df_part2_0[~df_part2_0['CUSTOMER_ID'].isin(filtered_groups)]
     print('after filter df_part2_0.shape:', df_part2_0.shape)
-    test_0_num_sample = test_0_num_sample if ((df_part2_0.shape[0] / n_line_head) > test_0_num_sample) else int(
-        df_part2_0.shape[0] / n_line_head)
+    test_0_num_sample = test_0_num_sample if ((df_part2_0.shape[0] / n_line_head) > test_0_num_sample) else int(df_part2_0.shape[0] / n_line_head)
     print('test_0_num_sample:', test_0_num_sample)
-    selected_groups = df_part2_0['CUSTOMER_ID'].drop_duplicates().sample(n=test_0_num_sample, random_state=int(
-        test_0_num_sample + n_line_head))
+    selected_groups = df_part2_0['CUSTOMER_ID'].drop_duplicates().sample(n=test_0_num_sample, random_state=int(test_0_num_sample + n_line_head))
     # 获取每个选中组的所有样本
-    df_part2_0_selected = df_part2_0.groupby('CUSTOMER_ID').apply(
-        lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
+    df_part2_0_selected = df_part2_0.groupby('CUSTOMER_ID').apply(lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     df_part2_0_selected = df_part2_0_selected.dropna(subset=['Y'])
     print('df_part2_0_selected.shape:', df_part2_0_selected.shape)
     df_test = pd.concat([df_part2_0_selected, df_part2_1])
