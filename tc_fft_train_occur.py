@@ -9113,8 +9113,7 @@ def multiple_hypothesis_testing_y_optuna():
     df16_1 = pd.read_csv("./data/0825_train/occur/2016_1_7_202308251331.csv", header=0, usecols=usecols, sep=',',
                          encoding='gbk')
     credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30', ]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
-    df_credit = pd.read_csv("./data/0825_train/credit/202310241019.csv", header=0, usecols=credit_usecols, sep=',',
-                            encoding='gbk')
+    df_credit = pd.read_csv("./data/0825_train/credit/202310241019.csv", header=0, usecols=credit_usecols, sep=',',encoding='gbk')
     y_usecols = ['CUSTOMER_ID', 'Y',]
     df_y = pd.read_csv("./data/0825_train/y/2023_9.csv", header=0, usecols=y_usecols, sep=',',encoding='gbk')
     print('df_y head:',df_y.head(5))
@@ -9257,12 +9256,19 @@ def multiple_hypothesis_testing_y_optuna():
 
     df_y_0 = df_y[df_y['Y'] == 0]
     df_y_1 = df_y[df_y['Y'] == 1]
-    df_part1_1_1 = df_part1_1[df_part1_1['CUSTOMER_ID'].isin(df_y_1['CUSTOMER_ID'])]
+    df_part1_1['CUSTOMER_ID_TMP'] = df_part1_1['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
+    df_y_0['CUSTOMER_ID_TMP'] = df_y_0['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
+    df_y_1['CUSTOMER_ID_TMP'] = df_y_1['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
+    df_part1_1_1 = df_part1_1[df_part1_1['CUSTOMER_ID_TMP'].isin(df_y_1['CUSTOMER_ID_TMP'])]
     print('after filter y df_part1_1_1.shape:', df_part1_1_1.shape)
-    df_part1_1_0 = df_part1_1[df_part1_1['CUSTOMER_ID'].isin(df_y_0['CUSTOMER_ID'])]
+    df_part1_1_0 = df_part1_1[df_part1_1['CUSTOMER_ID_TMP'].isin(df_y_0['CUSTOMER_ID_TMP'])]
     df_part1_1_0['Y'] = 0
     print('after filter y df_part1_1_0.shape:', df_part1_1_0.shape)
     print('head df_part1_1_0:', df_part1_1_0.iloc[:2, :3])
+    df_part1_1_1.drop(columns='CUSTOMER_ID_TMP', inplace=True)
+    df_part1_1_0.drop(columns='CUSTOMER_ID_TMP', inplace=True)
+    print('after drop CUSTOMER_ID_TMP df_part1_1_1.shape:', df_part1_1_1.shape)
+    print('after drop CUSTOMER_ID_TMP df_part1_1_0.shape:', df_part1_1_0.shape)
 
     train_1_0_num_sample = int(df_part1_1_0.shape[0] / n_line_head * 0.8)
     print('train_1_0_num_sample:', train_1_0_num_sample)
@@ -9277,18 +9283,18 @@ def multiple_hypothesis_testing_y_optuna():
     valid_1_0_selected = df_part1_1_0[~df_part1_1_0['CUSTOMER_ID'].isin(selected_groups)]
     print('valid_1_0_selected.shape:', valid_1_0_selected.shape)
 
-    train_1_num_sample = int(df_part1_1_1.shape[0] / n_line_head * 0.8)
-    print('train_1_num_sample:', train_1_num_sample)
-    selected_groups = df_part1_1_1['CUSTOMER_ID'].drop_duplicates().sample(n=train_1_num_sample, random_state=int(
-        train_1_num_sample + n_line_head))
+    train_1_1_num_sample = int(df_part1_1_1.shape[0] / n_line_head * 0.8)
+    print('train_1_1_num_sample:', train_1_1_num_sample)
+    selected_groups = df_part1_1_1['CUSTOMER_ID'].drop_duplicates().sample(n=train_1_1_num_sample, random_state=int(
+        train_1_1_num_sample + n_line_head))
     # 获取每个选中组的所有样本
-    train_1_selected = df_part1_1_1.groupby('CUSTOMER_ID').apply(
+    train_1_1_selected = df_part1_1_1.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
-    train_1_selected = train_1_selected.dropna(subset=['Y'])
-    print('train_1_selected.shape:', train_1_selected.shape)
+    train_1_1_selected = train_1_1_selected.dropna(subset=['Y'])
+    print('train_1_1_selected.shape:', train_1_1_selected.shape)
     # 获取剩余的组
-    valid_1_selected = df_part1_1_1[~df_part1_1_1['CUSTOMER_ID'].isin(selected_groups)]
-    print('valid_1_selected.shape:', valid_1_selected.shape)
+    valid_1_1_selected = df_part1_1_1[~df_part1_1_1['CUSTOMER_ID'].isin(selected_groups)]
+    print('valid_1_1_selected.shape:', valid_1_1_selected.shape)
 
     df_part1_0 = df_part1_0.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
@@ -9310,10 +9316,10 @@ def multiple_hypothesis_testing_y_optuna():
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     train_0_selected = train_0_selected.dropna(subset=['Y'])
     print('train_0_selected.shape:', train_0_selected.shape)
-    df_train = pd.concat([train_0_selected, train_1_selected, train_1_0_selected])
+    df_train = pd.concat([train_0_selected, train_1_1_selected, train_1_0_selected])
     print('df_train.shape: ', df_train.shape)
 
-    del train_0_selected, train_1_selected, train_1_0_selected
+    del train_0_selected, train_1_1_selected, train_1_0_selected
 
     # valid_0_num_sample = int(valid_1_selected.shape[0] / n_line_head * 10)  # down to 10
     valid_0_num_sample = int(df_part1_0.shape[0] / n_line_head * 0.2)
@@ -9326,9 +9332,9 @@ def multiple_hypothesis_testing_y_optuna():
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     valid_0_selected = valid_0_selected.dropna(subset=['Y'])
     print('valid_0_selected.shape:', valid_0_selected.shape)
-    df_val = pd.concat([valid_0_selected, valid_1_selected, valid_1_0_selected])
+    df_val = pd.concat([valid_0_selected, valid_1_1_selected, valid_1_0_selected])
 
-    del df_part1_0, df_part1_1, valid_0_remain, valid_0_selected, valid_1_selected, valid_1_0_selected
+    del df_part1_0, df_part1_1, valid_0_remain, valid_0_selected, valid_1_1_selected, valid_1_0_selected
 
     ###################### for test good:bad 100:1, good >= 2000  bad augment * 180
     df_part2_0 = df_part2[df_part2['Y'] == 0]
@@ -9350,16 +9356,17 @@ def multiple_hypothesis_testing_y_optuna():
     df_part2_1 = df_part2_1.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
 
-    df_part2_1_1 = df_part2_1[df_part2_1['CUSTOMER_ID'].isin(df_y_1['CUSTOMER_ID'])]
+    df_part2_1['CUSTOMER_ID_TMP'] = df_part2_1['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
+    df_part2_1_1 = df_part2_1[df_part2_1['CUSTOMER_ID_TMP'].isin(df_y_1['CUSTOMER_ID_TMP'])]
     print('after filter y df_part2_1_1.shape:', df_part2_1_1.shape)
-    df_part2_1_0 = df_part2_1[df_part2_1['CUSTOMER_ID'].isin(df_y_0['CUSTOMER_ID'])]
+    df_part2_1_0 = df_part2_1[df_part2_1['CUSTOMER_ID_TMP'].isin(df_y_0['CUSTOMER_ID_TMP'])]
     df_part2_1_0['Y'] = 0
     print('after filter y df_part2_1_0.shape:', df_part2_1_0.shape)
     print('head df_part2_1_0:', df_part2_1_0.iloc[:2, :3])
-
-
-
-
+    df_part2_1_1.drop(columns='CUSTOMER_ID_TMP', inplace=True)
+    df_part2_1_0.drop(columns='CUSTOMER_ID_TMP', inplace=True)
+    print('after drop CUSTOMER_ID_TMP df_part2_1_1.shape:', df_part2_1_1.shape)
+    print('after drop CUSTOMER_ID_TMP df_part2_1_0.shape:', df_part2_1_0.shape)
 
     test_0_num_sample = int(df_part2_1.shape[0] / n_line_head * 100) if int(df_part2_1.shape[0] / n_line_head * 100) < 2400 else 2400
     print('test_0_num_sample:', test_0_num_sample)
@@ -9381,9 +9388,9 @@ def multiple_hypothesis_testing_y_optuna():
     df_part2_0_selected = df_part2_0.groupby('CUSTOMER_ID').apply(lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     df_part2_0_selected = df_part2_0_selected.dropna(subset=['Y'])
     print('df_part2_0_selected.shape:', df_part2_0_selected.shape)
-    df_test = pd.concat([df_part2_0_selected, df_part2_1])
+    df_test = pd.concat([df_part2_0_selected, df_part2_1_1, df_part2_1_0])
     print('df_test.shape: ', df_test.shape)
-    del df_part2_0, df_part2_1, df_part2_0_selected
+    del df_part2_0, df_part2_1, df_part2_0_selected, df_part2_1_1, df_part2_1_0
 
     df_test = df_test.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_head)
     df_val = df_val.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_head)
@@ -9511,7 +9518,6 @@ def multiple_hypothesis_testing_y_optuna():
     ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:, select_cols],
                             np.array(df_test_ftr_select_notime.loc[:, 'Y']),
                             np.array(df_test_ftr_select_notime.loc[:, 'CUSTOMER_ID']))
-    return
 if __name__ == '__main__':
     # train_occur_for_report()
     # train_occur_for_predict()
