@@ -6907,8 +6907,8 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     data_cols.remove('Y')
     df.fillna(0, inplace=True)
     grouped_data = df.groupby('CUSTOMER_ID')
-    if (len(grouped_data) > 4000):
-        num_groups_per_data = 4000
+    if (len(grouped_data) > 2000):
+        num_groups_per_data = 2000
     else:
         num_groups_per_data = len(grouped_data) / 2
     splitted_data = [group for _, group in grouped_data]
@@ -9212,7 +9212,7 @@ def multiple_hypothesis_testing_y_optuna():
     ftr_num_str = '90'
     filter_num_ratio = 1 / 8
     ########## model
-    top_ftr_num = 8  # 2 4 8 16 32 64 128 256 512 1024
+    top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
     type = 'occur_augmentftr' + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail)
     ######## optuna
     n_trials = 128
@@ -9451,16 +9451,28 @@ def multiple_hypothesis_testing_y_optuna():
         # Save a trained model to a file.
         model_file_path = './model/tmp/' + str(trial.number) + '.cbm'
         gbm.save_model(model_file_path)
-
+        fpr_threshold = 0.001
         pred_train_prob = gbm.predict_proba(train_x)[:, 1]
-        fpr, tpr, thresholds = metrics.roc_curve(train_y, pred_train_prob, pos_label=1, )  # drop_intermediate=True
+        fpr, tpr, thresholds = metrics.roc_curve(train_y, pred_train_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
         ks1 = max(tpr - fpr)
+        for i in range(tpr.shape[0]):
+            if fpr[i] < fpr_threshold and fpr[i+1] > fpr_threshold:
+                tpr_1 = tpr[i]
+                print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+                break
+        print('train='*16)
 
         pred_val_prob = gbm.predict_proba(valid_x)[:, 1]
-        fpr, tpr, thresholds = metrics.roc_curve(valid_y, pred_val_prob, pos_label=1, )  # drop_intermediate=True
+        fpr, tpr, thresholds = metrics.roc_curve(valid_y, pred_val_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
         ks2 = max(tpr - fpr)
-        print("train ks = %0.4f, valid ks = %0.4f, thresholds = %0.4f" % (ks1, ks2, thresholds))
-        maximize = ks2 - abs(ks1 - ks2)
+        for i in range(tpr.shape[0]):
+            if fpr[i] < fpr_threshold and fpr[i+1] > fpr_threshold:
+                tpr_2 = tpr[i]
+                print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+                break
+        print('valid='*16)
+        print("train ks = {:.4f}, valid ks = {:.4f}".format(ks1, ks2))
+        maximize = (tpr_1 + tpr_2) - abs(tpr_1 - tpr_2)
         return maximize
 
     select_cols = [None] * top_ftr_num
