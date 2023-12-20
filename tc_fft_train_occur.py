@@ -6907,8 +6907,8 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     data_cols.remove('Y')
     df.fillna(0, inplace=True)
     grouped_data = df.groupby('CUSTOMER_ID')
-    if (len(grouped_data) > 10000):
-        num_groups_per_data = 10000
+    if (len(grouped_data) > 4000):
+        num_groups_per_data = 4000
     else:
         num_groups_per_data = len(grouped_data) / 2
     splitted_data = [group for _, group in grouped_data]
@@ -9212,7 +9212,7 @@ def multiple_hypothesis_testing_y_optuna():
     ftr_num_str = '90'
     filter_num_ratio = 1 / 8
     ########## model
-    top_ftr_num = 16  # 2 4 8 16 32 64 128 256 512 1024
+    top_ftr_num = 8  # 2 4 8 16 32 64 128 256 512 1024
     type = 'occur_augmentftr' + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail)
     ######## optuna
     n_trials = 128
@@ -9442,7 +9442,7 @@ def multiple_hypothesis_testing_y_optuna():
             train_y,
             eval_set=[(valid_x, valid_y)],
             verbose=0,
-            early_stopping_rounds=100,
+            early_stopping_rounds=50,
             callbacks=[pruning_callback],
         )
 
@@ -9459,7 +9459,7 @@ def multiple_hypothesis_testing_y_optuna():
         pred_val_prob = gbm.predict_proba(valid_x)[:, 1]
         fpr, tpr, thresholds = metrics.roc_curve(valid_y, pred_val_prob, pos_label=1, )  # drop_intermediate=True
         ks2 = max(tpr - fpr)
-        print("train ks = %0.4f, valid ks = %0.4f" % (ks1, ks2))
+        print("train ks = %0.4f, valid ks = %0.4f, thresholds = %0.4f" % (ks1, ks2, thresholds))
         maximize = ks2 - abs(ks1 - ks2)
         return maximize
 
