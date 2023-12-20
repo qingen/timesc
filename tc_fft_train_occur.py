@@ -6907,8 +6907,8 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     data_cols.remove('Y')
     df.fillna(0, inplace=True)
     grouped_data = df.groupby('CUSTOMER_ID')
-    if (len(grouped_data) > 1000):
-        num_groups_per_data = 1000
+    if (len(grouped_data) > 10000):
+        num_groups_per_data = 10000
     else:
         num_groups_per_data = len(grouped_data) / 2
     splitted_data = [group for _, group in grouped_data]
@@ -9212,8 +9212,8 @@ def multiple_hypothesis_testing_y_optuna():
     ftr_num_str = '90'
     filter_num_ratio = 1 / 8
     ########## model
-    top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
-    type = 'occur_augmentftr_' + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail)
+    top_ftr_num = 16  # 2 4 8 16 32 64 128 256 512 1024
+    type = 'occur_augmentftr' + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail)
     ######## optuna
     n_trials = 128
     max_depth = 6
@@ -9336,7 +9336,7 @@ def multiple_hypothesis_testing_y_optuna():
 
     del df_part1_0, df_part1_1, valid_0_remain, valid_0_selected, valid_1_1_selected, valid_1_0_selected
 
-    ###################### for test good:bad 100:1, good >= 2000  bad augment * 180
+    ###################### for test good:bad 100:1
     df_part2_0 = df_part2[df_part2['Y'] == 0]
     df_part2_1 = df_part2[df_part2['Y'] == 1]
     df_part2_1 = df_part2_1.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
@@ -9502,10 +9502,8 @@ def multiple_hypothesis_testing_y_optuna():
 
     select_cols = [None] * top_ftr_num
     model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '.cbm'
-    kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
-        top_ftr_num) + '.npy'
-    result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(
-        j) + '_' + str(i) + '.csv'
+    kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '.npy'
+    result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test.csv'
     print(result_file_path)
     if os.path.exists(result_file_path):
         print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
