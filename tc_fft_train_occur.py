@@ -5972,7 +5972,7 @@ def ml_model_forward_ks_roc(model_file_path: str, result_file_path: str, dataset
     sorted_df = sorted_df.drop_duplicates('customerid')
     print(sorted_df.head(30))
 
-    fpr, tpr, thresholds = metrics.roc_curve(y_labels, pred_val_prob, pos_label=1, )  # drop_intermediate=True
+    fpr, tpr, thresholds = metrics.roc_curve(y_labels, pred_val_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
     print("ks = %0.4f" % (max(tpr - fpr)))
     for i in range(tpr.shape[0]):
         if (tpr[i] - fpr[i] ) > (max(tpr - fpr)-0.0000001):
@@ -9215,7 +9215,7 @@ def multiple_hypothesis_testing_y_optuna():
     top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
     type = 'occur_augmentftr' + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail)
     ######## optuna
-    n_trials = 128
+    n_trials = 4096
     max_depth = 6
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
@@ -9442,7 +9442,7 @@ def multiple_hypothesis_testing_y_optuna():
             train_y,
             eval_set=[(valid_x, valid_y)],
             verbose=0,
-            early_stopping_rounds=50,
+            early_stopping_rounds=100,
             callbacks=[pruning_callback],
         )
 
