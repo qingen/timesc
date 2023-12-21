@@ -9489,7 +9489,7 @@ def multiple_hypothesis_testing_y_optuna():
             #"boosting_type": trial.suggest_categorical("boosting_type", ["gbdt", "dart", "goss", "rf"]),
             "reg_lambda": trial.suggest_float("reg_lambda", 0.01, 1.0, log=True),
             "reg_alpha": trial.suggest_float("reg_alpha", 0.01, 1.0, log=True),
-            "n_estimators": 50,
+            "n_estimators": 200,
             "objective": "binary",
             "seed": 0,
             #"bagging_fraction": trial.suggest_float("bagging_fraction", 0.4, 1.0), # rf.hpp >0 <1
@@ -9505,30 +9505,36 @@ def multiple_hypothesis_testing_y_optuna():
             train_y,
             eval_set=[(valid_x, valid_y)],
             verbose=0,
-            early_stopping_rounds=20,
+            early_stopping_rounds=100,
             callbacks=[pruning_callback],
         )
         # Save a trained model to a file.
         model_file_path = './model/tmp/' + str(trial.number) + '.pkl'
         joblib.dump(gbm, model_file_path)
-        fpr_threshold = 0.001
+        fpr_threshold = 0.0
         pred_train_prob = gbm.predict_proba(train_x)[:, 1]
         fpr, tpr, thresholds = metrics.roc_curve(train_y, pred_train_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
         ks1 = max(tpr - fpr)
+        tpr_1 = 0.0
         for i in range(tpr.shape[0]):
-            if fpr[i] < fpr_threshold and fpr[i+1] > fpr_threshold:
+        #for i in range(100):
+            print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+            if fpr[i] == fpr_threshold and fpr[i+1] > fpr_threshold:
                 tpr_1 = tpr[i]
-                print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+                print('find it:',tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
                 break
         print('train='*16)
 
         pred_val_prob = gbm.predict_proba(valid_x)[:, 1]
         fpr, tpr, thresholds = metrics.roc_curve(valid_y, pred_val_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
         ks2 = max(tpr - fpr)
+        tpr_2 = 0.0
         for i in range(tpr.shape[0]):
-            if fpr[i] < fpr_threshold and fpr[i+1] > fpr_threshold:
+        #for i in range(100):
+            print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+            if fpr[i] == fpr_threshold and fpr[i+1] > fpr_threshold:
                 tpr_2 = tpr[i]
-                print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+                print('find it:', tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
                 break
         print('valid='*16)
         print("train ks = {:.4f}, valid ks = {:.4f}".format(ks1, ks2))
