@@ -9522,6 +9522,7 @@ def multiple_hypothesis_testing_y_optuna():
             if fpr[i] == fpr_threshold and fpr[i+1] > fpr_threshold:
                 tpr_1 = tpr[i]
                 print('find it:',tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+                print('find it+1:', tpr[i+1], fpr[i+1], tpr[i+1] - fpr[i+1], thresholds[i+1])
                 break
         print('train='*16)
 
@@ -9535,10 +9536,12 @@ def multiple_hypothesis_testing_y_optuna():
             if fpr[i] == fpr_threshold and fpr[i+1] > fpr_threshold:
                 tpr_2 = tpr[i]
                 print('find it:', tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+                print('find it+1:', tpr[i + 1], fpr[i + 1], tpr[i + 1] - fpr[i + 1], thresholds[i + 1])
                 break
         print('valid='*16)
         print("train ks = {:.4f}, valid ks = {:.4f}".format(ks1, ks2))
-        maximize = (tpr_1 + tpr_2) - abs(tpr_1 - tpr_2)
+        #maximize = (tpr_1 + tpr_2) - abs(tpr_1 - tpr_2)
+        maximize = (tpr_1 + tpr_2)
         return maximize
 
     select_cols = [None] * top_ftr_num
