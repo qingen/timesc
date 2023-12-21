@@ -9700,34 +9700,35 @@ def multiple_hypothesis_testing_y_augdata_optuna():
         fpr, tpr, thresholds = metrics.roc_curve(train_y, pred_train_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
         ks_train = max(tpr - fpr)
         ks1 = 0.0
-        for i in range(tpr.shape[0]):
+        #for i in range(tpr.shape[0]):
         #for i in range(100):
             #print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
-            if fpr[i] == fpr_threshold and fpr[i+1] > fpr_threshold and tpr[i+1] > fpr[i+1]:
-                ks1 = tpr[i+1] - fpr[i+1]
-                print('find it:',tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
-                print('find it+1:', tpr[i+1], fpr[i+1], tpr[i+1] - fpr[i+1], thresholds[i+1])
-                break
+        #    if fpr[i] == fpr_threshold and fpr[i+1] > fpr_threshold and tpr[i+1] > fpr[i+1]:
+        #        ks1 = tpr[i+1] - fpr[i+1]
+        #        print('find it:',tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+        #        print('find it+1:', tpr[i+1], fpr[i+1], tpr[i+1] - fpr[i+1], thresholds[i+1])
+        #        break
         print('train='*16)
 
         pred_val_prob = gbm.predict_proba(valid_x)[:, 1]
         fpr, tpr, thresholds = metrics.roc_curve(valid_y, pred_val_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
         ks_val = max(tpr - fpr)
         ks2 = 0.0
-        for i in range(tpr.shape[0]):
+        #for i in range(tpr.shape[0]):
         #for i in range(100):
             #print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
-            if fpr[i] == fpr_threshold and fpr[i+1] > fpr_threshold and tpr[i+1] > fpr[i+1]:
-                ks2 = tpr[i+1] - fpr[i+1]
-                print('find it:', tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
-                print('find it+1:', tpr[i + 1], fpr[i + 1], tpr[i + 1] - fpr[i + 1], thresholds[i + 1])
-                break
+        #    if fpr[i] == fpr_threshold and fpr[i+1] > fpr_threshold and tpr[i+1] > fpr[i+1]:
+        #        ks2 = tpr[i+1] - fpr[i+1]
+        #        print('find it:', tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+        #        print('find it+1:', tpr[i + 1], fpr[i + 1], tpr[i + 1] - fpr[i + 1], thresholds[i + 1])
+        #        break
         print('valid='*16)
         print("train ks = {:.4f}, valid ks = {:.4f}".format(ks_train, ks_val))
         #maximize = (tpr_1 + tpr_2) - abs(tpr_1 - tpr_2)
         #maximize = (tpr_1 + tpr_2)
         #maximize = (ks1 + ks2) - abs(ks1 - ks2)
-        maximize = (ks1 + ks2)
+        #maximize = (ks1 + ks2)
+        maximize = (ks_train + ks_val) - abs(ks_train - ks_val)
         return maximize
 
     select_cols = [None] * top_ftr_num
