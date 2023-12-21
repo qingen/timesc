@@ -5951,6 +5951,13 @@ def ml_model_forward_ks_roc(model_file_path: str, result_file_path: str, dataset
     else:
         print("file not end with cbm, so this is not catboost model")
         model = joblib.load(model_file_path)
+        importance = model.booster_.feature_importance(importance_type='gain')
+        ftr_name = model.booster_.feature_name()
+        print('len importance:', len(importance))
+        importance_dict = {}
+        for x_n, im in zip(list(ftr_name), importance):
+            print(x_n,im)
+            importance_dict[x_n] = im
     #pred_val = network.predict(tsdatasets)
     pred_val_prob = model.predict_proba(datasets)[:, 1]
 
@@ -9215,7 +9222,7 @@ def multiple_hypothesis_testing_y_optuna():
     top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
     type = 'occur_augmentftr' + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail)
     ######## optuna
-    n_trials = 4096
+    n_trials = 1024
     max_depth = 6
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
@@ -9417,7 +9424,7 @@ def multiple_hypothesis_testing_y_optuna():
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('5 classifier train:', formatted_time)
 
-    def objective(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, ) -> float:
+    def objective_catboost(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, ) -> float:
         param = {
             "objective": trial.suggest_categorical("objective", ["Logloss", "CrossEntropy"]),
             "colsample_bylevel": trial.suggest_float("colsample_bylevel", 0.01, 1),  # (0,1] rsm
@@ -9474,13 +9481,67 @@ def multiple_hypothesis_testing_y_optuna():
         print("train ks = {:.4f}, valid ks = {:.4f}".format(ks1, ks2))
         maximize = (tpr_1 + tpr_2) - abs(tpr_1 - tpr_2)
         return maximize
+    def objective_lightgbm(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, ) -> float:
+        params = {
+            "max_depth": trial.suggest_int("max_depth", 2, 5),
+            "num_leaves": trial.suggest_int("num_leaves", 4, 32),
+            "class_weight": trial.suggest_categorical("class_weight", [None, "balanced"]),
+            #"boosting_type": trial.suggest_categorical("boosting_type", ["gbdt", "dart", "goss", "rf"]),
+            "reg_lambda": trial.suggest_float("reg_lambda", 0.01, 1.0, log=True),
+            "reg_alpha": trial.suggest_float("reg_alpha", 0.01, 1.0, log=True),
+            "n_estimators": 50,
+            "objective": "binary",
+            "seed": 0,
+            #"bagging_fraction": trial.suggest_float("bagging_fraction", 0.4, 1.0), # rf.hpp >0 <1
+            #"bagging_freq": trial.suggest_int("bagging_freq", 1, 7),  # rf.hpp >0
+            "metric": "auc",
+            "boosting_type": "gbdt"
+        }
+        # Add a callback for pruning.
+        pruning_callback = optuna.integration.LightGBMPruningCallback(trial, "auc")
+        lc = LGBMClassifier(**params,)
+        gbm = lc.fit(
+            train_x,
+            train_y,
+            eval_set=[(valid_x, valid_y)],
+            verbose=0,
+            early_stopping_rounds=20,
+            callbacks=[pruning_callback],
+        )
+        # Save a trained model to a file.
+        model_file_path = './model/tmp/' + str(trial.number) + '.pkl'
+        joblib.dump(gbm, model_file_path)
+        fpr_threshold = 0.001
+        pred_train_prob = gbm.predict_proba(train_x)[:, 1]
+        fpr, tpr, thresholds = metrics.roc_curve(train_y, pred_train_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
+        ks1 = max(tpr - fpr)
+        for i in range(tpr.shape[0]):
+            if fpr[i] < fpr_threshold and fpr[i+1] > fpr_threshold:
+                tpr_1 = tpr[i]
+                print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+                break
+        print('train='*16)
+
+        pred_val_prob = gbm.predict_proba(valid_x)[:, 1]
+        fpr, tpr, thresholds = metrics.roc_curve(valid_y, pred_val_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
+        ks2 = max(tpr - fpr)
+        for i in range(tpr.shape[0]):
+            if fpr[i] < fpr_threshold and fpr[i+1] > fpr_threshold:
+                tpr_2 = tpr[i]
+                print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+                break
+        print('valid='*16)
+        print("train ks = {:.4f}, valid ks = {:.4f}".format(ks1, ks2))
+        maximize = (tpr_1 + tpr_2) - abs(tpr_1 - tpr_2)
+        return maximize
 
     select_cols = [None] * top_ftr_num
-    model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '.cbm'
+    #model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '.cbm'
+    model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '.pkl'
     if os.path.exists(model_file_path):
         print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
-        # os.remove(model_file_path)
-        # print(f" file '{model_file_path}' is removed.")
+        os.remove(model_file_path)
+        print(f" file '{model_file_path}' is removed.")
         # continue
     kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
         top_ftr_num) + '.npy'
@@ -9496,7 +9557,7 @@ def multiple_hypothesis_testing_y_optuna():
     study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),
                                 direction="maximize",  # minimize
                                 study_name=study_name, storage='sqlite:///db.sqlite3', load_if_exists=True, )
-    study.optimize(lambda trial: objective(trial, df_train_ftr_select_notime.loc[:, select_cols],
+    study.optimize(lambda trial: objective_lightgbm(trial, df_train_ftr_select_notime.loc[:, select_cols],
                                            np.array(df_train_ftr_select_notime.loc[:, 'Y']),
                                            df_val_ftr_select_notime.loc[:, select_cols],
                                            np.array(df_val_ftr_select_notime.loc[:, 'Y'])),
@@ -9505,7 +9566,7 @@ def multiple_hypothesis_testing_y_optuna():
     print("Best trial:")
     trial = study.best_trial
     # save the best model.
-    source_path = './model/tmp/' + str(study.best_trial.number) + '.cbm'
+    source_path = './model/tmp/' + str(study.best_trial.number) + '.pkl'
     shutil.move(source_path, model_file_path)
     print("  Value: {}".format(trial.value))
     print("  Params: ")
@@ -9513,9 +9574,9 @@ def multiple_hypothesis_testing_y_optuna():
         print("    {}: {}".format(key, value))
 
     select_cols = [None] * top_ftr_num
-    model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '.cbm'
     kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '.npy'
-    result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test.csv'
+    #result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test.csv'
+    result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test.csv'
     print(result_file_path)
     if os.path.exists(result_file_path):
         print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
@@ -9528,6 +9589,8 @@ def multiple_hypothesis_testing_y_optuna():
     ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:, select_cols],
                             np.array(df_test_ftr_select_notime.loc[:, 'Y']),
                             np.array(df_test_ftr_select_notime.loc[:, 'CUSTOMER_ID']))
+
+
 if __name__ == '__main__':
     # train_occur_for_report()
     # train_occur_for_predict()
