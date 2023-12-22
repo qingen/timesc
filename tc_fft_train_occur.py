@@ -9963,7 +9963,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     n_line_tail = 32  # 32 64 128
     n_line_head = 32  # == tail
     step = 5
-    date_str = datetime(2023, 11, 25).strftime("%Y%m%d")
+    date_str = datetime(2023, 12, 22).strftime("%Y%m%d")
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8
     ########## model
@@ -9976,7 +9976,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     type = 'occur_addcredit_step' + str(step) + '_cluster_less_' + str(cluster_less_train_num) + '_' + \
            str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
     ######## optuna
-    n_trials = 1024
+    n_trials = 128
     max_depth = 6
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
@@ -9997,7 +9997,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     df_part1_1 = df_part3[df_part3['Y'] == 1]
     df_part1_1 = df_part1_1.groupby(['CUSTOMER_ID']).apply(
         lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
-    print('df_part1_1.head:', df_part1_1.head(2))
+    print('df_part1_1.head:', df_part1_1.iloc[:2,:5])
     print('df_part1_1.shape:', df_part1_1.shape)
     # 使用 groupby 方法按照 CUSTOMER_ID 列的值分组，并应用函数去除最后一行
     df_part1_1 = df_part1_1.groupby('CUSTOMER_ID').apply(remove_last_row).reset_index(drop=True)
@@ -10005,7 +10005,6 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
 
     # 定义每次读取的数量
     batch_size = n_line_head
-
     def generate_new_groups(group):
         new_groups = []
         size = len(group)
@@ -10024,11 +10023,10 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         # 将新的组数据合并为一个 DataFrame
         new_df = pd.concat(new_groups)
         return new_df
-
     # 将数据按照 CUSTOMER_ID 列的值分组，并应用函数生成新的组
     df_part1_1 = df_part1_1.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
     # 输出结果
-    print('df_part1_1.head:', df_part1_1.head(2))
+    print('df_part1_1.head:', df_part1_1.iloc[:2,:5])
     print('df_part1_1.shape:', df_part1_1.shape)
 
     # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
@@ -10053,12 +10051,13 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     df_part1_1_0 = df_part1_1[df_part1_1['CUSTOMER_ID_TMP'].isin(df_y_0['CUSTOMER_ID_TMP'])]
     df_part1_1_0['Y'] = 0
     print('after filter y df_part1_1_0.shape:', df_part1_1_0.shape)
-    print('head df_part1_1_0:', df_part1_1_0.iloc[:2, :3])
+    print('df_part1_1_0.head:', df_part1_1_0.iloc[:2, :3])
     df_part1_1_1.drop(columns='CUSTOMER_ID_TMP', inplace=True)
     df_part1_1_0.drop(columns='CUSTOMER_ID_TMP', inplace=True)
     print('after drop CUSTOMER_ID_TMP df_part1_1_1.shape:', df_part1_1_1.shape)
     print('after drop CUSTOMER_ID_TMP df_part1_1_0.shape:', df_part1_1_0.shape)
 
+    #################### df_part1_1  1 and 0 , 8:2 each
     train_1_0_num_sample = int(df_part1_1_0.shape[0] / n_line_head * 0.8)
     print('train_1_0_num_sample:', train_1_0_num_sample)
     selected_groups = df_part1_1_0['CUSTOMER_ID'].drop_duplicates().sample(n=train_1_0_num_sample, random_state=int(
@@ -10131,13 +10130,13 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     df_part2_1 = df_part2[df_part2['Y'] == 1]
     df_part2_1 = df_part2_1.groupby(['CUSTOMER_ID']).apply(
         lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
-    print('df_part2_1.head:', df_part2_1.head(2))
+    print('df_part2_1.head:', df_part2_1.iloc[:2,:5])
     print('df_part2_1.shape:', df_part2_1.shape)
     df_part2_1 = df_part2_1.groupby('CUSTOMER_ID').apply(remove_last_row).reset_index(drop=True)
     print('after del last row df_part2_1.shape:', df_part2_1.shape)
 
     df_part2_1 = df_part2_1.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
-    print('df_part2_1.head:', df_part2_1.head(2))
+    print('df_part2_1.head:', df_part2_1.iloc[:2,:5])
     print('df_part2_1.shape:', df_part2_1.shape)
 
     # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
@@ -10155,15 +10154,13 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     df_part2_1_0 = df_part2_1[df_part2_1['CUSTOMER_ID_TMP'].isin(df_y_0['CUSTOMER_ID_TMP'])]
     df_part2_1_0['Y'] = 0
     print('after filter y df_part2_1_0.shape:', df_part2_1_0.shape)
-    print('head df_part2_1_0:', df_part2_1_0.iloc[:2, :3])
+    print('df_part2_1_0.head:', df_part2_1_0.iloc[:2, :3])
     df_part2_1_1.drop(columns='CUSTOMER_ID_TMP', inplace=True)
     df_part2_1_0.drop(columns='CUSTOMER_ID_TMP', inplace=True)
     print('after drop CUSTOMER_ID_TMP df_part2_1_1.shape:', df_part2_1_1.shape)
     print('after drop CUSTOMER_ID_TMP df_part2_1_0.shape:', df_part2_1_0.shape)
 
-
-    test_0_num_sample = int(df_part2_1.shape[0] / n_line_head * 100) if int(
-        df_part2_1.shape[0] / n_line_head * 100) < 2400 else 2400
+    test_0_num_sample = int(df_part2_1_1.shape[0] / n_line_head * 100)
     print('test_0_num_sample:', test_0_num_sample)
 
     df_part2_0 = df_part2_0.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
@@ -10177,6 +10174,9 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     print(filtered_groups)
     df_part2_0 = df_part2_0[~df_part2_0['CUSTOMER_ID'].isin(filtered_groups)]
     print('after filter df_part2_0.shape:', df_part2_0.shape)
+    df_part2_0 = pd.concat([df_part2_0, df_part2_1_0])
+    print('after concat df_part2_1_0, df_part2_0.shape:', df_part2_0.shape)
+
     test_0_num_sample = test_0_num_sample if ((df_part2_0.shape[0] / n_line_head) > test_0_num_sample) else int(
         df_part2_0.shape[0] / n_line_head)
     print('test_0_num_sample:', test_0_num_sample)
@@ -10187,9 +10187,9 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     df_part2_0_selected = df_part2_0_selected.dropna(subset=['Y'])
     print('df_part2_0_selected.shape:', df_part2_0_selected.shape)
-    df_test = pd.concat([df_part2_0_selected, df_part2_1])
+    df_test = pd.concat([df_part2_0_selected, df_part2_1_1])
     print('df_test.shape: ', df_test.shape)
-    del df_part2_0, df_part2_1, df_part2_0_selected
+    del df_part2_0, df_part2_1, df_part2_0_selected, df_part2_1_0, df_part2_1_1
 
     df_test = df_test.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_head)
     df_val = df_val.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_head)
@@ -10339,7 +10339,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
             pickle.dump(tsdatasets_val, f)
         with open(tsdataset_list_test_file_path, 'wb') as f:
             pickle.dump(tsdatasets_test, f)
-        print('tsdatasets_train, tsdatasets_val and tsdatasets_test dump done.')
+        print('tsdatasets_transform_train, tsdatasets_transform_val and tsdatasets_transform_test dump done.')
     else:
         with open(tsdataset_list_train_file_path, 'rb') as f:
             tsdatasets_train = pickle.load(f)
@@ -10347,7 +10347,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
             tsdatasets_val = pickle.load(f)
         with open(tsdataset_list_test_file_path, 'rb') as f:
             tsdatasets_test = pickle.load(f)
-        print('tsdatasets_train, tsdatasets_val and tsdatasets_test load done.')
+        print('tsdatasets_transform_train, tsdatasets_transform_val and tsdatasets_transform_test load done.')
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -10404,7 +10404,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('5 classifier train:', formatted_time)
 
-    def objective(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, ) -> float:
+    def objective_catboost(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, ) -> float:
         param = {
             "objective": trial.suggest_categorical("objective", ["Logloss", "CrossEntropy"]),
             "colsample_bylevel": trial.suggest_float("colsample_bylevel", 0.01, 1),  # (0,1] rsm
@@ -10450,13 +10450,78 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         maximize = ks2 - abs(ks1 - ks2)
         return maximize
 
+    def objective_lightgbm(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, ) -> float:
+        params = {
+            #"max_depth": trial.suggest_int("max_depth", 2, 5),
+            #"num_leaves": trial.suggest_int("num_leaves", 4, 32),
+            "class_weight": trial.suggest_categorical("class_weight", [None, "balanced"]),
+            #"boosting_type": trial.suggest_categorical("boosting_type", ["gbdt", "dart", "goss", "rf"]),
+            "reg_lambda": trial.suggest_float("reg_lambda", 0.01, 1.0, log=True),
+            "reg_alpha": trial.suggest_float("reg_alpha", 0.01, 1.0, log=True),
+            "n_estimators": 200,
+            "objective": "binary",
+            "seed": 0,
+            #"bagging_fraction": trial.suggest_float("bagging_fraction", 0.4, 1.0), # rf.hpp >0 <1
+            #"bagging_freq": trial.suggest_int("bagging_freq", 1, 7),  # rf.hpp >0
+            "metric": "auc",
+            "boosting_type": "gbdt"
+        }
+        # Add a callback for pruning.
+        pruning_callback = optuna.integration.LightGBMPruningCallback(trial, "auc")
+        lc = LGBMClassifier(**params,max_depth=2,num_leaves=3)
+        gbm = lc.fit(
+            train_x,
+            train_y,
+            eval_set=[(valid_x, valid_y)],
+            verbose=0,
+            early_stopping_rounds=100,
+            callbacks=[pruning_callback],
+        )
+        # Save a trained model to a file.
+        model_file_path = './model/tmp/' + str(trial.number) + '.pkl'
+        joblib.dump(gbm, model_file_path)
+        fpr_threshold = 0.0
+        pred_train_prob = gbm.predict_proba(train_x)[:, 1]
+        fpr, tpr, thresholds = metrics.roc_curve(train_y, pred_train_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
+        ks_train = max(tpr - fpr)
+        ks1 = 0.0
+        for i in range(tpr.shape[0]):
+        #for i in range(100):
+            #print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+            if fpr[i] == fpr_threshold and fpr[i+1] > fpr_threshold and tpr[i+1] > fpr[i+1]:
+                ks1 = tpr[i+1] - fpr[i+1]
+                print('find it:',tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+                print('find it+1:', tpr[i+1], fpr[i+1], tpr[i+1] - fpr[i+1], thresholds[i+1])
+                break
+        print('train='*16)
+
+        pred_val_prob = gbm.predict_proba(valid_x)[:, 1]
+        fpr, tpr, thresholds = metrics.roc_curve(valid_y, pred_val_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
+        ks_val = max(tpr - fpr)
+        ks2 = 0.0
+        for i in range(tpr.shape[0]):
+        #for i in range(100):
+            #print(tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+            if fpr[i] == fpr_threshold and fpr[i+1] > fpr_threshold and tpr[i+1] > fpr[i+1]:
+                ks2 = tpr[i+1] - fpr[i+1]
+                print('find it:', tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
+                print('find it+1:', tpr[i + 1], fpr[i + 1], tpr[i + 1] - fpr[i + 1], thresholds[i + 1])
+                break
+        print('valid='*16)
+        print("train ks = {:.4f}, valid ks = {:.4f}".format(ks_train, ks_val))
+        #maximize = (tpr_1 + tpr_2) - abs(tpr_1 - tpr_2)
+        #maximize = (tpr_1 + tpr_2)
+        #maximize = (ks1 + ks2) - abs(ks1 - ks2)
+        maximize = (ks1 + ks2)
+        return maximize
+
     for i in range(len(label_list_train)):
         select_cols = [None] * top_ftr_num
-        model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(i) + '.cbm'
+        model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(i) + '.pkl'
         if os.path.exists(model_file_path):
             print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
-            #os.remove(model_file_path)
-            #print(f" file '{model_file_path}' is removed.")
+            os.remove(model_file_path)
+            print(f" file '{model_file_path}' is removed.")
             #continue
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
@@ -10470,14 +10535,15 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         sampler = optuna.samplers.TPESampler(seed=1)
         study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),direction="maximize", # minimize
                                     study_name=study_name, storage='sqlite:///db.sqlite3', load_if_exists=True,)
-        study.optimize(lambda trial: objective(trial, df_train_ftr_select_notime.loc[:,select_cols],np.array(df_train_ftr_select_notime.loc[:,'Y']),
+        study.optimize(lambda trial: objective_lightgbm(trial, df_train_ftr_select_notime.loc[:,select_cols],np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                                df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y'])),
                        n_trials=n_trials, n_jobs=1, show_progress_bar=True)  # timeout=600,
         print("Number of finished trials: {}".format(len(study.trials)))
         print("Best trial:")
         trial = study.best_trial
         # save the best model.
-        source_path = './model/tmp/' + str(study.best_trial.number) + '.cbm'
+        #source_path = './model/tmp/' + str(study.best_trial.number) + '.cbm'
+        source_path = './model/tmp/' + str(study.best_trial.number) + '.pkl'
         shutil.move(source_path, model_file_path)
         print("  Value: {}".format(trial.value))
         print("  Params: ")
@@ -10489,9 +10555,9 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         select_cols = [None] * top_ftr_num
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
@@ -10511,9 +10577,9 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         select_cols = [None] * top_ftr_num
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_'+ str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) +'_val_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
@@ -10553,9 +10619,11 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         select_cols = [None] * top_ftr_num
         df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
+            #model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
+            model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            #result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
@@ -10570,7 +10638,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     for i in range(len(label_list_test)):
         model_index = i if i < len(label_list_train) else 0  #  models num
         dataset_group_index = i
-        result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
         X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
         X = pd.concat([X, X_part])
     X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
@@ -10582,7 +10650,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     X = pd.DataFrame()
     for i in range(len(label_list_test)):
         for j in range(len(label_list_train)):
-            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
             X = pd.concat([X, X_part])
     X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
@@ -10610,4 +10678,5 @@ if __name__ == '__main__':
     # optuna_test()
     # multiple_hypothesis_testing_optuna()
     # multiple_hypothesis_testing_y_optuna()
-    multiple_hypothesis_testing_y_augdata_optuna()
+    # multiple_hypothesis_testing_y_augdata_optuna()
+    multiple_hypothesis_testing_y_augdata_cluster_optuna()
