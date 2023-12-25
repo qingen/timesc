@@ -9976,7 +9976,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     type = 'occur_addcredit_step' + str(step) + '_cluster_less_' + str(cluster_less_train_num) + '_' + \
            str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
     ######## optuna
-    n_trials = 128
+    n_trials = 1024
     max_depth = 6
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
@@ -10029,17 +10029,18 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     print('df_part1_1.head:', df_part1_1.iloc[:2,:5])
     print('df_part1_1.shape:', df_part1_1.shape)
 
-    # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
-    count_df = df_part1_1.groupby('CUSTOMER_ID').apply(
-        lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
-    # 设定阈值 K
-    K = n_line_head * int(ftr_num_str) * filter_num_ratio
-    print('K:', K)
-    # 删除满足条件的组
-    filtered_groups = count_df[count_df.gt(K)].index
-    print(filtered_groups)
-    df_part1_1 = df_part1_1[~df_part1_1['CUSTOMER_ID'].isin(filtered_groups)]
-    print('after filter 0/null df_part1_1.shape:', df_part1_1.shape)
+    if 0:
+        # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
+        count_df = df_part1_1.groupby('CUSTOMER_ID').apply(
+            lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
+        # 设定阈值 K
+        K = n_line_head * int(ftr_num_str) * filter_num_ratio
+        print('K:', K)
+        # 删除满足条件的组
+        filtered_groups = count_df[count_df.gt(K)].index
+        print(filtered_groups)
+        df_part1_1 = df_part1_1[~df_part1_1['CUSTOMER_ID'].isin(filtered_groups)]
+        print('after filter 0/null df_part1_1.shape:', df_part1_1.shape)
 
     df_y_0 = df_y[df_y['Y'] == 0]
     df_y_1 = df_y[df_y['Y'] == 1]
@@ -10087,14 +10088,16 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     df_part1_0 = df_part1_0.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
     print('df_part1_0.shape:', df_part1_0.shape)
-    # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
-    count_df = df_part1_0.groupby('CUSTOMER_ID').apply(
-        lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
-    # 删除满足条件的组
-    filtered_groups = count_df[count_df.gt(K)].index
-    print(filtered_groups)
-    df_part1_0 = df_part1_0[~df_part1_0['CUSTOMER_ID'].isin(filtered_groups)]
-    print('after filter 0/null df_part1_0.shape:', df_part1_0.shape)
+
+    if 0:
+        # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
+        count_df = df_part1_0.groupby('CUSTOMER_ID').apply(
+            lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
+        # 删除满足条件的组
+        filtered_groups = count_df[count_df.gt(K)].index
+        print(filtered_groups)
+        df_part1_0 = df_part1_0[~df_part1_0['CUSTOMER_ID'].isin(filtered_groups)]
+        print('after filter 0/null df_part1_0.shape:', df_part1_0.shape)
 
     # train_0_num_sample = train_1_num_sample * 100 if train_1_num_sample * 100 < df_part1_0.shape[0]/n_line_head else df_part1_0.shape[0]/n_line_head
     train_0_num_sample = int(df_part1_0.shape[0] / n_line_head * 0.8)
@@ -10139,14 +10142,15 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     print('df_part2_1.head:', df_part2_1.iloc[:2,:5])
     print('df_part2_1.shape:', df_part2_1.shape)
 
-    # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
-    count_df = df_part2_1.groupby('CUSTOMER_ID').apply(
-        lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
-    # 删除满足条件的组
-    filtered_groups = count_df[count_df.gt(K)].index
-    print(filtered_groups)
-    df_part2_1 = df_part2_1[~df_part2_1['CUSTOMER_ID'].isin(filtered_groups)]
-    print('after filter 0/null df_part2_1.shape:', df_part2_1.shape)
+    if 0:
+        # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
+        count_df = df_part2_1.groupby('CUSTOMER_ID').apply(
+            lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
+        # 删除满足条件的组
+        filtered_groups = count_df[count_df.gt(K)].index
+        print(filtered_groups)
+        df_part2_1 = df_part2_1[~df_part2_1['CUSTOMER_ID'].isin(filtered_groups)]
+        print('after filter 0/null df_part2_1.shape:', df_part2_1.shape)
 
     df_part2_1['CUSTOMER_ID_TMP'] = df_part2_1['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
     df_part2_1_1 = df_part2_1[df_part2_1['CUSTOMER_ID_TMP'].isin(df_y_1['CUSTOMER_ID_TMP'])]
@@ -10166,14 +10170,17 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     df_part2_0 = df_part2_0.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
     print('df_part2_0.shape:', df_part2_0.shape)
-    # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
-    count_df = df_part2_0.groupby('CUSTOMER_ID').apply(
-        lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
-    # 删除满足条件的组
-    filtered_groups = count_df[count_df.gt(K)].index
-    print(filtered_groups)
-    df_part2_0 = df_part2_0[~df_part2_0['CUSTOMER_ID'].isin(filtered_groups)]
-    print('after filter df_part2_0.shape:', df_part2_0.shape)
+
+    if 0:
+        # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
+        count_df = df_part2_0.groupby('CUSTOMER_ID').apply(
+            lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
+        # 删除满足条件的组
+        filtered_groups = count_df[count_df.gt(K)].index
+        print(filtered_groups)
+        df_part2_0 = df_part2_0[~df_part2_0['CUSTOMER_ID'].isin(filtered_groups)]
+        print('after filter 0/null df_part2_0.shape:', df_part2_0.shape)
+
     df_part2_0 = pd.concat([df_part2_0, df_part2_1_0])
     print('after concat df_part2_1_0, df_part2_0.shape:', df_part2_0.shape)
 
@@ -10468,7 +10475,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         }
         # Add a callback for pruning.
         pruning_callback = optuna.integration.LightGBMPruningCallback(trial, "auc")
-        lc = LGBMClassifier(**params,max_depth=2,num_leaves=3)
+        lc = LGBMClassifier(**params,max_depth=2,num_leaves=3) # 3 7, 4 15, 5 31,
         gbm = lc.fit(
             train_x,
             train_y,
