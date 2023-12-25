@@ -9966,6 +9966,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     date_str = datetime(2023, 12, 22).strftime("%Y%m%d")
     ftr_num_str = '91'
     filter_num_ratio = 1 / 8
+    filter = False
     ########## model
     top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
     cluster_model_path = './model/cluster_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
@@ -10029,7 +10030,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     print('df_part1_1.head:', df_part1_1.iloc[:2,:5])
     print('df_part1_1.shape:', df_part1_1.shape)
 
-    if 0:
+    if filter:
         # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
         count_df = df_part1_1.groupby('CUSTOMER_ID').apply(
             lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
@@ -10089,7 +10090,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
     print('df_part1_0.shape:', df_part1_0.shape)
 
-    if 0:
+    if filter:
         # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
         count_df = df_part1_0.groupby('CUSTOMER_ID').apply(
             lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
@@ -10142,7 +10143,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     print('df_part2_1.head:', df_part2_1.iloc[:2,:5])
     print('df_part2_1.shape:', df_part2_1.shape)
 
-    if 0:
+    if filter:
         # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
         count_df = df_part2_1.groupby('CUSTOMER_ID').apply(
             lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
@@ -10171,7 +10172,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
     print('df_part2_0.shape:', df_part2_0.shape)
 
-    if 0:
+    if filter:
         # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
         count_df = df_part2_0.groupby('CUSTOMER_ID').apply(
             lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
