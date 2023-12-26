@@ -10460,12 +10460,12 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
 
     def objective_lightgbm(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, ) -> float:
         params = {
-            #"max_depth": trial.suggest_int("max_depth", 2, 5),
-            #"num_leaves": trial.suggest_int("num_leaves", 4, 32),
+            "max_depth": trial.suggest_categorical("max_depth", [3, 4, 5]),
+            "num_leaves": trial.suggest_categorical("num_leaves", [5, 6, 7, 12, 13, 14, 15, 28, 29, 30, 31]),
             "class_weight": trial.suggest_categorical("class_weight", [None, "balanced"]),
             #"boosting_type": trial.suggest_categorical("boosting_type", ["gbdt", "dart", "goss", "rf"]),
-            "reg_lambda": trial.suggest_float("reg_lambda", 0.01, 1.0, log=True),
-            "reg_alpha": trial.suggest_float("reg_alpha", 0.01, 1.0, log=True),
+            "reg_lambda": trial.suggest_float("reg_lambda", 0.01, 1000.0, log=True),
+            "reg_alpha": trial.suggest_float("reg_alpha", 0.01, 1000.0, log=True),
             "n_estimators": 200,
             "objective": "binary",
             "seed": 0,
@@ -10476,7 +10476,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         }
         # Add a callback for pruning.
         pruning_callback = optuna.integration.LightGBMPruningCallback(trial, "auc")
-        lc = LGBMClassifier(**params,max_depth=2,num_leaves=3) # 3 7, 4 15, 5 31,
+        lc = LGBMClassifier(**params,) # 3 7, 4 15, 5 31,
         gbm = lc.fit(
             train_x,
             train_y,
