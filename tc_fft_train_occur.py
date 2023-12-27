@@ -9787,6 +9787,44 @@ def multiple_hypothesis_testing_y_augdata_optuna():
                             np.array(df_test_ftr_select_notime.loc[:, 'CUSTOMER_ID']))
 
 def multiple_hypothesis_testing_y_augdata_cluster_optuna():
+    usecols = ['CUSTOMER_ID', 'RDATE', 'Y', 'INV_RATIO', 'INV_AVG_7', 'INV_AVG_15', 'INV_AVG_30', 'INV_AVG_60', 'INV_AVG_90',
+              'INV_AVG_180', 'INV_AVG_365', 'INV_CHA_7', 'INV_CHA_15', 'INV_CHA_30', 'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+              'INV_CHA_365', 'LOAN_REPAY_RATIO', 'LRR_AVG_7', 'LRR_AVG_15', 'LRR_AVG_30', 'LRR_AVG_60', 'LRR_AVG_90', 'LRR_AVG_180',
+              'LRR_AVG_365', 'LRR_CHA_7', 'LRR_CHA_15', 'LRR_CHA_30', 'LRR_CHA_60', 'LRR_CHA_90', 'LRR_CHA_180', 'LRR_CHA_365',
+              'AMOUNT_CHANGE_SIGNAL', 'USEAMOUNT_RATIO', 'UAR_LAG_YEAR', 'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60',
+              'UAR_AVG_90', 'UAR_AVG_180', 'UAR_AVG_365', 'UAR_CHA_7', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90',
+              'UAR_CHA_180', 'UAR_CHA_365', 'UAR_CHA_YEAR', 'SDV_REPAY_7', 'SDV_REPAY_15', 'SDV_REPAY_30', 'SDV_REPAY_60', 'SDV_REPAY_90',
+              'SDV_REPAY_180', 'SDV_REPAY_365', 'REPAY_STD_RATIO_7_15', 'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60',
+              'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_180', 'REPAY_STD_RATIO_7_365', 'STOCK_OVER_91_RATIO', 'LSR_91_AVG_7',
+              'LSR_91_AVG_15', 'LSR_91_AVG_30', 'LSR_91_AVG_60', 'LSR_91_AVG_90', 'LSR_91_AVG_180', 'LSR_91_AVG_365', 'LSR_91_CHA_7',
+              'LSR_91_CHA_15', 'LSR_91_CHA_30', 'LSR_91_CHA_60', 'LSR_91_CHA_90', 'LSR_91_CHA_180', 'LSR_91_CHA_365', 'STOCK_OVER_121_RATIO',
+              'LSR_121_AVG_7', 'LSR_121_AVG_15', 'LSR_121_AVG_30', 'LSR_121_AVG_60', 'LSR_121_AVG_90', 'LSR_121_AVG_180',
+              'LSR_121_AVG_365', 'LSR_121_CHA_7', 'LSR_121_CHA_15', 'LSR_121_CHA_30', 'LSR_121_CHA_60', 'LSR_121_CHA_90',
+              'LSR_121_CHA_180', 'LSR_121_CHA_365', 'STOCK_OVER_181_RATIO', 'LSR_181_AVG_7', 'LSR_181_AVG_15', 'LSR_181_AVG_30',
+              'LSR_181_AVG_60', 'LSR_181_AVG_90', 'LSR_181_AVG_180', 'LSR_181_AVG_365', 'LSR_181_CHA_7', 'LSR_181_CHA_15',
+              'LSR_181_CHA_30', 'LSR_181_CHA_60', 'LSR_181_CHA_90', 'LSR_181_CHA_180', 'LSR_181_CHA_365', 'STOCK_AGE_AVG',
+              'STOCK_AGE_AVG_7', 'STOCK_AGE_AVG_15', 'STOCK_AGE_AVG_30', 'STOCK_AGE_AVG_60', 'STOCK_AGE_AVG_90', 'STOCK_AGE_AVG_180',
+              'STOCK_AGE_AVG_365', 'STOCK_AGE_CHA_RATIO_7', 'STOCK_AGE_CHA_RATIO_15', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_60',
+              'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_180', 'STOCK_AGE_CHA_RATIO_365', 'JH_30_CNT', 'JH_60_CNT', 'JH_90_CNT',
+              'JH_180_CNT', 'JH_HEGE', 'JH_WANSHAN', 'JH_XIANYI', 'JH_XIANYI_R', 'JH_WAIFANG', 'JH_WAIFANG_R', 'JH_YIDONGCL',
+              'JH_YIDONGCL_R', 'JH_CCC', 'JH_SC_R', 'JH_SALE_R', 'JH_ZT_R', 'JH_WT_R', 'JH_XFEW_R', 'JH_CZ_R', 'JH_WGWF_R', 'JH_HGZ',
+              'JH_HGZ_R', 'JH_JTS', 'JH_3YCHK_R', 'JH_3SZYD_R', 'JH_3HGZWF_R', 'JH_5YCHK_R', 'JH_5SZYD_R', 'JH_5HGZWF_R', 'JH_10YCHK_R',
+              'JH_10SZYD_R', 'JH_10HGZWF_R', 'JH_3YCHK10_R', 'JH_3SZYD10_R', 'JH_3HGZWF10_R', 'JH_6YCHK_R', 'JH_6SZYD_R', 'JH_6HGZWF_R',
+              'PES_30HUIDIZHI', 'PES_30HCL', 'PES_30MAHCL', 'PES_30MAHTS', 'PES_30MIHTS', 'PES_30AVGHTS', 'PES_30AVGHCL', 'PES_30MAHCL_R',
+              'PES_30CHUDIZHI', 'PES_30CCL', 'PES_30MACCL', 'PES_30AVGCCL', 'PES_30MACCL_R', 'GRP_CNT', 'GRP_AVAILAMT_SUM', 'GRP_USEAMT_SUM',
+              'GRP_REPAYCARS30_SUM', 'GRP_REPAYCARS90_SUM', 'GRP_REPAYCARS180_SUM', 'LOAN_GHD_30D_IND', 'LOAN_GHD_30D_CNT',
+              'LOAN_AJ_30D_IND', 'LOAN_AJ_30D_CNT', 'LOAN_GHDAJ_30D_IND', 'LOAN_GHDAJ_30D_CNT', 'LOAN_GHD_90D_IND', 'LOAN_GHD_90D_CNT',
+              'LOAN_AJ_90D_IND', 'LOAN_AJ_90D_CNT', 'LOAN_GHDAJ_90D_IND', 'LOAN_GHDAJ_90D_CNT', 'SN_XFDQ_180D_CNT_2',
+              'SNEX_30D_HKKDDZ_CNT', 'SNEX_30D_HKCL_CNT', 'SNEX_30D_DKDHKCL_MAX', 'SNEX_30D_HKTS_MAX', 'SNEX_30D_HKTS_MIN',
+              'SNEX_30D_HKTS_AVG', 'SNEX_30D_SYKDHKCL_AVG', 'SNEX_30D_DKDHKCL_MAX_R', 'SNEX_30D_CKKDDZ_CNT', 'SNEX_30D_CKCL_CNT',
+              'SNEX_30D_DKDCKCL_MAX', 'SNEX_30D_SYKDCKCL_AVG', 'SNEX_30D_DKDCKCL_MAX_R', 'SNEX_CKRJSQ_30D_CNT', 'SNEX_CKSQKDDZ_30D_R',
+              'SNEX_CKRJSQ_90D_CNT', 'SNEX_CKSQKDDZ_90D_R', 'SNEX_CKSQKDDZ_180D_R', 'SNEX_ONLINE90D_R', 'SNEX_XFDQ_30D_CNT',
+              'SNEX_XFDQ_90D_CNT', 'SNEX_XFDQ_180D_CNT', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'XSZQ30D_R', 'XSZQ90D_R', 'XSZQ180D_R',
+              'FREESPANRP_30D_R', 'FREESPANRP_90D_R', 'FREESPANRP_180D_R', 'FREESPANRP_360D_R', 'REPAYCNT3_90D', 'REPAYCNT7_90D',
+              'REPAYCNT3_180D', 'REPAYCNT7_180D', 'INV_RATIO_90', 'STOCK_OVER_91_RATIO', 'RPCNT3_90_90AGE_R', 'RPCNT7_90_90AGE_R',
+              'RPCNT3_180_90AGE_R', 'RPCNT7_180_90AGE_R', 'RPCNT3_90_90INV_R', 'RPCNT7_90_90INV_R', 'RPCNT3_180_90INV_R',
+              'RPCNT7_180_90INV_R', 'AUDIT_1YCHK_IND', 'AUDIT_5YCHKSZYD_R', 'AUDIT_10YCHKSZYD_R', 'AUDIT_5YCHKSZYDHGWF_R',
+              'AUDIT_10YCHKSZYDHGWF_R', 'AUDIT_1YCHKWGWF_IND', 'AUDIT_1YCHKPCT25_IND', 'EXT_12M_R']  # 240 cols
     usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
@@ -9815,7 +9853,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
                'LSR_91_CHA_180','LRR_AVG_15','LSR_91_CHA_365','LSR_91_CHA_90','LRR_AVG_7','LSR_121_AVG_60','LRR_CHA_365','LRR_CHA_180',
                'LRR_CHA_30','LRR_CHA_60','LRR_CHA_7','LRR_CHA_90','LOAN_REPAY_RATIO','LRR_CHA_15','LSR_121_AVG_30','LSR_121_AVG_15',
                'LSR_121_AVG_7','STOCK_OVER_121_RATIO','LSR_121_CHA_180','LSR_121_CHA_90','LSR_121_CHA_30','LSR_121_CHA_15','LSR_121_CHA_7','LSR_121_CHA_60']  # 128 cols 1/5
-    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
                'STOCK_AGE_AVG_365',
@@ -9900,6 +9938,77 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('1 read csv :', formatted_time)
+    col = ['INV_RATIO', 'INV_AVG_7', 'INV_AVG_15', 'INV_AVG_30', 'INV_AVG_60', 'INV_AVG_90','INV_AVG_180',
+              'INV_AVG_365', 'INV_CHA_7', 'INV_CHA_15', 'INV_CHA_30', 'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+              'INV_CHA_365', 'LOAN_REPAY_RATIO', 'LRR_AVG_7', 'LRR_AVG_15', 'LRR_AVG_30', 'LRR_AVG_60', 'LRR_AVG_90',
+              'LRR_AVG_180',
+              'LRR_AVG_365', 'LRR_CHA_7', 'LRR_CHA_15', 'LRR_CHA_30', 'LRR_CHA_60', 'LRR_CHA_90', 'LRR_CHA_180',
+              'LRR_CHA_365',
+              'AMOUNT_CHANGE_SIGNAL', 'USEAMOUNT_RATIO', 'UAR_LAG_YEAR', 'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30',
+              'UAR_AVG_60',
+              'UAR_AVG_90', 'UAR_AVG_180', 'UAR_AVG_365', 'UAR_CHA_7', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60',
+              'UAR_CHA_90',
+              'UAR_CHA_180', 'UAR_CHA_365', 'UAR_CHA_YEAR', 'SDV_REPAY_7', 'SDV_REPAY_15', 'SDV_REPAY_30',
+              'SDV_REPAY_60', 'SDV_REPAY_90',
+              'SDV_REPAY_180', 'SDV_REPAY_365', 'REPAY_STD_RATIO_7_15', 'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60',
+              'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_180', 'REPAY_STD_RATIO_7_365', 'STOCK_OVER_91_RATIO',
+              'LSR_91_AVG_7',
+              'LSR_91_AVG_15', 'LSR_91_AVG_30', 'LSR_91_AVG_60', 'LSR_91_AVG_90', 'LSR_91_AVG_180', 'LSR_91_AVG_365',
+              'LSR_91_CHA_7',
+              'LSR_91_CHA_15', 'LSR_91_CHA_30', 'LSR_91_CHA_60', 'LSR_91_CHA_90', 'LSR_91_CHA_180', 'LSR_91_CHA_365',
+              'STOCK_OVER_121_RATIO',
+              'LSR_121_AVG_7', 'LSR_121_AVG_15', 'LSR_121_AVG_30', 'LSR_121_AVG_60', 'LSR_121_AVG_90',
+              'LSR_121_AVG_180',
+              'LSR_121_AVG_365', 'LSR_121_CHA_7', 'LSR_121_CHA_15', 'LSR_121_CHA_30', 'LSR_121_CHA_60',
+              'LSR_121_CHA_90',
+              'LSR_121_CHA_180', 'LSR_121_CHA_365', 'STOCK_OVER_181_RATIO', 'LSR_181_AVG_7', 'LSR_181_AVG_15',
+              'LSR_181_AVG_30',
+              'LSR_181_AVG_60', 'LSR_181_AVG_90', 'LSR_181_AVG_180', 'LSR_181_AVG_365', 'LSR_181_CHA_7',
+              'LSR_181_CHA_15',
+              'LSR_181_CHA_30', 'LSR_181_CHA_60', 'LSR_181_CHA_90', 'LSR_181_CHA_180', 'LSR_181_CHA_365',
+              'STOCK_AGE_AVG',
+              'STOCK_AGE_AVG_7', 'STOCK_AGE_AVG_15', 'STOCK_AGE_AVG_30', 'STOCK_AGE_AVG_60', 'STOCK_AGE_AVG_90',
+              'STOCK_AGE_AVG_180',
+              'STOCK_AGE_AVG_365', 'STOCK_AGE_CHA_RATIO_7', 'STOCK_AGE_CHA_RATIO_15', 'STOCK_AGE_CHA_RATIO_30',
+              'STOCK_AGE_CHA_RATIO_60',
+              'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_180', 'STOCK_AGE_CHA_RATIO_365', 'JH_30_CNT', 'JH_60_CNT',
+              'JH_90_CNT',
+              'JH_180_CNT', 'JH_HEGE', 'JH_WANSHAN', 'JH_XIANYI', 'JH_XIANYI_R', 'JH_WAIFANG', 'JH_WAIFANG_R',
+              'JH_YIDONGCL',
+              'JH_YIDONGCL_R', 'JH_CCC', 'JH_SC_R', 'JH_SALE_R', 'JH_ZT_R', 'JH_WT_R', 'JH_XFEW_R', 'JH_CZ_R',
+              'JH_WGWF_R', 'JH_HGZ',
+              'JH_HGZ_R', 'JH_JTS', 'JH_3YCHK_R', 'JH_3SZYD_R', 'JH_3HGZWF_R', 'JH_5YCHK_R', 'JH_5SZYD_R',
+              'JH_5HGZWF_R', 'JH_10YCHK_R',
+              'JH_10SZYD_R', 'JH_10HGZWF_R', 'JH_3YCHK10_R', 'JH_3SZYD10_R', 'JH_3HGZWF10_R', 'JH_6YCHK_R',
+              'JH_6SZYD_R', 'JH_6HGZWF_R',
+              'PES_30HUIDIZHI', 'PES_30HCL', 'PES_30MAHCL', 'PES_30MAHTS', 'PES_30MIHTS', 'PES_30AVGHTS',
+              'PES_30AVGHCL', 'PES_30MAHCL_R',
+              'PES_30CHUDIZHI', 'PES_30CCL', 'PES_30MACCL', 'PES_30AVGCCL', 'PES_30MACCL_R', 'GRP_CNT',
+              'GRP_AVAILAMT_SUM', 'GRP_USEAMT_SUM',
+              'GRP_REPAYCARS30_SUM', 'GRP_REPAYCARS90_SUM', 'GRP_REPAYCARS180_SUM', 'LOAN_GHD_30D_IND',
+              'LOAN_GHD_30D_CNT',
+              'LOAN_AJ_30D_IND', 'LOAN_AJ_30D_CNT', 'LOAN_GHDAJ_30D_IND', 'LOAN_GHDAJ_30D_CNT', 'LOAN_GHD_90D_IND',
+              'LOAN_GHD_90D_CNT',
+              'LOAN_AJ_90D_IND', 'LOAN_AJ_90D_CNT', 'LOAN_GHDAJ_90D_IND', 'LOAN_GHDAJ_90D_CNT', 'SN_XFDQ_180D_CNT_2',
+              'SNEX_30D_HKKDDZ_CNT', 'SNEX_30D_HKCL_CNT', 'SNEX_30D_DKDHKCL_MAX', 'SNEX_30D_HKTS_MAX',
+              'SNEX_30D_HKTS_MIN',
+              'SNEX_30D_HKTS_AVG', 'SNEX_30D_SYKDHKCL_AVG', 'SNEX_30D_DKDHKCL_MAX_R', 'SNEX_30D_CKKDDZ_CNT',
+              'SNEX_30D_CKCL_CNT',
+              'SNEX_30D_DKDCKCL_MAX', 'SNEX_30D_SYKDCKCL_AVG', 'SNEX_30D_DKDCKCL_MAX_R', 'SNEX_CKRJSQ_30D_CNT',
+              'SNEX_CKSQKDDZ_30D_R',
+              'SNEX_CKRJSQ_90D_CNT', 'SNEX_CKSQKDDZ_90D_R', 'SNEX_CKSQKDDZ_180D_R', 'SNEX_ONLINE90D_R',
+              'SNEX_XFDQ_30D_CNT',
+              'SNEX_XFDQ_90D_CNT', 'SNEX_XFDQ_180D_CNT', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'XSZQ30D_R', 'XSZQ90D_R',
+              'XSZQ180D_R',
+              'FREESPANRP_30D_R', 'FREESPANRP_90D_R', 'FREESPANRP_180D_R', 'FREESPANRP_360D_R', 'REPAYCNT3_90D',
+              'REPAYCNT7_90D',
+              'REPAYCNT3_180D', 'REPAYCNT7_180D', 'INV_RATIO_90', 'STOCK_OVER_91_RATIO', 'RPCNT3_90_90AGE_R',
+              'RPCNT7_90_90AGE_R',
+              'RPCNT3_180_90AGE_R', 'RPCNT7_180_90AGE_R', 'RPCNT3_90_90INV_R', 'RPCNT7_90_90INV_R',
+              'RPCNT3_180_90INV_R',
+              'RPCNT7_180_90INV_R', 'AUDIT_1YCHK_IND', 'AUDIT_5YCHKSZYD_R', 'AUDIT_10YCHKSZYD_R',
+              'AUDIT_5YCHKSZYDHGWF_R',
+              'AUDIT_10YCHKSZYDHGWF_R', 'AUDIT_1YCHKWGWF_IND', 'AUDIT_1YCHKPCT25_IND', 'EXT_12M_R', 'ICA_30']  # 240  + 1
     cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
            'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
@@ -9929,7 +10038,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
            'LRR_CHA_30','LRR_CHA_60','LRR_CHA_7','LRR_CHA_90','LOAN_REPAY_RATIO','LRR_CHA_15','LSR_121_AVG_30','LSR_121_AVG_15',
            'LSR_121_AVG_7','STOCK_OVER_121_RATIO','LSR_121_CHA_180','LSR_121_CHA_90','LSR_121_CHA_30',
            'LSR_121_CHA_15','LSR_121_CHA_7','LSR_121_CHA_60', 'ICA_30']  # 127 + 1
-    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
            'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
            'STOCK_AGE_AVG_365',
@@ -9955,7 +10064,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60','GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
            'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
-           'ICA_30']  # 18 + ICA_30
+           'ICA_30']  # 18 + 1
 
     df_all[col] = df_all[col].astype(float)
 
@@ -9964,7 +10073,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     n_line_head = 32  # == tail
     step = 5
     date_str = datetime(2023, 12, 22).strftime("%Y%m%d")
-    ftr_num_str = '91'
+    ftr_num_str = '241'
     filter_num_ratio = 1 / 8
     filter = False
     ########## model
@@ -9977,7 +10086,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     type = 'occur_addcredit_step' + str(step) + '_cluster_less_' + str(cluster_less_train_num) + '_' + \
            str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
     ######## optuna
-    n_trials = 1024
+    n_trials = 128
     max_depth = 6
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
@@ -10461,7 +10570,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     def objective_lightgbm(trial: optuna.Trial, train_x, train_y, valid_x, valid_y, ) -> float:
         params = {
             "max_depth": trial.suggest_categorical("max_depth", [3, 4, 5]),
-            "num_leaves": trial.suggest_categorical("num_leaves", [5, 6, 7, 12, 13, 14, 15, 28, 29, 30, 31]),
+            "num_leaves": trial.suggest_categorical("num_leaves", [3, 4, 5, 6, 7,]), #  12, 13, 14, 15, 28, 29, 30, 31
             "class_weight": trial.suggest_categorical("class_weight", [None, "balanced"]),
             #"boosting_type": trial.suggest_categorical("boosting_type", ["gbdt", "dart", "goss", "rf"]),
             "reg_lambda": trial.suggest_float("reg_lambda", 0.01, 1000.0, log=True),
@@ -10476,7 +10585,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         }
         # Add a callback for pruning.
         pruning_callback = optuna.integration.LightGBMPruningCallback(trial, "auc")
-        lc = LGBMClassifier(**params,) # 3 7, 4 15, 5 31,
+        lc = LGBMClassifier(**params,) # 3 7, 4 15, 5 31, max_depth=2,num_leaves=3
         gbm = lc.fit(
             train_x,
             train_y,
@@ -10501,7 +10610,6 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         #        print('find it:',tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
         #        print('find it+1:', tpr[i+1], fpr[i+1], tpr[i+1] - fpr[i+1], thresholds[i+1])
         #        break
-        print('train='*16)
 
         pred_val_prob = gbm.predict_proba(valid_x)[:, 1]
         fpr, tpr, thresholds = metrics.roc_curve(valid_y, pred_val_prob, pos_label=1, drop_intermediate=False)  # drop_intermediate=True
@@ -10515,11 +10623,11 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         #        print('find it:', tpr[i], fpr[i], tpr[i] - fpr[i], thresholds[i])
         #        print('find it+1:', tpr[i + 1], fpr[i + 1], tpr[i + 1] - fpr[i + 1], thresholds[i + 1])
         #        break
-        print('valid='*16)
         print("train ks = {:.4f}, valid ks = {:.4f}".format(ks_train, ks_val))
         #maximize = (tpr_1 + tpr_2) - abs(tpr_1 - tpr_2)
         #maximize = (tpr_1 + tpr_2)
         maximize = (ks_train + ks_val) - abs(ks_train - ks_val)
+        #maximize = (ks_val) - abs(ks_train - ks_val)
         #maximize = (ks1 + ks2)
         return maximize
 
