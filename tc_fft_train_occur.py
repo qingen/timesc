@@ -9825,6 +9825,10 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
               'RPCNT3_180_90AGE_R', 'RPCNT7_180_90AGE_R', 'RPCNT3_90_90INV_R', 'RPCNT7_90_90INV_R', 'RPCNT3_180_90INV_R',
               'RPCNT7_180_90INV_R', 'AUDIT_1YCHK_IND', 'AUDIT_5YCHKSZYD_R', 'AUDIT_10YCHKSZYD_R', 'AUDIT_5YCHKSZYDHGWF_R',
               'AUDIT_10YCHKSZYDHGWF_R', 'AUDIT_1YCHKWGWF_IND', 'AUDIT_1YCHKPCT25_IND', 'EXT_12M_R']  # 240 cols
+    new_lst = []
+    [new_lst.append(i) for i in usecols if not i in new_lst]
+    usecols[:] = new_lst[:]
+
     usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
@@ -10615,7 +10619,10 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
         print('select_cols:', select_cols)
-        df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
+        if i < len(label_list_val):
+            df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
+        else:
+            df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[0])]
         df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
 
         study_name = 'ts' + str(n_line_tail) + '_ftr' + str(ftr_num_str) + '_top' + str(top_ftr_num) + '_auc_' + \
