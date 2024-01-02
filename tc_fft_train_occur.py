@@ -6914,8 +6914,8 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     data_cols.remove('Y')
     df.fillna(0, inplace=True)
     grouped_data = df.groupby('CUSTOMER_ID')
-    if (len(grouped_data) > 2000):
-        num_groups_per_data = 2000
+    if (len(grouped_data) > 1000):
+        num_groups_per_data = 1000
     else:
         num_groups_per_data = len(grouped_data) / 2
     splitted_data = [group for _, group in grouped_data]
@@ -6939,7 +6939,7 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     else:
         X = extract_features(df[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE',
                                   kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32,
-    impute(X)
+    #impute(X)
     print('head X:',X.iloc[:2, :5])
     print('columns X:',X.columns,'\n length X:',len(X))
     #print(df.loc[:, ['CUSTOMER_ID','Y']].head(31))
@@ -6953,7 +6953,7 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
         X_tmp = X.reset_index(drop=True)
         y_tmp = y.loc[:, 'Y']
         y_tmp = y_tmp.reset_index(drop=True)
-        relevance_table = calculate_relevance_table(X_tmp, y_tmp, ml_task='classification')
+        relevance_table = calculate_relevance_table(X_tmp, y_tmp, ml_task='classification',n_jobs=24)
         print(relevance_table.iloc[:2, :5])
         print('p_value start=========')
         print('relevance_table[true].shape', relevance_table[relevance_table.relevant].shape)
