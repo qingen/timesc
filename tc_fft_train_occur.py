@@ -6953,7 +6953,7 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
         line = 0
         if len(y) > 20000:
             line = int(len(y) / 2)
-        X_tmp = X.loc[line:, :]
+        X_tmp = X.iloc[line:, :]
         X_tmp = X_tmp.reset_index(drop=True)
         y_tmp = y.loc[line:, 'Y']
         y_tmp = y_tmp.reset_index(drop=True)
