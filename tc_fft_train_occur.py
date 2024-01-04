@@ -5394,7 +5394,7 @@ def augment_bad_data_add_credit_relabel_multiclass_train_occur_continue_for_repo
 
 from tsfresh import extract_features, extract_relevant_features, select_features, feature_extraction
 from tsfresh.utilities.dataframe_functions import impute
-from tsfresh.feature_extraction import ComprehensiveFCParameters
+from tsfresh.feature_extraction import ComprehensiveFCParameters, MinimalFCParameters,EfficientFCParameters
 from tsfresh.feature_selection.relevance import calculate_relevance_table
 
 from lightgbm import plot_importance
@@ -6934,11 +6934,11 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
         for indices in split_indices:
             df_part = pd.concat([splitted_data[i] for i in indices])
             X_part = extract_features(df_part[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE',
-                                      kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32,
+                                      kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32, default_fc_parameters=EfficientFCParameters()
             X = pd.concat([X, X_part])
     else:
         X = extract_features(df[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE',
-                                  kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32,
+                                  kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32, default_fc_parameters=EfficientFCParameters()
     #impute(X)
     print('head X:',X.iloc[:2, :5])
     print('columns X:',X.columns,'\n length X:',len(X))
@@ -6950,10 +6950,14 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     print(X.iloc[:2, :3], len(X), len(X.columns.tolist()))
     if saved_kind_to_fc_parameters == None:
         print('kind_to_fc_parameters_file not exists, so calculate it by calculate_relevance_table')
-        X_tmp = X.reset_index(drop=True)
-        y_tmp = y.loc[:, 'Y']
+        line = 0
+        if len(y) > 20000:
+            line = int(len(y) / 2)
+        X_tmp = X.loc[line:, :]
+        X_tmp = X_tmp.reset_index(drop=True)
+        y_tmp = y.loc[line:, 'Y']
         y_tmp = y_tmp.reset_index(drop=True)
-        relevance_table = calculate_relevance_table(X_tmp, y_tmp, ml_task='classification',n_jobs=24)
+        relevance_table = calculate_relevance_table(X_tmp, y_tmp, ml_task='classification',)  # n_jobs=1,chunksize=10
         print(relevance_table.iloc[:2, :5])
         print('p_value start=========')
         print('relevance_table[true].shape', relevance_table[relevance_table.relevant].shape)
@@ -10153,10 +10157,10 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     train_1_0_selected = df_part1_1_0.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     train_1_0_selected = train_1_0_selected.dropna(subset=['Y'])
-    print('train_1_0_selected.shape:', train_1_0_selected.shape)
+    print('train_1_0_selected:', train_1_0_selected.shape[0] / n_line_head)
     # 获取剩余的组
     valid_1_0_selected = df_part1_1_0[~df_part1_1_0['CUSTOMER_ID'].isin(selected_groups)]
-    print('valid_1_0_selected.shape:', valid_1_0_selected.shape)
+    print('valid_1_0_selected:', valid_1_0_selected.shape[0] / n_line_head)
 
     train_1_1_num_sample = int(df_part1_1_1.shape[0] / n_line_head * 0.8)
     print('train_1_1_num_sample:', train_1_1_num_sample)
@@ -10166,10 +10170,10 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     train_1_1_selected = df_part1_1_1.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     train_1_1_selected = train_1_1_selected.dropna(subset=['Y'])
-    print('train_1_1_selected.shape:', train_1_1_selected.shape)
+    print('train_1_1_selected:', train_1_1_selected.shape[0] / n_line_head)
     # 获取剩余的组
     valid_1_1_selected = df_part1_1_1[~df_part1_1_1['CUSTOMER_ID'].isin(selected_groups)]
-    print('valid_1_1_selected.shape:', valid_1_1_selected.shape)
+    print('valid_1_1_selected:', valid_1_1_selected.shape[0] / n_line_head)
 
     df_part1_0 = df_part1_0.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
         reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
@@ -10193,7 +10197,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     train_0_selected = df_part1_0.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     train_0_selected = train_0_selected.dropna(subset=['Y'])
-    print('train_0_selected.shape:', train_0_selected.shape)
+    print('train_0_selected:', train_0_selected.shape[0] / n_line_head)
     df_train = pd.concat([train_0_selected, train_1_1_selected, train_1_0_selected])
     print('df_train.shape: ', df_train.shape)
 
@@ -10209,7 +10213,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     valid_0_selected = valid_0_remain.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     valid_0_selected = valid_0_selected.dropna(subset=['Y'])
-    print('valid_0_selected.shape:', valid_0_selected.shape)
+    print('valid_0_selected:', valid_0_selected.shape[0] / n_line_head)
     df_val = pd.concat([valid_0_selected, valid_1_1_selected, valid_1_0_selected])
 
     del df_part1_0, df_part1_1, valid_0_remain, valid_0_selected, valid_1_1_selected, valid_1_0_selected
@@ -10240,7 +10244,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
 
     df_part2_1['CUSTOMER_ID_TMP'] = df_part2_1['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
     df_part2_1_1 = df_part2_1[df_part2_1['CUSTOMER_ID_TMP'].isin(df_y_1['CUSTOMER_ID_TMP'])]
-    print('after filter y df_part2_1_1.shape:', df_part2_1_1.shape)
+    print('after filter y df_part2_1_1:', df_part2_1_1.shape[0] / n_line_head)
     df_part2_1_0 = df_part2_1[df_part2_1['CUSTOMER_ID_TMP'].isin(df_y_0['CUSTOMER_ID_TMP'])]
     df_part2_1_0['Y'] = 0
     print('after filter y df_part2_1_0.shape:', df_part2_1_0.shape)
@@ -10279,7 +10283,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     df_part2_0_selected = df_part2_0.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     df_part2_0_selected = df_part2_0_selected.dropna(subset=['Y'])
-    print('df_part2_0_selected.shape:', df_part2_0_selected.shape)
+    print('df_part2_0_selected:', df_part2_0_selected.shape[0] / n_line_head)
     df_test = pd.concat([df_part2_0_selected, df_part2_1_1])
     print('df_test.shape: ', df_test.shape)
     del df_part2_0, df_part2_1, df_part2_0_selected, df_part2_1_0, df_part2_1_1
@@ -10611,10 +10615,10 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         select_cols = [None] * top_ftr_num
         model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(i) + '.pkl'
         if os.path.exists(model_file_path):
-            print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
-            os.remove(model_file_path)
-            print(f" file '{model_file_path}' is removed.")
-            #continue
+            #print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
+            #os.remove(model_file_path)
+            #print(f" file '{model_file_path}' is removed.")
+            continue
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
@@ -10656,10 +10660,10 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
-                os.remove(result_file_path)
+                #os.remove(result_file_path)
                 print(f" file '{result_file_path}' is removed.")
-                #print('{} already exists, so no more infer.'.format(result_file_path))
-                #continue
+                print('{} already exists, so no more infer.'.format(result_file_path))
+                continue
             df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_train_ftr_select_notime.loc[:,'CUSTOMER_ID']))
