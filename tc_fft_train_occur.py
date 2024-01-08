@@ -3582,7 +3582,7 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
                      "max_epochs": 5,
                      "verbose": 1,
                      "hidden_dims": hidden_dims,  # 64
-                     "seed": 1, }
+                     "seed": 4, }
     from paddlets.models.representation import ReprCluster
     from paddlets.models.representation import TS2Vec
     model = ReprCluster(repr_model=TS2Vec, repr_model_params=ts2vec_params)
@@ -6939,7 +6939,7 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     else:
         X = extract_features(df[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE',
                                   kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32, default_fc_parameters=EfficientFCParameters()
-    #impute(X)
+    impute(X)
     print('head X:',X.iloc[:2, :5])
     print('columns X:',X.columns,'\n length X:',len(X))
     #print(df.loc[:, ['CUSTOMER_ID','Y']].head(31))
@@ -6952,7 +6952,7 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
         print('kind_to_fc_parameters_file not exists, so calculate it by calculate_relevance_table')
         line = 0
         if len(y) > 20000:
-            line = int(len(y) / 2)
+            line = int(len(y) / 4)
         X_tmp = X.iloc[line:, :]
         X_tmp = X_tmp.reset_index(drop=True)
         y_tmp = y.loc[line:, 'Y']
@@ -10052,21 +10052,21 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     n_line_tail = 32  # 32 64 128
     n_line_head = 32  # == tail
     step = 5
-    date_str = datetime(2023, 12, 22).strftime("%Y%m%d")
+    date_str = datetime(2024, 1, 10).strftime("%Y%m%d")
     ftr_num_str = '241'
     filter_num_ratio = 1 / 8
     filter = False
     ########## model
     top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
-    cluster_model_path = './model/cluster_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
-    cluster_model_file = 'repr-cluster-train-6.pkl'
+    cluster_model_path = './model/cluster8_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
+    cluster_model_file = 'repr-cluster-train-8.pkl'
     cluster_less_train_num = 200    # 200
     cluster_less_val_num = 100      # 100
     cluster_less_test_num = 50     # 50
     type = 'occur_addcredit_step' + str(step) + '_cluster_less_' + str(cluster_less_train_num) + '_' + \
            str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
     ######## optuna
-    n_trials = 128
+    n_trials = 1024
     max_depth = 6
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
@@ -10557,7 +10557,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
             "reg_alpha": trial.suggest_float("reg_alpha", 0.01, 1000.0, log=True),
             "n_estimators": 200,
             "objective": "binary",
-            "seed": 0,
+            "seed": 2,
             #"bagging_fraction": trial.suggest_float("bagging_fraction", 0.4, 1.0), # rf.hpp >0 <1
             #"bagging_freq": trial.suggest_int("bagging_freq", 1, 7),  # rf.hpp >0
             "metric": "auc",
@@ -10606,7 +10606,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         print("train ks = {:.4f}, valid ks = {:.4f}".format(ks_train, ks_val))
         #maximize = (tpr_1 + tpr_2) - abs(tpr_1 - tpr_2)
         #maximize = (tpr_1 + tpr_2)
-        maximize = (ks_train + ks_val) - abs(ks_train - ks_val)
+        maximize = (ks_val) - abs(ks_train - ks_val)
         #maximize = (ks_val) - abs(ks_train - ks_val)
         #maximize = (ks1 + ks2)
         return maximize
@@ -10615,10 +10615,10 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         select_cols = [None] * top_ftr_num
         model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(i) + '.pkl'
         if os.path.exists(model_file_path):
-            #print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
-            #os.remove(model_file_path)
-            #print(f" file '{model_file_path}' is removed.")
-            continue
+            print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
+            os.remove(model_file_path)
+            print(f" file '{model_file_path}' is removed.")
+            #continue
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
@@ -10626,12 +10626,13 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         if i < len(label_list_val):
             df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         else:
+            print('select 0 val set for train model')
             df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[0])]
         df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
 
         study_name = 'ts' + str(n_line_tail) + '_ftr' + str(ftr_num_str) + '_top' + str(top_ftr_num) + '_auc_' + \
                      str(n_trials) + '_model' + str(i) + '_' + date_str  # AUC Accuracy
-        sampler = optuna.samplers.TPESampler(seed=1)
+        sampler = optuna.samplers.TPESampler(seed=2)
         study = optuna.create_study(sampler=sampler, pruner=optuna.pruners.MedianPruner(n_warmup_steps=5),direction="maximize", # minimize
                                     study_name=study_name, storage='sqlite:///db.sqlite3', load_if_exists=True,)
         study.optimize(lambda trial: objective_lightgbm(trial, df_train_ftr_select_notime.loc[:,select_cols],np.array(df_train_ftr_select_notime.loc[:,'Y']),
@@ -10660,10 +10661,10 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
             print(result_file_path)
             if os.path.exists(result_file_path):
                 print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
-                #os.remove(result_file_path)
+                os.remove(result_file_path)
                 print(f" file '{result_file_path}' is removed.")
-                print('{} already exists, so no more infer.'.format(result_file_path))
-                continue
+                #print('{} already exists, so no more infer.'.format(result_file_path))
+                #continue
             df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_train_ftr_select_notime.loc[:,'CUSTOMER_ID']))
