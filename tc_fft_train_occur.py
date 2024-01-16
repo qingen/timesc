@@ -6914,8 +6914,8 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     data_cols.remove('Y')
     df.fillna(0, inplace=True)
     grouped_data = df.groupby('CUSTOMER_ID')
-    if (len(grouped_data) > 1000):
-        num_groups_per_data = 1000
+    if (len(grouped_data) > 500):  # for ts=64, if 32 that is 1000
+        num_groups_per_data = 500
     else:
         num_groups_per_data = len(grouped_data) / 2
     splitted_data = [group for _, group in grouped_data]
@@ -10049,8 +10049,8 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     df_all[col] = df_all[col].astype(float)
 
     ######### ftr
-    n_line_tail = 32  # 32 64 128
-    n_line_head = 32  # == tail
+    n_line_tail = 64  # 32 64 128
+    n_line_head = 64  # == tail
     step = 5
     date_str = datetime(2024, 1, 10).strftime("%Y%m%d")
     ftr_num_str = '241'
