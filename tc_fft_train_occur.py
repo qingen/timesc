@@ -6914,8 +6914,8 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     data_cols.remove('Y')
     df.fillna(0, inplace=True)
     grouped_data = df.groupby('CUSTOMER_ID')
-    if (len(grouped_data) > 500):  # for ts=64, if 32 that is 1000
-        num_groups_per_data = 500
+    if (len(grouped_data) > 256):  # for ts=64, if 32 that is 1000
+        num_groups_per_data = 256
     else:
         num_groups_per_data = len(grouped_data) / 2
     splitted_data = [group for _, group in grouped_data]
