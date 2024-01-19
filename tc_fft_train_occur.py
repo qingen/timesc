@@ -6939,7 +6939,7 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     else:
         X = extract_features(df[data_cols], column_id='CUSTOMER_ID', column_sort='RDATE',
                                   kind_to_fc_parameters=saved_kind_to_fc_parameters, impute_function=impute)  # chunksize=10,n_jobs=32, default_fc_parameters=EfficientFCParameters()
-    impute(X)
+    #impute(X)
     print('head X:',X.iloc[:2, :5])
     print('columns X:',X.columns,'\n length X:',len(X))
     #print(df.loc[:, ['CUSTOMER_ID','Y']].head(31))
@@ -6952,7 +6952,7 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
         print('kind_to_fc_parameters_file not exists, so calculate it by calculate_relevance_table')
         line = 0
         if len(y) > 20000:
-            line = int(len(y) / 4)
+            line = int(len(y) / 2)
         X_tmp = X.iloc[line:, :]
         X_tmp = X_tmp.reset_index(drop=True)
         y_tmp = y.loc[line:, 'Y']
@@ -10644,7 +10644,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         # save the best model.
         #source_path = './model/tmp/' + str(study.best_trial.number) + '.cbm'
         source_path = './model/tmp/' + str(study.best_trial.number) + '.pkl'
-        shutil.move(source_path, model_file_path)
+        shutil.copy(source_path, model_file_path)
         print("  Value: {}".format(trial.value))
         print("  Params: ")
         for key, value in trial.params.items():
