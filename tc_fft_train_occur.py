@@ -6951,8 +6951,10 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
     if saved_kind_to_fc_parameters == None:
         print('kind_to_fc_parameters_file not exists, so calculate it by calculate_relevance_table')
         line = 0
-        if len(y) > 20000:
-            line = int(len(y) / 2)
+        count = len(y)
+        if count > 20000:
+            line = count - int(count/ 4)
+            print('the number of y is too large, so decrease it to 1/4 :', count)
         X_tmp = X.iloc[line:, :]
         X_tmp = X_tmp.reset_index(drop=True)
         y_tmp = y.loc[line:, 'Y']
@@ -10057,7 +10059,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     filter_num_ratio = 1 / 8
     filter = False
     ########## model
-    top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
+    top_ftr_num = 128  # 2 4 8 16 32 64 128 256 512 1024
     cluster_model_path = './model/cluster8_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-8.pkl'
     cluster_less_train_num = 200    # 200
