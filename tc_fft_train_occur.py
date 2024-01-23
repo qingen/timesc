@@ -10051,15 +10051,15 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     df_all[col] = df_all[col].astype(float)
 
     ######### ftr
-    n_line_tail = 64  # 32 64 128
-    n_line_head = 64  # == tail
+    n_line_tail = 96  # 32 64 128
+    n_line_head = 96  # == tail
     step = 5
     date_str = datetime(2024, 1, 10).strftime("%Y%m%d")
     ftr_num_str = '241'
     filter_num_ratio = 1 / 8
     filter = False
     ########## model
-    top_ftr_num = 128  # 2 4 8 16 32 64 128 256 512 1024
+    top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
     cluster_model_path = './model/cluster8_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-8.pkl'
     cluster_less_train_num = 200    # 200
