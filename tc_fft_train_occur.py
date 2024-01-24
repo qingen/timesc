@@ -3572,7 +3572,7 @@ def ts2vec_relabel(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomers
 
 def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.ndarray, y_cutomersid: np.ndarray,
                                    model_path: str, repr_cluster_file_name: str = "repr-cluster-partial.pkl",
-                                   del_num:int = 100, ts_len:int = 32):
+                                   del_num:int = 100, ts_len:int = 32, datasetype:str = 'train'):
     segment_size = ts_len
     hidden_dims = ts_len * 2
     ts2vec_params = {"segment_size": segment_size,  # 32
@@ -3610,7 +3610,8 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
 
     i = 0
     while i < len(label_list):
-        if len(label_list[i]) < del_num or (sum(label_list[i]) == 0 or sum(label_list[i]) == len(label_list[i])):
+        #if len(label_list[i]) < del_num or (sum(label_list[i]) == 0 or sum(label_list[i]) == len(label_list[i])):
+        if (sum(label_list[i]) == 0 or (sum(label_list[i]) == len(label_list[i]) and datasetype == 'train')):
             print('warning del class ', i, ' less ', del_num, ', elements len: ',len(label_list[i]),' sum: ',sum(label_list[i]))
             for id in customersid_list[i]:
                 print(id)
@@ -3619,6 +3620,7 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
             customersid_list.pop(i)
 
         else:
+            print('save class ', i, ', elements len: ', len(label_list[i]), ' sum: ', sum(label_list[i]))
             i += 1
 
     print('length each class')
@@ -9835,7 +9837,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     [new_lst.append(i) for i in usecols if not i in new_lst]
     usecols[:] = new_lst[:]
 
-    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
                'STOCK_AGE_AVG_365',
@@ -9948,7 +9950,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('1 read csv :', formatted_time)
-    col = ['INV_RATIO', 'INV_AVG_7', 'INV_AVG_15', 'INV_AVG_30', 'INV_AVG_60', 'INV_AVG_90', 'INV_AVG_180',
+    cols = ['INV_RATIO', 'INV_AVG_7', 'INV_AVG_15', 'INV_AVG_30', 'INV_AVG_60', 'INV_AVG_90', 'INV_AVG_180',
             'INV_AVG_365', 'INV_CHA_7', 'INV_CHA_15', 'INV_CHA_30', 'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
             'INV_CHA_365', 'LOAN_REPAY_RATIO', 'LRR_AVG_7', 'LRR_AVG_15', 'LRR_AVG_30', 'LRR_AVG_60', 'LRR_AVG_90',
             'LRR_AVG_180', 'LRR_AVG_365', 'LRR_CHA_7', 'LRR_CHA_15', 'LRR_CHA_30', 'LRR_CHA_60', 'LRR_CHA_90', 'LRR_CHA_180',
@@ -9988,7 +9990,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
             'RPCNT7_90_90AGE_R', 'RPCNT3_180_90AGE_R', 'RPCNT7_180_90AGE_R', 'RPCNT3_90_90INV_R', 'RPCNT7_90_90INV_R',
             'RPCNT3_180_90INV_R', 'RPCNT7_180_90INV_R', 'AUDIT_1YCHK_IND', 'AUDIT_5YCHKSZYD_R', 'AUDIT_10YCHKSZYD_R',
             'AUDIT_5YCHKSZYDHGWF_R', 'AUDIT_10YCHKSZYDHGWF_R', 'AUDIT_1YCHKWGWF_IND', 'AUDIT_1YCHKPCT25_IND', 'EXT_12M_R', 'ICA_30']  # 240  + 1
-    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
            'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
            'STOCK_AGE_AVG_365',
@@ -10054,10 +10056,10 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     n_line_tail = 96  # 32 64 128
     n_line_head = 96  # == tail
     step = 5
-    date_str = datetime(2024, 1, 10).strftime("%Y%m%d")
-    ftr_num_str = '241'
-    filter_num_ratio = 1 / 8
-    filter = False
+    date_str = datetime(2024, 1, 20).strftime("%Y%m%d")
+    ftr_num_str = '128'
+    filter_num_ratio = 1 / 5
+    filter = True
     ########## model
     top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
     cluster_model_path = './model/cluster8_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
@@ -10065,8 +10067,8 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     cluster_less_train_num = 200    # 200
     cluster_less_val_num = 100      # 100
     cluster_less_test_num = 50     # 50
-    type = 'occur_addcredit_step' + str(step) + '_cluster_less_' + str(cluster_less_train_num) + '_' + \
-           str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
+    type = 'occur_addcredit_step' + str(step) + '_filter' + str(filter).lower() + '_cluster_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
+    #'less_' + str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_'
     ######## optuna
     n_trials = 1024
     max_depth = 6
@@ -10462,7 +10464,8 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
                                                                                                         cluster_model_path,
                                                                                                         cluster_model_file,
                                                                                                         cluster_less_train_num,
-                                                                                                        n_line_tail)
+                                                                                                        n_line_tail,
+                                                                                                        'train')
         with open(label_list_train_file_path, 'wb') as f:
             pickle.dump(label_list_train, f)
         with open(customersid_list_train_file_path, 'wb') as f:
@@ -10486,7 +10489,8 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
                                                                                                   cluster_model_path,
                                                                                                   cluster_model_file,
                                                                                                   cluster_less_val_num,
-                                                                                                  n_line_tail)
+                                                                                                  n_line_tail,
+                                                                                                  'val')
         with open(label_list_val_file_path, 'wb') as f:
             pickle.dump(label_list_val, f)
         with open(customersid_list_val_file_path, 'wb') as f:
@@ -10704,7 +10708,8 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
                                                                                                      cluster_model_path,
                                                                                                      cluster_model_file,
                                                                                                      cluster_less_test_num,
-                                                                                                     n_line_tail)
+                                                                                                     n_line_tail,
+                                                                                                     'test')
         with open(label_list_test_file_path, 'wb') as f:
             pickle.dump(label_list_test, f)
         with open(customersid_list_test_file_path, 'wb') as f:
@@ -10746,7 +10751,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
     X.sort_values(by='prob', ascending=False, inplace=True)
     X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
-    print('get same index, after sort:', X.head(20))
+    print('get same index, after sort:', X.head(200))
     print('all rows is:', len(X['customerid']))
 
     X = pd.DataFrame()
@@ -10758,7 +10763,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
     X.sort_values(by='prob', ascending=False, inplace=True)
     X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
-    print('get top result, after sort:', X.head(20))
+    print('get top result, after sort:', X.head(200))
     print('all rows is:', len(X['customerid']))
 
 if __name__ == '__main__':
