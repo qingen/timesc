@@ -6955,8 +6955,8 @@ def benjamini_yekutieli_p_value_get_ftr(df: pd.DataFrame,origin_cols:List[str], 
         line = 0
         count = len(y)
         if count > 20000:
-            line = count - int(count/ 4)
-            print('the number of y is too large, so decrease it to 1/4 :', count)
+            line = int(count/ 2)
+            print('the number of y is too large, so decrease it to 1/2 :', count)
         X_tmp = X.iloc[line:, :]
         X_tmp = X_tmp.reset_index(drop=True)
         y_tmp = y.loc[line:, 'Y']
