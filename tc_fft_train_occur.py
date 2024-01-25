@@ -10629,13 +10629,17 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
         print('select_cols:', select_cols)
+        if(select_cols[top_ftr_num - 1] == None):
+            print('top ftr can not be selected, maybe data is less.')
+            os.remove(kind_to_fc_parameters_file_path)
+            print(f" so file '{kind_to_fc_parameters_file_path}' is removed.")
+            continue
         if i < len(label_list_val):
             df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         else:
             print('select 0 val set for train model')
             df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[0])]
         df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
-
         study_name = 'ts' + str(n_line_tail) + '_ftr' + str(ftr_num_str) + '_top' + str(top_ftr_num) + '_auc_' + \
                      str(n_trials) + '_model' + str(i) + '_' + date_str  # AUC Accuracy
         sampler = optuna.samplers.TPESampler(seed=2)
@@ -10662,6 +10666,9 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
+            if not os.path.exists(model_file_path):
+                print('model {} not exists, so next it:'.format(model_file_path))
+                continue
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
@@ -10684,6 +10691,9 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         for j in range(len(label_list_train)):
             model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
+            if not os.path.exists(model_file_path):
+                print('model {} not exists, so next it:'.format(model_file_path))
+                continue
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
@@ -10728,6 +10738,9 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         for j in range(len(label_list_train)):
             #model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
             model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
+            if not os.path.exists(model_file_path):
+                print('model {} not exists, so next it:'.format(model_file_path))
+                continue
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             #result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
@@ -10758,6 +10771,9 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     for i in range(len(label_list_test)):
         for j in range(len(label_list_train)):
             result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            if not os.path.exists(result_file_path):
+                print('result {} not exists, so next it:'.format(result_file_path))
+                continue
             X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
             X = pd.concat([X, X_part])
     X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
