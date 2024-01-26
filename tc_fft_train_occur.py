@@ -10622,9 +10622,9 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(i) + '.pkl'
         if os.path.exists(model_file_path):
             print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
-            os.remove(model_file_path)
-            print(f" file '{model_file_path}' is removed.")
-            #continue
+            #os.remove(model_file_path)
+            #print(f" file '{model_file_path}' is removed.")
+            continue
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
@@ -10632,7 +10632,7 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         if(select_cols[top_ftr_num - 1] == None):
             print('top ftr can not be selected, maybe data is less.')
             os.remove(kind_to_fc_parameters_file_path)
-            print(f" so file '{kind_to_fc_parameters_file_path}' is removed.")
+            print(f"so file '{kind_to_fc_parameters_file_path}' is removed.")
             continue
         if i < len(label_list_val):
             df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
@@ -10673,11 +10673,11 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
             result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
-                os.remove(result_file_path)
-                print(f" file '{result_file_path}' is removed.")
-                #print('{} already exists, so no more infer.'.format(result_file_path))
-                #continue
+                #print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
+                #os.remove(result_file_path)
+                #print(f" file '{result_file_path}' is removed.")
+                print('{} already exists, so no more infer.'.format(result_file_path))
+                continue
             df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_train_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -10698,11 +10698,11 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
             result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
-                os.remove(result_file_path)
-                print(f" file '{result_file_path}' is removed.")
-                #print('{} already exists, so no more infer.'.format(result_file_path))
-                #continue
+                #print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
+                #os.remove(result_file_path)
+                #print(f" file '{result_file_path}' is removed.")
+                print('{} already exists, so no more infer.'.format(result_file_path))
+                continue
             df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_val_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -10746,11 +10746,11 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
             result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
-                os.remove(result_file_path)
+                #print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
+                #os.remove(result_file_path)
                 print(f" file '{result_file_path}' is removed.")
-                #print('{} already exists, so no more infer.'.format(result_file_path))
-                #continue
+                print('{} already exists, so no more infer.'.format(result_file_path))
+                continue
             df_test_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -10759,6 +10759,9 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
         model_index = i if i < len(label_list_train) else 0  #  models num
         dataset_group_index = i
         result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        if not os.path.exists(result_file_path):
+            print('result {} not exists, so next it:'.format(result_file_path))
+            continue
         X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
         X = pd.concat([X, X_part])
     X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
