@@ -10785,6 +10785,479 @@ def multiple_hypothesis_testing_y_augdata_cluster_optuna():
     print('get top result, after sort:', X.head(200))
     print('all rows is:', len(X['customerid']))
 
+def analysis_relabeldata():
+    usecols = ['CUSTOMER_ID', 'RDATE', 'Y', 'INV_RATIO', 'INV_AVG_7', 'INV_AVG_15', 'INV_AVG_30', 'INV_AVG_60',
+               'INV_AVG_90',
+               'INV_AVG_180', 'INV_AVG_365', 'INV_CHA_7', 'INV_CHA_15', 'INV_CHA_30', 'INV_CHA_60', 'INV_CHA_90',
+               'INV_CHA_180',
+               'INV_CHA_365', 'LOAN_REPAY_RATIO', 'LRR_AVG_7', 'LRR_AVG_15', 'LRR_AVG_30', 'LRR_AVG_60', 'LRR_AVG_90',
+               'LRR_AVG_180',
+               'LRR_AVG_365', 'LRR_CHA_7', 'LRR_CHA_15', 'LRR_CHA_30', 'LRR_CHA_60', 'LRR_CHA_90', 'LRR_CHA_180',
+               'LRR_CHA_365',
+               'AMOUNT_CHANGE_SIGNAL', 'USEAMOUNT_RATIO', 'UAR_LAG_YEAR', 'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30',
+               'UAR_AVG_60',
+               'UAR_AVG_90', 'UAR_AVG_180', 'UAR_AVG_365', 'UAR_CHA_7', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60',
+               'UAR_CHA_90',
+               'UAR_CHA_180', 'UAR_CHA_365', 'UAR_CHA_YEAR', 'SDV_REPAY_7', 'SDV_REPAY_15', 'SDV_REPAY_30',
+               'SDV_REPAY_60', 'SDV_REPAY_90',
+               'SDV_REPAY_180', 'SDV_REPAY_365', 'REPAY_STD_RATIO_7_15', 'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60',
+               'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_180', 'REPAY_STD_RATIO_7_365', 'STOCK_OVER_91_RATIO',
+               'LSR_91_AVG_7',
+               'LSR_91_AVG_15', 'LSR_91_AVG_30', 'LSR_91_AVG_60', 'LSR_91_AVG_90', 'LSR_91_AVG_180', 'LSR_91_AVG_365',
+               'LSR_91_CHA_7',
+               'LSR_91_CHA_15', 'LSR_91_CHA_30', 'LSR_91_CHA_60', 'LSR_91_CHA_90', 'LSR_91_CHA_180', 'LSR_91_CHA_365',
+               'STOCK_OVER_121_RATIO',
+               'LSR_121_AVG_7', 'LSR_121_AVG_15', 'LSR_121_AVG_30', 'LSR_121_AVG_60', 'LSR_121_AVG_90',
+               'LSR_121_AVG_180',
+               'LSR_121_AVG_365', 'LSR_121_CHA_7', 'LSR_121_CHA_15', 'LSR_121_CHA_30', 'LSR_121_CHA_60',
+               'LSR_121_CHA_90',
+               'LSR_121_CHA_180', 'LSR_121_CHA_365', 'STOCK_OVER_181_RATIO', 'LSR_181_AVG_7', 'LSR_181_AVG_15',
+               'LSR_181_AVG_30',
+               'LSR_181_AVG_60', 'LSR_181_AVG_90', 'LSR_181_AVG_180', 'LSR_181_AVG_365', 'LSR_181_CHA_7',
+               'LSR_181_CHA_15',
+               'LSR_181_CHA_30', 'LSR_181_CHA_60', 'LSR_181_CHA_90', 'LSR_181_CHA_180', 'LSR_181_CHA_365',
+               'STOCK_AGE_AVG',
+               'STOCK_AGE_AVG_7', 'STOCK_AGE_AVG_15', 'STOCK_AGE_AVG_30', 'STOCK_AGE_AVG_60', 'STOCK_AGE_AVG_90',
+               'STOCK_AGE_AVG_180',
+               'STOCK_AGE_AVG_365', 'STOCK_AGE_CHA_RATIO_7', 'STOCK_AGE_CHA_RATIO_15', 'STOCK_AGE_CHA_RATIO_30',
+               'STOCK_AGE_CHA_RATIO_60',
+               'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_180', 'STOCK_AGE_CHA_RATIO_365', 'JH_30_CNT', 'JH_60_CNT',
+               'JH_90_CNT',
+               'JH_180_CNT', 'JH_HEGE', 'JH_WANSHAN', 'JH_XIANYI', 'JH_XIANYI_R', 'JH_WAIFANG', 'JH_WAIFANG_R',
+               'JH_YIDONGCL',
+               'JH_YIDONGCL_R', 'JH_CCC', 'JH_SC_R', 'JH_SALE_R', 'JH_ZT_R', 'JH_WT_R', 'JH_XFEW_R', 'JH_CZ_R',
+               'JH_WGWF_R', 'JH_HGZ',
+               'JH_HGZ_R', 'JH_JTS', 'JH_3YCHK_R', 'JH_3SZYD_R', 'JH_3HGZWF_R', 'JH_5YCHK_R', 'JH_5SZYD_R',
+               'JH_5HGZWF_R', 'JH_10YCHK_R',
+               'JH_10SZYD_R', 'JH_10HGZWF_R', 'JH_3YCHK10_R', 'JH_3SZYD10_R', 'JH_3HGZWF10_R', 'JH_6YCHK_R',
+               'JH_6SZYD_R', 'JH_6HGZWF_R',
+               'PES_30HUIDIZHI', 'PES_30HCL', 'PES_30MAHCL', 'PES_30MAHTS', 'PES_30MIHTS', 'PES_30AVGHTS',
+               'PES_30AVGHCL', 'PES_30MAHCL_R',
+               'PES_30CHUDIZHI', 'PES_30CCL', 'PES_30MACCL', 'PES_30AVGCCL', 'PES_30MACCL_R', 'GRP_CNT',
+               'GRP_AVAILAMT_SUM', 'GRP_USEAMT_SUM',
+               'GRP_REPAYCARS30_SUM', 'GRP_REPAYCARS90_SUM', 'GRP_REPAYCARS180_SUM', 'LOAN_GHD_30D_IND',
+               'LOAN_GHD_30D_CNT',
+               'LOAN_AJ_30D_IND', 'LOAN_AJ_30D_CNT', 'LOAN_GHDAJ_30D_IND', 'LOAN_GHDAJ_30D_CNT', 'LOAN_GHD_90D_IND',
+               'LOAN_GHD_90D_CNT',
+               'LOAN_AJ_90D_IND', 'LOAN_AJ_90D_CNT', 'LOAN_GHDAJ_90D_IND', 'LOAN_GHDAJ_90D_CNT', 'SN_XFDQ_180D_CNT_2',
+               'SNEX_30D_HKKDDZ_CNT', 'SNEX_30D_HKCL_CNT', 'SNEX_30D_DKDHKCL_MAX', 'SNEX_30D_HKTS_MAX',
+               'SNEX_30D_HKTS_MIN',
+               'SNEX_30D_HKTS_AVG', 'SNEX_30D_SYKDHKCL_AVG', 'SNEX_30D_DKDHKCL_MAX_R', 'SNEX_30D_CKKDDZ_CNT',
+               'SNEX_30D_CKCL_CNT',
+               'SNEX_30D_DKDCKCL_MAX', 'SNEX_30D_SYKDCKCL_AVG', 'SNEX_30D_DKDCKCL_MAX_R', 'SNEX_CKRJSQ_30D_CNT',
+               'SNEX_CKSQKDDZ_30D_R',
+               'SNEX_CKRJSQ_90D_CNT', 'SNEX_CKSQKDDZ_90D_R', 'SNEX_CKSQKDDZ_180D_R', 'SNEX_ONLINE90D_R',
+               'SNEX_XFDQ_30D_CNT',
+               'SNEX_XFDQ_90D_CNT', 'SNEX_XFDQ_180D_CNT', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'XSZQ30D_R', 'XSZQ90D_R',
+               'XSZQ180D_R',
+               'FREESPANRP_30D_R', 'FREESPANRP_90D_R', 'FREESPANRP_180D_R', 'FREESPANRP_360D_R', 'REPAYCNT3_90D',
+               'REPAYCNT7_90D',
+               'REPAYCNT3_180D', 'REPAYCNT7_180D', 'INV_RATIO_90', 'STOCK_OVER_91_RATIO', 'RPCNT3_90_90AGE_R',
+               'RPCNT7_90_90AGE_R',
+               'RPCNT3_180_90AGE_R', 'RPCNT7_180_90AGE_R', 'RPCNT3_90_90INV_R', 'RPCNT7_90_90INV_R',
+               'RPCNT3_180_90INV_R',
+               'RPCNT7_180_90INV_R', 'AUDIT_1YCHK_IND', 'AUDIT_5YCHKSZYD_R', 'AUDIT_10YCHKSZYD_R',
+               'AUDIT_5YCHKSZYDHGWF_R',
+               'AUDIT_10YCHKSZYDHGWF_R', 'AUDIT_1YCHKWGWF_IND', 'AUDIT_1YCHKPCT25_IND', 'EXT_12M_R']  # 240 cols
+    new_lst = []
+    [new_lst.append(i) for i in usecols if not i in new_lst]
+    usecols[:] = new_lst[:]
+
+    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+               'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+               'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+               'STOCK_AGE_AVG_365',
+               'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+               'LSR_91_AVG_365',
+               'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+               'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+               'STOCK_AGE_AVG_90',
+               'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+               'FREESPANRP_180D_R', 'SDV_REPAY_60',
+               'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+               'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+               'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+               'STOCK_AGE_CHA_RATIO_180',
+               'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+               'LSR_91_AVG_60',
+               'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+               'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+               'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+               'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+               'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+               'LRR_AVG_90', 'LSR_91_AVG_30',
+               'LRR_AVG_60', 'LSR_91_AVG_15', 'LRR_AVG_30', 'LSR_91_AVG_7', 'STOCK_OVER_91_RATIO',
+               'LSR_121_AVG_90', 'FREESPANRP_30D_R', 'JH_60_CNT', 'LSR_91_CHA_30', 'LSR_91_CHA_7', 'LSR_91_CHA_15',
+               'LSR_91_CHA_60',
+               'LSR_91_CHA_180', 'LRR_AVG_15', 'LSR_91_CHA_365', 'LSR_91_CHA_90', 'LRR_AVG_7', 'LSR_121_AVG_60',
+               'LRR_CHA_365', 'LRR_CHA_180',
+               'LRR_CHA_30', 'LRR_CHA_60', 'LRR_CHA_7', 'LRR_CHA_90', 'LOAN_REPAY_RATIO', 'LRR_CHA_15',
+               'LSR_121_AVG_30', 'LSR_121_AVG_15',
+               'LSR_121_AVG_7', 'STOCK_OVER_121_RATIO', 'LSR_121_CHA_180', 'LSR_121_CHA_90', 'LSR_121_CHA_30',
+               'LSR_121_CHA_15', 'LSR_121_CHA_7', 'LSR_121_CHA_60']  # 128 cols 1/5
+    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+              'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+              'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+              'STOCK_AGE_AVG_365',
+              'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+              'LSR_91_AVG_365',
+              'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+              'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+              'STOCK_AGE_AVG_90',
+              'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+              'FREESPANRP_180D_R', 'SDV_REPAY_60',
+              'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+              'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+              'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+              'STOCK_AGE_CHA_RATIO_180',
+              'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+              'LSR_91_AVG_60',
+              'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+              'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+              'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+              'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+              'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+              'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols  1/8
+    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+              'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+              'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180',
+              'UAR_CHA_7']  # 18 cols 1/8
+    df23 = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, usecols=usecols, sep=',',
+                       encoding='gbk')
+    df22_4 = pd.read_csv("./data/0825_train/occur/2022_10_12_202308250913.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df22_3 = pd.read_csv("./data/0825_train/occur/2022_7_10_202308250922.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df22_2 = pd.read_csv("./data/0825_train/occur/2022_4_7_202308250927.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df22_1 = pd.read_csv("./data/0825_train/occur/2022_1_4_202308250931.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df21_4 = pd.read_csv("./data/0825_train/occur/2021_10_12_202308250937.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df21_3 = pd.read_csv("./data/0825_train/occur/2021_7_10_202308251006.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df21_2 = pd.read_csv("./data/0825_train/occur/2021_4_7_202308251012.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df21_1 = pd.read_csv("./data/0825_train/occur/2021_1_4_202308251017.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df20_4 = pd.read_csv("./data/0825_train/occur/2020_10_12_202308251023.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df20_3 = pd.read_csv("./data/0825_train/occur/2020_7_10_202308251033.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df20_2 = pd.read_csv("./data/0825_train/occur/2020_4_7_202308251037.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df20_1 = pd.read_csv("./data/0825_train/occur/2020_1_4_202308251042.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df19_4 = pd.read_csv("./data/0825_train/occur/2019_10_12_202308251047.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df19_3 = pd.read_csv("./data/0825_train/occur/2019_7_10_202308251052.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df19_2 = pd.read_csv("./data/0825_train/occur/2019_4_7_202308251057.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df19_1 = pd.read_csv("./data/0825_train/occur/2019_1_4_202308251238.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df18_4 = pd.read_csv("./data/0825_train/occur/2018_10_12_202308251253.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df18_3 = pd.read_csv("./data/0825_train/occur/2018_7_10_202308251257.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df18_2 = pd.read_csv("./data/0825_train/occur/2018_4_7_202308251301.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df18_1 = pd.read_csv("./data/0825_train/occur/2018_1_4_202308251306.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df17_4 = pd.read_csv("./data/0825_train/occur/2017_10_12_202308251310.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df17_3 = pd.read_csv("./data/0825_train/occur/2017_7_10_202308251313.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df17_2 = pd.read_csv("./data/0825_train/occur/2017_4_7_202308251316.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df17_1 = pd.read_csv("./data/0825_train/occur/2017_1_4_202308251320.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df16_2 = pd.read_csv("./data/0825_train/occur/2016_7_12_202308251325.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    df16_1 = pd.read_csv("./data/0825_train/occur/2016_1_7_202308251331.csv", header=0, usecols=usecols, sep=',',
+                         encoding='gbk')
+    credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30', ]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
+    df_credit = pd.read_csv("./data/0825_train/credit/202310241019.csv", header=0, usecols=credit_usecols, sep=',',
+                            encoding='gbk')
+    y_usecols = ['CUSTOMER_ID', 'Y', ]
+    df_y = pd.read_csv("./data/0825_train/y/2023_9.csv", header=0, usecols=y_usecols, sep=',', encoding='gbk')
+    print('df_y head:', df_y.head(5))
+
+    df_16_18 = pd.concat([df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4])
+    df_19_20 = pd.concat([df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4])
+    df_21_23 = pd.concat([df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23])
+    # print(df_16_18.shape)
+    # print(df_19_20.shape)
+    print(df_21_23.shape)
+
+    del df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4
+    del df19_1, df19_2, df19_3, df19_4, df20_1, df20_2, df20_3, df20_4
+    del df21_1, df21_2, df21_3, df21_4, df22_1, df22_2, df22_3, df22_4, df23
+
+    df_all = pd.concat([df_16_18, df_19_20, df_21_23])
+    # df_all = pd.concat([df_19_20, df_21_23])
+    print('df_all.shape:', df_all.shape)
+    # merge credit
+    df_all = pd.merge(df_all, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
+    print('after merge credit df_all.shape:', df_all.shape)
+    # df_all = df_all.astype(float)
+
+    del df_16_18, df_19_20, df_21_23, df_credit
+    # del df_19_20, df_21_23
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print('1 read csv :', formatted_time)
+    cols = ['INV_RATIO', 'INV_AVG_7', 'INV_AVG_15', 'INV_AVG_30', 'INV_AVG_60', 'INV_AVG_90', 'INV_AVG_180',
+            'INV_AVG_365', 'INV_CHA_7', 'INV_CHA_15', 'INV_CHA_30', 'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+            'INV_CHA_365', 'LOAN_REPAY_RATIO', 'LRR_AVG_7', 'LRR_AVG_15', 'LRR_AVG_30', 'LRR_AVG_60', 'LRR_AVG_90',
+            'LRR_AVG_180', 'LRR_AVG_365', 'LRR_CHA_7', 'LRR_CHA_15', 'LRR_CHA_30', 'LRR_CHA_60', 'LRR_CHA_90',
+            'LRR_CHA_180',
+            'LRR_CHA_365', 'AMOUNT_CHANGE_SIGNAL', 'USEAMOUNT_RATIO', 'UAR_LAG_YEAR', 'UAR_AVG_7', 'UAR_AVG_15',
+            'UAR_AVG_30',
+            'UAR_AVG_60', 'UAR_AVG_90', 'UAR_AVG_180', 'UAR_AVG_365', 'UAR_CHA_7', 'UAR_CHA_15', 'UAR_CHA_30',
+            'UAR_CHA_60',
+            'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_365', 'UAR_CHA_YEAR', 'SDV_REPAY_7', 'SDV_REPAY_15', 'SDV_REPAY_30',
+            'SDV_REPAY_60', 'SDV_REPAY_90', 'SDV_REPAY_180', 'SDV_REPAY_365', 'REPAY_STD_RATIO_7_15',
+            'REPAY_STD_RATIO_7_30',
+            'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_180', 'REPAY_STD_RATIO_7_365',
+            'STOCK_OVER_91_RATIO',
+            'LSR_91_AVG_7', 'LSR_91_AVG_15', 'LSR_91_AVG_30', 'LSR_91_AVG_60', 'LSR_91_AVG_90', 'LSR_91_AVG_180',
+            'LSR_91_AVG_365',
+            'LSR_91_CHA_7', 'LSR_91_CHA_15', 'LSR_91_CHA_30', 'LSR_91_CHA_60', 'LSR_91_CHA_90', 'LSR_91_CHA_180',
+            'LSR_91_CHA_365',
+            'STOCK_OVER_121_RATIO',
+            'LSR_121_AVG_7', 'LSR_121_AVG_15', 'LSR_121_AVG_30', 'LSR_121_AVG_60', 'LSR_121_AVG_90', 'LSR_121_AVG_180',
+            'LSR_121_AVG_365',
+            'LSR_121_CHA_7', 'LSR_121_CHA_15', 'LSR_121_CHA_30', 'LSR_121_CHA_60', 'LSR_121_CHA_90', 'LSR_121_CHA_180',
+            'LSR_121_CHA_365',
+            'STOCK_OVER_181_RATIO',
+            'LSR_181_AVG_7', 'LSR_181_AVG_15', 'LSR_181_AVG_30', 'LSR_181_AVG_60', 'LSR_181_AVG_90', 'LSR_181_AVG_180',
+            'LSR_181_AVG_365',
+            'LSR_181_CHA_7', 'LSR_181_CHA_15', 'LSR_181_CHA_30', 'LSR_181_CHA_60', 'LSR_181_CHA_90', 'LSR_181_CHA_180',
+            'LSR_181_CHA_365',
+            'STOCK_AGE_AVG',
+            'STOCK_AGE_AVG_7', 'STOCK_AGE_AVG_15', 'STOCK_AGE_AVG_30', 'STOCK_AGE_AVG_60', 'STOCK_AGE_AVG_90',
+            'STOCK_AGE_AVG_180', 'STOCK_AGE_AVG_365',
+            'STOCK_AGE_CHA_RATIO_7', 'STOCK_AGE_CHA_RATIO_15', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_60',
+            'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_180', 'STOCK_AGE_CHA_RATIO_365',
+            'JH_30_CNT', 'JH_60_CNT', 'JH_90_CNT', 'JH_180_CNT',
+            'JH_HEGE', 'JH_WANSHAN', 'JH_XIANYI', 'JH_XIANYI_R', 'JH_WAIFANG', 'JH_WAIFANG_R', 'JH_YIDONGCL',
+            'JH_YIDONGCL_R', 'JH_CCC', 'JH_SC_R', 'JH_SALE_R', 'JH_ZT_R', 'JH_WT_R', 'JH_XFEW_R', 'JH_CZ_R',
+            'JH_WGWF_R', 'JH_HGZ', 'JH_HGZ_R', 'JH_JTS', 'JH_3YCHK_R', 'JH_3SZYD_R', 'JH_3HGZWF_R', 'JH_5YCHK_R',
+            'JH_5SZYD_R',
+            'JH_5HGZWF_R', 'JH_10YCHK_R', 'JH_10SZYD_R', 'JH_10HGZWF_R', 'JH_3YCHK10_R', 'JH_3SZYD10_R',
+            'JH_3HGZWF10_R', 'JH_6YCHK_R',
+            'JH_6SZYD_R', 'JH_6HGZWF_R', 'PES_30HUIDIZHI', 'PES_30HCL', 'PES_30MAHCL', 'PES_30MAHTS', 'PES_30MIHTS',
+            'PES_30AVGHTS',
+            'PES_30AVGHCL', 'PES_30MAHCL_R', 'PES_30CHUDIZHI', 'PES_30CCL', 'PES_30MACCL', 'PES_30AVGCCL',
+            'PES_30MACCL_R',
+            'GRP_CNT', 'GRP_AVAILAMT_SUM', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM', 'GRP_REPAYCARS90_SUM',
+            'GRP_REPAYCARS180_SUM',
+            'LOAN_GHD_30D_IND', 'LOAN_GHD_30D_CNT', 'LOAN_AJ_30D_IND', 'LOAN_AJ_30D_CNT', 'LOAN_GHDAJ_30D_IND',
+            'LOAN_GHDAJ_30D_CNT', 'LOAN_GHD_90D_IND',
+            'LOAN_GHD_90D_CNT', 'LOAN_AJ_90D_IND', 'LOAN_AJ_90D_CNT', 'LOAN_GHDAJ_90D_IND', 'LOAN_GHDAJ_90D_CNT',
+            'SN_XFDQ_180D_CNT_2',
+            'SNEX_30D_HKKDDZ_CNT', 'SNEX_30D_HKCL_CNT', 'SNEX_30D_DKDHKCL_MAX', 'SNEX_30D_HKTS_MAX',
+            'SNEX_30D_HKTS_MIN', 'SNEX_30D_HKTS_AVG', 'SNEX_30D_SYKDHKCL_AVG', 'SNEX_30D_DKDHKCL_MAX_R',
+            'SNEX_30D_CKKDDZ_CNT',
+            'SNEX_30D_CKCL_CNT', 'SNEX_30D_DKDCKCL_MAX', 'SNEX_30D_SYKDCKCL_AVG', 'SNEX_30D_DKDCKCL_MAX_R',
+            'SNEX_CKRJSQ_30D_CNT',
+            'SNEX_CKSQKDDZ_30D_R', 'SNEX_CKRJSQ_90D_CNT', 'SNEX_CKSQKDDZ_90D_R', 'SNEX_CKSQKDDZ_180D_R',
+            'SNEX_ONLINE90D_R',
+            'SNEX_XFDQ_30D_CNT', 'SNEX_XFDQ_90D_CNT', 'SNEX_XFDQ_180D_CNT', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'XSZQ30D_R',
+            'XSZQ90D_R',
+            'XSZQ180D_R', 'FREESPANRP_30D_R', 'FREESPANRP_90D_R', 'FREESPANRP_180D_R', 'FREESPANRP_360D_R',
+            'REPAYCNT3_90D',
+            'REPAYCNT7_90D', 'REPAYCNT3_180D', 'REPAYCNT7_180D', 'INV_RATIO_90', 'STOCK_OVER_91_RATIO',
+            'RPCNT3_90_90AGE_R',
+            'RPCNT7_90_90AGE_R', 'RPCNT3_180_90AGE_R', 'RPCNT7_180_90AGE_R', 'RPCNT3_90_90INV_R', 'RPCNT7_90_90INV_R',
+            'RPCNT3_180_90INV_R', 'RPCNT7_180_90INV_R', 'AUDIT_1YCHK_IND', 'AUDIT_5YCHKSZYD_R', 'AUDIT_10YCHKSZYD_R',
+            'AUDIT_5YCHKSZYDHGWF_R', 'AUDIT_10YCHKSZYDHGWF_R', 'AUDIT_1YCHKWGWF_IND', 'AUDIT_1YCHKPCT25_IND',
+            'EXT_12M_R', 'ICA_30']  # 240  + 1
+    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+           'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+           'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+           'STOCK_AGE_AVG_365',
+           'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+           'LSR_91_AVG_365',
+           'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+           'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+           'STOCK_AGE_AVG_90',
+           'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+           'FREESPANRP_180D_R', 'SDV_REPAY_60',
+           'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+           'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+           'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+           'STOCK_AGE_CHA_RATIO_180',
+           'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+           'LSR_91_AVG_60',
+           'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+           'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+           'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+           'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+           'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+           'LRR_AVG_90', 'LSR_91_AVG_30',
+           'LRR_AVG_60', 'LSR_91_AVG_15', 'LRR_AVG_30', 'LSR_91_AVG_7', 'STOCK_OVER_91_RATIO',
+           'LSR_121_AVG_90', 'FREESPANRP_30D_R', 'JH_60_CNT', 'LSR_91_CHA_30', 'LSR_91_CHA_7', 'LSR_91_CHA_15',
+           'LSR_91_CHA_60',
+           'LSR_91_CHA_180', 'LRR_AVG_15', 'LSR_91_CHA_365', 'LSR_91_CHA_90', 'LRR_AVG_7', 'LSR_121_AVG_60',
+           'LRR_CHA_365', 'LRR_CHA_180',
+           'LRR_CHA_30', 'LRR_CHA_60', 'LRR_CHA_7', 'LRR_CHA_90', 'LOAN_REPAY_RATIO', 'LRR_CHA_15', 'LSR_121_AVG_30',
+           'LSR_121_AVG_15',
+           'LSR_121_AVG_7', 'STOCK_OVER_121_RATIO', 'LSR_121_CHA_180', 'LSR_121_CHA_90', 'LSR_121_CHA_30',
+           'LSR_121_CHA_15', 'LSR_121_CHA_7', 'LSR_121_CHA_60', 'ICA_30']  # 127 + 1
+    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+            'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+            'STOCK_AGE_AVG_365',
+            'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+            'LSR_91_AVG_365',
+            'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+            'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+            'STOCK_AGE_AVG_90',
+            'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+            'FREESPANRP_180D_R', 'SDV_REPAY_60',
+            'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+            'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+            'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+            'STOCK_AGE_CHA_RATIO_180',
+            'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+            'LSR_91_AVG_60',
+            'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+            'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+            'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+            'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+            'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+            'LRR_AVG_90', 'LSR_91_AVG_30', 'ICA_30']  # 90 + 1
+    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO', 'UAR_CHA_365',
+            'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+            'ICA_30']  # 18 + 1
+
+    new_lst = []
+    [new_lst.append(i) for i in col if not i in new_lst]
+    col[:] = new_lst[:]
+    df_all[col] = df_all[col].astype(float)
+
+    ######### ftr
+    n_line_tail = 96  # 32 64 128
+    n_line_head = 96  # == tail
+    step = 5
+    date_str = datetime(2024, 1, 30).strftime("%Y%m%d")
+    ftr_num_str = '128'
+    filter_num_ratio = 1 / 5
+    filter = True
+    ########## model
+    top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
+    cluster_model_path = './model/cluster8_' + date_str + '_step' + str(step) + '_ftr' + str(ftr_num_str) + '_ts' + str(
+        n_line_tail) + '/'
+    cluster_model_file = 'repr-cluster-train-8.pkl'
+    cluster_less_train_num = 200  # 200
+    cluster_less_val_num = 100  # 100
+    cluster_less_test_num = 50  # 50
+    type = 'occur_addcredit_step' + str(step) + '_filter' + str(filter).lower() + '_cluster_ftr' + str(
+        ftr_num_str) + '_ts' + str(n_line_tail)
+    # 'less_' + str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_'
+    ######## optuna
+    n_trials = 1024
+    max_depth = 6
+
+    df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
+    df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
+
+    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)  # 20230101
+    df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230701)  # for test
+
+    df_part3 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20160101)  # 20160101
+    df_part3 = df_part3.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train bad
+    del df_all
+
+    df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
+    df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
+    df_part3 = df_part3.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
+    ###################### for train valid 8:2
+    df_part1_0 = df_part1[df_part1['Y'] == 0]
+    df_part1_1 = df_part3[df_part3['Y'] == 1]
+    df_part1_1 = df_part1_1.groupby(['CUSTOMER_ID']).apply(
+        lambda x: x.sort_values(["RDATE"], ascending=True)).reset_index(drop=True)
+    print('df_part1_1.head:', df_part1_1.iloc[:2, :5])
+    print('df_part1_1.shape:', df_part1_1.shape)
+    # 使用 groupby 方法按照 CUSTOMER_ID 列的值分组，并应用函数去除最后一行
+    df_part1_1 = df_part1_1.groupby('CUSTOMER_ID').apply(remove_last_row).reset_index(drop=True)
+    print('after del last row df_part1_1.shape:', df_part1_1.shape)
+
+    # 定义每次读取的数量
+    batch_size = n_line_head
+
+    def generate_new_groups(group):
+        new_groups = []
+        size = len(group)
+        # 循环切片生成新的组
+        for i in range(0, size, step):  # range(0,size,2)
+            start_position = size - i - batch_size
+            if start_position < 0:
+                break
+            end_position = size - i
+            # 获取当前组的一部分数据
+            batch = group.iloc[start_position:end_position].copy()
+            # 修改组名
+            batch['CUSTOMER_ID'] = f'{group.iloc[i]["CUSTOMER_ID"]}_{i}'
+            # 将切片后的数据添加到新的组列表中
+            new_groups.append(batch)
+        # 将新的组数据合并为一个 DataFrame
+        new_df = pd.concat(new_groups)
+        return new_df
+
+    # 将数据按照 CUSTOMER_ID 列的值分组，并应用函数生成新的组
+    df_part1_1 = df_part1_1.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
+    # 输出结果
+    print('df_part1_1.head:', df_part1_1.iloc[:2, :5])
+    print('df_part1_1.shape:', df_part1_1.shape)
+
+    if filter:
+        # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
+        count_df = df_part1_1.groupby('CUSTOMER_ID').apply(
+            lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
+        # 设定阈值 K
+        K = n_line_head * int(ftr_num_str) * filter_num_ratio
+        print('K:', K)
+        # 删除满足条件的组
+        filtered_groups = count_df[count_df.gt(K)].index
+        print(filtered_groups)
+        df_part1_1 = df_part1_1[~df_part1_1['CUSTOMER_ID'].isin(filtered_groups)]
+        print('after filter 0/null df_part1_1.shape:', df_part1_1.shape)
+
+    df_y_0 = df_y[df_y['Y'] == 0]
+    df_y_1 = df_y[df_y['Y'] == 1]
+    df_part1_1['CUSTOMER_ID_TMP'] = df_part1_1['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
+    df_y_0['CUSTOMER_ID_TMP'] = df_y_0['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
+    df_y_1['CUSTOMER_ID_TMP'] = df_y_1['CUSTOMER_ID'].str.replace('_.*', '', regex=True)
+    df_part1_1_1 = df_part1_1[df_part1_1['CUSTOMER_ID_TMP'].isin(df_y_1['CUSTOMER_ID_TMP'])]
+    print('after filter y df_part1_1_1.shape:', df_part1_1_1.shape)
+    df_part1_1_0 = df_part1_1[df_part1_1['CUSTOMER_ID_TMP'].isin(df_y_0['CUSTOMER_ID_TMP'])]
+    df_part1_1_0['Y'] = 0
+    print('after filter y df_part1_1_0.shape:', df_part1_1_0.shape)
+    print('df_part1_1_0.head:', df_part1_1_0.iloc[:2, :3])
+    df_part1_1_1.drop(columns='CUSTOMER_ID_TMP', inplace=True)
+    df_part1_1_0.drop(columns='CUSTOMER_ID_TMP', inplace=True)
+    print('after drop CUSTOMER_ID_TMP df_part1_1_1.shape:', df_part1_1_1.shape)
+    print('after drop CUSTOMER_ID_TMP df_part1_1_0.shape:', df_part1_1_0.shape)
+    df_test_mix = pd.concat([df_part1_1_1, df_part1_1_0])
+
+    select_cols = [None] * top_ftr_num
+    kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
+        top_ftr_num) + '_test_mix.npy'
+    df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_mix, usecols, select_cols, top_ftr_num,
+                                                                     kind_to_fc_parameters_file_path)
+    print('select_cols:', select_cols)
+    if (select_cols[top_ftr_num - 1] == None):
+        print('top ftr can not be selected, maybe data is less.')
+        os.remove(kind_to_fc_parameters_file_path)
+        print(f"so file '{kind_to_fc_parameters_file_path}' is removed.")
+
+    return
+
 if __name__ == '__main__':
     # train_occur_for_report()
     # train_occur_for_predict()
@@ -10805,4 +11278,5 @@ if __name__ == '__main__':
     # multiple_hypothesis_testing_optuna()
     # multiple_hypothesis_testing_y_optuna()
     # multiple_hypothesis_testing_y_augdata_optuna()
-    multiple_hypothesis_testing_y_augdata_cluster_optuna()
+    # multiple_hypothesis_testing_y_augdata_cluster_optuna()
+    analysis_relabeldata()
