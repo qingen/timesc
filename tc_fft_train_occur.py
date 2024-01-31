@@ -11243,11 +11243,27 @@ def analysis_relabeldata():
     df_part1_1_0.drop(columns='CUSTOMER_ID_TMP', inplace=True)
     print('after drop CUSTOMER_ID_TMP df_part1_1_1.shape:', df_part1_1_1.shape)
     print('after drop CUSTOMER_ID_TMP df_part1_1_0.shape:', df_part1_1_0.shape)
+
+    df_part1_0 = df_part1_0.groupby(['CUSTOMER_ID']).apply(lambda x: x.sort_values(["RDATE"], ascending=True)). \
+        reset_index(drop=True).groupby(['CUSTOMER_ID']).tail(n_line_head)
+    print('df_part1_0.shape:', df_part1_0.shape)
+
+    if filter:
+        # 按照 group 列进行分组，统计每个分组中所有列元素为 0 或 null 的个数的总和
+        count_df = df_part1_0.groupby('CUSTOMER_ID').apply(
+            lambda x: (x.iloc[:, 3:] == 0).sum() + x.iloc[:, 3:].isnull().sum()).sum(axis=1)
+        # 删除满足条件的组
+        filtered_groups = count_df[count_df.gt(K)].index
+        print(filtered_groups)
+        df_part1_0 = df_part1_0[~df_part1_0['CUSTOMER_ID'].isin(filtered_groups)]
+        print('after filter 0/null df_part1_0.shape:', df_part1_0.shape)
+
     df_test_mix = pd.concat([df_part1_1_1, df_part1_1_0])
+
     if 0:
         select_cols = [None] * top_ftr_num
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
-            top_ftr_num) + '_test_mix_2.npy'
+            top_ftr_num) + '_bad1_2_allyear.npy'
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_mix, usecols, select_cols, top_ftr_num,
                                                                          kind_to_fc_parameters_file_path)
         print('select_cols:', select_cols)
@@ -11256,20 +11272,56 @@ def analysis_relabeldata():
             os.remove(kind_to_fc_parameters_file_path)
             print(f"so file '{kind_to_fc_parameters_file_path}' is removed.")
 
-    start = 20160101
-    step = 10000
+
+    step = 30000
     for i in range(7):
+        start = 20160101
         select_cols = [None] * top_ftr_num
-        start += i*step
+        start += i * 10000
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
-            top_ftr_num) + '_test_mix_'+str(start)+'_'+str(step)+'.npy'
+            top_ftr_num) + '_bad1_2_'+str(start)+'_'+str(step)+'.npy'
         df_tmp = df_test_mix.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= start)
         df_tmp = df_tmp.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < (start+step))
+        if start+step > 20230101:
+            break
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_tmp, usecols, select_cols, top_ftr_num,
                                                                          kind_to_fc_parameters_file_path)
         print("{} select_cols : {}".format(start, select_cols))
 
+
+    if 0:
+        df_test_mix = pd.concat([df_part1_1_1, df_part1_0])
+        select_cols = [None] * top_ftr_num
+        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
+            top_ftr_num) + '_bad1_good_allyear.npy'
+        df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_mix, usecols, select_cols, top_ftr_num,
+                                                                         kind_to_fc_parameters_file_path)
+        print('select_cols:', select_cols)
+        if (select_cols[top_ftr_num - 1] == None):
+            print('top ftr can not be selected, maybe data is less.')
+            os.remove(kind_to_fc_parameters_file_path)
+            print(f"so file '{kind_to_fc_parameters_file_path}' is removed.")
+
+    if 0:
+        df_test_mix = pd.concat([df_part1_1_1, df_part1_0])
+        step = 10000
+        for i in range(7):
+            start = 20160101
+            select_cols = [None] * top_ftr_num
+            start += i * 10000
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
+                top_ftr_num) + '_bad1_good_' + str(start) + '_' + str(step) + '.npy'
+            df_tmp = df_test_mix.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= start)
+            df_tmp = df_tmp.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < (start + step))
+            if start + step > 20230101:
+                break
+            df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_tmp, usecols, select_cols, top_ftr_num,
+                                                                             kind_to_fc_parameters_file_path)
+            print("{} select_cols : {}".format(start, select_cols))
     return
+
+
+
 
 if __name__ == '__main__':
     # train_occur_for_report()
