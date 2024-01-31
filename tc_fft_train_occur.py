@@ -10980,7 +10980,7 @@ def analysis_relabeldata():
     df_credit = pd.read_csv("./data/0825_train/credit/202310241019.csv", header=0, usecols=credit_usecols, sep=',',
                             encoding='gbk')
     y_usecols = ['CUSTOMER_ID', 'Y', ]
-    df_y = pd.read_csv("./data/0825_train/y/2023_9.csv", header=0, usecols=y_usecols, sep=',', encoding='gbk')
+    df_y = pd.read_csv("./data/0825_train/y/2023_9_2.csv", header=0, usecols=y_usecols, sep=',', encoding='gbk')
     print('df_y head:', df_y.head(5))
 
     df_16_18 = pd.concat([df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4])
@@ -11141,8 +11141,8 @@ def analysis_relabeldata():
     df_all[col] = df_all[col].astype(float)
 
     ######### ftr
-    n_line_tail = 96  # 32 64 128
-    n_line_head = 96  # == tail
+    n_line_tail = 32  # 32 64 128
+    n_line_head = 32  # == tail
     step = 5
     date_str = datetime(2024, 1, 30).strftime("%Y%m%d")
     ftr_num_str = '128'
@@ -11244,17 +11244,30 @@ def analysis_relabeldata():
     print('after drop CUSTOMER_ID_TMP df_part1_1_1.shape:', df_part1_1_1.shape)
     print('after drop CUSTOMER_ID_TMP df_part1_1_0.shape:', df_part1_1_0.shape)
     df_test_mix = pd.concat([df_part1_1_1, df_part1_1_0])
+    if 0:
+        select_cols = [None] * top_ftr_num
+        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
+            top_ftr_num) + '_test_mix_2.npy'
+        df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_mix, usecols, select_cols, top_ftr_num,
+                                                                         kind_to_fc_parameters_file_path)
+        print('select_cols:', select_cols)
+        if (select_cols[top_ftr_num - 1] == None):
+            print('top ftr can not be selected, maybe data is less.')
+            os.remove(kind_to_fc_parameters_file_path)
+            print(f"so file '{kind_to_fc_parameters_file_path}' is removed.")
 
-    select_cols = [None] * top_ftr_num
-    kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
-        top_ftr_num) + '_test_mix.npy'
-    df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_mix, usecols, select_cols, top_ftr_num,
-                                                                     kind_to_fc_parameters_file_path)
-    print('select_cols:', select_cols)
-    if (select_cols[top_ftr_num - 1] == None):
-        print('top ftr can not be selected, maybe data is less.')
-        os.remove(kind_to_fc_parameters_file_path)
-        print(f"so file '{kind_to_fc_parameters_file_path}' is removed.")
+    start = 20160101
+    step = 10000
+    for i in range(7):
+        select_cols = [None] * top_ftr_num
+        start += i*step
+        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
+            top_ftr_num) + '_test_mix_'+str(start)+'_'+str(step)+'.npy'
+        df_tmp = df_test_mix.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= start)
+        df_tmp = df_tmp.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < (start+step))
+        df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_tmp, usecols, select_cols, top_ftr_num,
+                                                                         kind_to_fc_parameters_file_path)
+        print("{} select_cols : {}".format(start, select_cols))
 
     return
 
