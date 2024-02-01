@@ -11259,7 +11259,6 @@ def analysis_relabeldata():
         print('after filter 0/null df_part1_0.shape:', df_part1_0.shape)
 
     df_test_mix = pd.concat([df_part1_1_1, df_part1_1_0])
-
     if 0:
         select_cols = [None] * top_ftr_num
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
@@ -11272,25 +11271,31 @@ def analysis_relabeldata():
             os.remove(kind_to_fc_parameters_file_path)
             print(f"so file '{kind_to_fc_parameters_file_path}' is removed.")
 
-
-    step = 30000
-    for i in range(7):
-        start = 20160101
-        select_cols = [None] * top_ftr_num
-        start += i * 10000
-        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
-            top_ftr_num) + '_bad1_2_'+str(start)+'_'+str(step)+'.npy'
-        df_tmp = df_test_mix.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= start)
-        df_tmp = df_tmp.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < (start+step))
-        if start+step > 20230101:
-            break
-        df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_tmp, usecols, select_cols, top_ftr_num,
-                                                                         kind_to_fc_parameters_file_path)
-        print("{} select_cols : {}".format(start, select_cols))
-
-
     if 0:
-        df_test_mix = pd.concat([df_part1_1_1, df_part1_0])
+        step = 10000
+        for i in range(7):
+            start = 20160101
+            select_cols = [None] * top_ftr_num
+            start += i * 10000
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
+                top_ftr_num) + '_bad1_2_'+str(start)+'_'+str(step)+'.npy'
+            df_tmp = df_test_mix.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= start)
+            df_tmp = df_tmp.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < (start+step))
+            if start+step > 20230101:
+                break
+            df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_tmp, usecols, select_cols, top_ftr_num,
+                                                                             kind_to_fc_parameters_file_path)
+            print("{} select_cols : {}".format(start, select_cols))
+
+    train_0_num_sample = 2000
+    selected_groups = df_part1_0['CUSTOMER_ID'].drop_duplicates().sample(n=train_0_num_sample, random_state=int(
+        train_0_num_sample + n_line_head))
+    # 获取每个选中组的所有样本
+    train_0_selected = df_part1_0.groupby('CUSTOMER_ID').apply(
+        lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
+    train_0_selected = train_0_selected.dropna(subset=['Y'])
+    df_test_mix = pd.concat([df_part1_1_1, train_0_selected])
+    if 1:
         select_cols = [None] * top_ftr_num
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
             top_ftr_num) + '_bad1_good_allyear.npy'
@@ -11302,8 +11307,7 @@ def analysis_relabeldata():
             os.remove(kind_to_fc_parameters_file_path)
             print(f"so file '{kind_to_fc_parameters_file_path}' is removed.")
 
-    if 0:
-        df_test_mix = pd.concat([df_part1_1_1, df_part1_0])
+    if 1:
         step = 10000
         for i in range(7):
             start = 20160101
