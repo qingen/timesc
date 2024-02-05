@@ -11287,7 +11287,7 @@ def analysis_relabeldata():
                                                                              kind_to_fc_parameters_file_path)
             print("{} select_cols : {}".format(start, select_cols))
 
-    train_0_num_sample = 2000
+    train_0_num_sample = 10000
     selected_groups = df_part1_0['CUSTOMER_ID'].drop_duplicates().sample(n=train_0_num_sample, random_state=int(
         train_0_num_sample + n_line_head))
     # 获取每个选中组的所有样本
@@ -11295,7 +11295,7 @@ def analysis_relabeldata():
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     train_0_selected = train_0_selected.dropna(subset=['Y'])
     df_test_mix = pd.concat([df_part1_1_1, train_0_selected])
-    if 1:
+    if 0:
         select_cols = [None] * top_ftr_num
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
             top_ftr_num) + '_bad1_good_allyear.npy'
@@ -11310,7 +11310,7 @@ def analysis_relabeldata():
     if 1:
         step = 10000
         for i in range(7):
-            start = 20160101
+            start = 20170101
             select_cols = [None] * top_ftr_num
             start += i * 10000
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
