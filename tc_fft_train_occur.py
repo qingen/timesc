@@ -11498,7 +11498,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     n_line_tail = 96  # 32 64 128
     n_line_head = 96  # == tail
     step = 5
-    date_str = datetime(2024, 1, 20).strftime("%Y%m%d")
+    date_str = datetime(2024, 2, 20).strftime("%Y%m%d")
     ftr_num_str = '128'
     filter_num_ratio = 1 / 5
     filter = True
@@ -11999,7 +11999,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
         params = {
             "max_depth": trial.suggest_categorical("max_depth", [3, 4, 5]),
             "num_leaves": trial.suggest_categorical("num_leaves", [3, 4, 5, 6, 7,]), #  12, 13, 14, 15, 28, 29, 30, 31
-            "class_weight": trial.suggest_categorical("class_weight", [None, "balanced"]),
+            "class_weight": trial.suggest_categorical("class_weight", [0.1, 0.9, "balanced"]), # None
             #"boosting_type": trial.suggest_categorical("boosting_type", ["gbdt", "dart", "goss", "rf"]),
             "reg_lambda": trial.suggest_float("reg_lambda", 0.01, 1000.0, log=True),
             "reg_alpha": trial.suggest_float("reg_alpha", 0.01, 1000.0, log=True),
