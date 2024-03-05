@@ -10922,38 +10922,22 @@ def analysis_relabeldata():
               'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
               'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180',
               'UAR_CHA_7']  # 18 cols 1/8
-    df23 = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, usecols=usecols, sep=',',
-                       encoding='gbk')
-    df22_4 = pd.read_csv("./data/0825_train/occur/2022_10_12_202308250913.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df22_3 = pd.read_csv("./data/0825_train/occur/2022_7_10_202308250922.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df22_2 = pd.read_csv("./data/0825_train/occur/2022_4_7_202308250927.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df22_1 = pd.read_csv("./data/0825_train/occur/2022_1_4_202308250931.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df21_4 = pd.read_csv("./data/0825_train/occur/2021_10_12_202308250937.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df21_3 = pd.read_csv("./data/0825_train/occur/2021_7_10_202308251006.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df21_2 = pd.read_csv("./data/0825_train/occur/2021_4_7_202308251012.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df21_1 = pd.read_csv("./data/0825_train/occur/2021_1_4_202308251017.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df20_4 = pd.read_csv("./data/0825_train/occur/2020_10_12_202308251023.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df20_3 = pd.read_csv("./data/0825_train/occur/2020_7_10_202308251033.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df20_2 = pd.read_csv("./data/0825_train/occur/2020_4_7_202308251037.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df20_1 = pd.read_csv("./data/0825_train/occur/2020_1_4_202308251042.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df19_4 = pd.read_csv("./data/0825_train/occur/2019_10_12_202308251047.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df19_3 = pd.read_csv("./data/0825_train/occur/2019_7_10_202308251052.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
-    df19_2 = pd.read_csv("./data/0825_train/occur/2019_4_7_202308251057.csv", header=0, usecols=usecols, sep=',',
-                         encoding='gbk')
+    df23 = pd.read_csv("./data/0825_train/occur/2023_202308251939.csv", header=0, usecols=usecols, sep=',', encoding='gbk')
+    df22_4 = pd.read_csv("./data/0825_train/occur/2022_10_12_202308250913.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df22_3 = pd.read_csv("./data/0825_train/occur/2022_7_10_202308250922.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df22_2 = pd.read_csv("./data/0825_train/occur/2022_4_7_202308250927.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df22_1 = pd.read_csv("./data/0825_train/occur/2022_1_4_202308250931.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df21_4 = pd.read_csv("./data/0825_train/occur/2021_10_12_202308250937.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df21_3 = pd.read_csv("./data/0825_train/occur/2021_7_10_202308251006.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df21_2 = pd.read_csv("./data/0825_train/occur/2021_4_7_202308251012.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df21_1 = pd.read_csv("./data/0825_train/occur/2021_1_4_202308251017.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df20_4 = pd.read_csv("./data/0825_train/occur/2020_10_12_202308251023.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df20_3 = pd.read_csv("./data/0825_train/occur/2020_7_10_202308251033.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df20_2 = pd.read_csv("./data/0825_train/occur/2020_4_7_202308251037.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df20_1 = pd.read_csv("./data/0825_train/occur/2020_1_4_202308251042.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df19_4 = pd.read_csv("./data/0825_train/occur/2019_10_12_202308251047.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df19_3 = pd.read_csv("./data/0825_train/occur/2019_7_10_202308251052.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
+    df19_2 = pd.read_csv("./data/0825_train/occur/2019_4_7_202308251057.csv", header=0, usecols=usecols, sep=',',encoding='gbk')
     df19_1 = pd.read_csv("./data/0825_train/occur/2019_1_4_202308251238.csv", header=0, usecols=usecols, sep=',',
                          encoding='gbk')
     df18_4 = pd.read_csv("./data/0825_train/occur/2018_10_12_202308251253.csv", header=0, usecols=usecols, sep=',',
@@ -11144,24 +11128,18 @@ def analysis_relabeldata():
     n_line_tail = 32  # 32 64 128
     n_line_head = 32  # == tail
     step = 5
-    date_str = datetime(2024, 1, 30).strftime("%Y%m%d")
+    date_str = datetime(2024, 2, 29).strftime("%Y%m%d")
     ftr_num_str = '128'
     filter_num_ratio = 1 / 5
+    generate = False
     filter = True
+    train_0_num_sample = 400
     ########## model
     top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
-    cluster_model_path = './model/cluster8_' + date_str + '_step' + str(step) + '_ftr' + str(ftr_num_str) + '_ts' + str(
-        n_line_tail) + '/'
-    cluster_model_file = 'repr-cluster-train-8.pkl'
-    cluster_less_train_num = 200  # 200
-    cluster_less_val_num = 100  # 100
-    cluster_less_test_num = 50  # 50
     type = 'occur_addcredit_step' + str(step) + '_filter' + str(filter).lower() + '_cluster_ftr' + str(
-        ftr_num_str) + '_ts' + str(n_line_tail)
+        ftr_num_str) + '_ts' + str(n_line_tail) + '_good' + str(train_0_num_sample)
     # 'less_' + str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_'
     ######## optuna
-    n_trials = 1024
-    max_depth = 6
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
@@ -11210,7 +11188,8 @@ def analysis_relabeldata():
         return new_df
 
     # 将数据按照 CUSTOMER_ID 列的值分组，并应用函数生成新的组
-    df_part1_1 = df_part1_1.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
+    if generate:
+        df_part1_1 = df_part1_1.groupby('CUSTOMER_ID').apply(generate_new_groups).reset_index(drop=True)
     # 输出结果
     print('df_part1_1.head:', df_part1_1.iloc[:2, :5])
     print('df_part1_1.shape:', df_part1_1.shape)
@@ -11259,7 +11238,7 @@ def analysis_relabeldata():
         print('after filter 0/null df_part1_0.shape:', df_part1_0.shape)
 
     df_test_mix = pd.concat([df_part1_1_1, df_part1_1_0])
-    if 0:
+    if 1:
         select_cols = [None] * top_ftr_num
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
             top_ftr_num) + '_bad1_2_allyear.npy'
@@ -11287,7 +11266,6 @@ def analysis_relabeldata():
                                                                              kind_to_fc_parameters_file_path)
             print("{} select_cols : {}".format(start, select_cols))
 
-    train_0_num_sample = 10000
     selected_groups = df_part1_0['CUSTOMER_ID'].drop_duplicates().sample(n=train_0_num_sample, random_state=int(
         train_0_num_sample + n_line_head))
     # 获取每个选中组的所有样本
@@ -11295,7 +11273,7 @@ def analysis_relabeldata():
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     train_0_selected = train_0_selected.dropna(subset=['Y'])
     df_test_mix = pd.concat([df_part1_1_1, train_0_selected])
-    if 0:
+    if 1:
         select_cols = [None] * top_ftr_num
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
             top_ftr_num) + '_bad1_good_allyear.npy'
@@ -11307,7 +11285,7 @@ def analysis_relabeldata():
             os.remove(kind_to_fc_parameters_file_path)
             print(f"so file '{kind_to_fc_parameters_file_path}' is removed.")
 
-    if 1:
+    if 0:
         step = 10000
         for i in range(7):
             start = 20170101
@@ -12249,5 +12227,5 @@ if __name__ == '__main__':
     # multiple_hypothesis_testing_y_optuna()
     # multiple_hypothesis_testing_y_augdata_optuna()
     # multiple_hypothesis_testing_y_augdata_cluster_optuna()
-    # analysis_relabeldata()
-    multiple_hypothesis_testing_y_cluster_multilabel_optuna()
+    analysis_relabeldata()
+    # multiple_hypothesis_testing_y_cluster_multilabel_optuna()
