@@ -11125,17 +11125,17 @@ def analysis_relabeldata():
     df_all[col] = df_all[col].astype(float)
 
     ######### ftr
-    n_line_tail = 32  # 32 64 128
-    n_line_head = 32  # == tail
+    n_line_tail = 96  # 32 64 128
+    n_line_head = 96  # == tail
     step = 5
     date_str = datetime(2024, 2, 29).strftime("%Y%m%d")
     ftr_num_str = '128'
     filter_num_ratio = 1 / 5
     generate = False
-    filter = True
-    train_0_num_sample = 400
+    filter = False
+    train_0_num_sample = 1000
     ########## model
-    top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024
+    top_ftr_num = 1024  # 2 4 8 16 32 64 128 256 512 1024
     type = 'occur_addcredit_step' + str(step) + '_filter' + str(filter).lower() + '_cluster_ftr' + str(
         ftr_num_str) + '_ts' + str(n_line_tail) + '_good' + str(train_0_num_sample)
     # 'less_' + str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_'
@@ -11300,6 +11300,11 @@ def analysis_relabeldata():
             df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_tmp, usecols, select_cols, top_ftr_num,
                                                                              kind_to_fc_parameters_file_path)
             print("{} select_cols : {}".format(start, select_cols))
+
+    df = pd.concat([df_part1_1_1, df_part1_1_0, train_0_selected])
+    sample_result = './result/' + date_str + '_' + type + '_sample.csv'
+    df.to_csv(sample_result, index=False)
+    print('sample_result dump success')
     return
 
 def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
