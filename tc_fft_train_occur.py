@@ -11238,11 +11238,12 @@ def analysis_relabeldata():
         print('after filter 0/null df_part1_0.shape:', df_part1_0.shape)
 
     df_test_mix = pd.concat([df_part1_1_1, df_part1_1_0])
+    X_a = pd.DataFrame()
     if 1:
         select_cols = [None] * top_ftr_num
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
             top_ftr_num) + '_bad1_2_allyear.npy'
-        df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_mix, usecols, select_cols, top_ftr_num,
+        X_a = benjamini_yekutieli_p_value_get_ftr(df_test_mix, usecols, select_cols, top_ftr_num,
                                                                          kind_to_fc_parameters_file_path)
         print('select_cols:', select_cols)
         if (select_cols[top_ftr_num - 1] == None):
@@ -11273,11 +11274,12 @@ def analysis_relabeldata():
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     train_0_selected = train_0_selected.dropna(subset=['Y'])
     df_test_mix = pd.concat([df_part1_1_1, train_0_selected])
+    X_b = pd.DataFrame()
     if 1:
         select_cols = [None] * top_ftr_num
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(
             top_ftr_num) + '_bad1_good_allyear.npy'
-        df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_mix, usecols, select_cols, top_ftr_num,
+        X_b = benjamini_yekutieli_p_value_get_ftr(df_test_mix, usecols, select_cols, top_ftr_num,
                                                                          kind_to_fc_parameters_file_path)
         print('select_cols:', select_cols)
         if (select_cols[top_ftr_num - 1] == None):
@@ -11305,6 +11307,11 @@ def analysis_relabeldata():
     sample_result = './result/' + date_str + '_' + type + '_sample.csv'
     df.to_csv(sample_result, index=False)
     print('sample_result dump success')
+
+    df_merge = pd.concat([X_a, X_b], axis=0, join='inner')
+    merge_result = './result/' + date_str + '_' + type + '_result.csv'
+    df_merge.to_csv(merge_result, index=False)
+    print('merge_result dump success')
     return
 
 def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
