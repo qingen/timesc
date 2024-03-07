@@ -10964,7 +10964,8 @@ def analysis_relabeldata():
     df_credit = pd.read_csv("./data/0825_train/credit/202310241019.csv", header=0, usecols=credit_usecols, sep=',',
                             encoding='gbk')
     y_usecols = ['CUSTOMER_ID', 'Y', ]
-    df_y = pd.read_csv("./data/0825_train/y/2023_9_2.csv", header=0, usecols=y_usecols, sep=',', encoding='gbk')
+    #df_y = pd.read_csv("./data/0825_train/y/2023_9_2.csv", header=0, usecols=y_usecols, sep=',', encoding='gbk')
+    df_y = pd.read_csv("./data/0825_train/y/2023_9.csv", header=0, usecols=y_usecols, sep=',', encoding='gbk')
     print('df_y head:', df_y.head(5))
 
     df_16_18 = pd.concat([df16_1, df16_2, df17_1, df17_2, df17_3, df17_4, df18_1, df18_2, df18_3, df18_4])
@@ -11125,19 +11126,21 @@ def analysis_relabeldata():
     df_all[col] = df_all[col].astype(float)
 
     ######### ftr
-    n_line_tail = 96  # 32 64 128
-    n_line_head = 96  # == tail
+    n_line_tail = 32  # 32 64 128
+    n_line_head = 32  # == tail
     step = 5
     date_str = datetime(2024, 2, 29).strftime("%Y%m%d")
     ftr_num_str = '128'
     filter_num_ratio = 1 / 5
-    generate = False
+    generate = True
     filter = False
     train_0_num_sample = 1000
+    random = 7
     ########## model
-    top_ftr_num = 1024  # 2 4 8 16 32 64 128 256 512 1024
-    type = 'occur_addcredit_step' + str(step) + '_filter' + str(filter).lower() + '_cluster_ftr' + str(
-        ftr_num_str) + '_ts' + str(n_line_tail) + '_good' + str(train_0_num_sample)
+    top_ftr_num = 2048  # 2 4 8 16 32 64 128 256 512 1024
+    type = 'occur_generate' + str(generate) + '_filter' + str(filter).lower() + '_ftr' + str(
+        ftr_num_str) + '_ts' + str(n_line_tail) + '_good' + str(train_0_num_sample)+ '_top' + str(
+        top_ftr_num) + '_random' + str(random)
     # 'less_' + str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_'
     ######## optuna
 
@@ -11310,7 +11313,11 @@ def analysis_relabeldata():
 
     df_merge = pd.concat([X_a, X_b], axis=0, join='inner')
     merge_result = './result/' + date_str + '_' + type + '_result.csv'
+    result_a = './result/' + date_str + '_' + type + '_result_a.csv'
+    result_b = './result/' + date_str + '_' + type + '_result_b.csv'
     df_merge.to_csv(merge_result, index=False)
+    X_a.to_csv(result_a, index=False)
+    X_b.to_csv(result_b, index=False)
     print('merge_result dump success')
     return
 
@@ -11989,7 +11996,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
         params = {
             "max_depth": trial.suggest_categorical("max_depth", [3, 4, 5]),
             "num_leaves": trial.suggest_categorical("num_leaves", [3, 4, 5, 6, 7,]), #  12, 13, 14, 15, 28, 29, 30, 31
-            "class_weight": trial.suggest_categorical("class_weight", [0.1, 0.9, "balanced"]), # None
+            "class_weight": trial.suggest_categorical("class_weight", [None, "balanced"]), # None
             #"boosting_type": trial.suggest_categorical("boosting_type", ["gbdt", "dart", "goss", "rf"]),
             "reg_lambda": trial.suggest_float("reg_lambda", 0.01, 1000.0, log=True),
             "reg_alpha": trial.suggest_float("reg_alpha", 0.01, 1000.0, log=True),
