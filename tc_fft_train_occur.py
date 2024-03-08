@@ -11132,13 +11132,13 @@ def analysis_relabeldata():
     date_str = datetime(2024, 2, 29).strftime("%Y%m%d")
     ftr_num_str = '128'
     filter_num_ratio = 1 / 5
-    generate = True
+    generate = False
     filter = False
-    train_0_num_sample = 1000
+    train_0_num_sample = 2000
     random = 7
     ########## model
     top_ftr_num = 2048  # 2 4 8 16 32 64 128 256 512 1024
-    type = 'occur_generate' + str(generate) + '_filter' + str(filter).lower() + '_ftr' + str(
+    type = 'occur_generate' + str(generate) + '_filter' + str(filter) + '_ftr' + str(
         ftr_num_str) + '_ts' + str(n_line_tail) + '_good' + str(train_0_num_sample)+ '_top' + str(
         top_ftr_num) + '_random' + str(random)
     # 'less_' + str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_'
@@ -11147,15 +11147,15 @@ def analysis_relabeldata():
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train good
 
-    df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)  # 20230101
-    df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230701)  # for test
+    #df_part2 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20230101)  # 20230101
+    #df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230701)  # for test
 
     df_part3 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20160101)  # 20160101
     df_part3 = df_part3.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) < 20230101)  # for train bad
     del df_all
 
     df_part1 = df_part1.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
-    df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
+    #df_part2 = df_part2.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
     df_part3 = df_part3.groupby(['CUSTOMER_ID']).filter(lambda x: len(x) >= n_line_tail)
     ###################### for train valid 8:2
     df_part1_0 = df_part1[df_part1['Y'] == 0]
