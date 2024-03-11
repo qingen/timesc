@@ -10960,9 +10960,8 @@ def analysis_relabeldata():
                          encoding='gbk')
     df16_1 = pd.read_csv("./data/0825_train/occur/2016_1_7_202308251331.csv", header=0, usecols=usecols, sep=',',
                          encoding='gbk')
-    credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30', ]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
-    df_credit = pd.read_csv("./data/0825_train/credit/202310241019.csv", header=0, usecols=credit_usecols, sep=',',
-                            encoding='gbk')
+    #credit_usecols = ['CUSTOMER_ID', 'RDATE', 'ICA_30', ]  # ICA_30,PCA_30,ZCA_30  'PCA_30', 'ZCA_30'
+    #df_credit = pd.read_csv("./data/0825_train/credit/202310241019.csv", header=0, usecols=credit_usecols, sep=',',encoding='gbk')
     y_usecols = ['CUSTOMER_ID', 'Y', ]
     #df_y = pd.read_csv("./data/0825_train/y/2023_9_2.csv", header=0, usecols=y_usecols, sep=',', encoding='gbk')
     df_y = pd.read_csv("./data/0825_train/y/2023_9.csv", header=0, usecols=y_usecols, sep=',', encoding='gbk')
@@ -10983,11 +10982,11 @@ def analysis_relabeldata():
     # df_all = pd.concat([df_19_20, df_21_23])
     print('df_all.shape:', df_all.shape)
     # merge credit
-    df_all = pd.merge(df_all, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
-    print('after merge credit df_all.shape:', df_all.shape)
+    # df_all = pd.merge(df_all, df_credit, on=['CUSTOMER_ID', 'RDATE'], how='left')
+    # print('after merge credit df_all.shape:', df_all.shape)
     # df_all = df_all.astype(float)
 
-    del df_16_18, df_19_20, df_21_23, df_credit
+    del df_16_18, df_19_20, df_21_23, # df_credit
     # del df_19_20, df_21_23
 
     current_time = datetime.now()
@@ -11091,7 +11090,7 @@ def analysis_relabeldata():
            'LRR_CHA_30', 'LRR_CHA_60', 'LRR_CHA_7', 'LRR_CHA_90', 'LOAN_REPAY_RATIO', 'LRR_CHA_15', 'LSR_121_AVG_30',
            'LSR_121_AVG_15',
            'LSR_121_AVG_7', 'STOCK_OVER_121_RATIO', 'LSR_121_CHA_180', 'LSR_121_CHA_90', 'LSR_121_CHA_30',
-           'LSR_121_CHA_15', 'LSR_121_CHA_7', 'LSR_121_CHA_60', 'ICA_30']  # 127 + 1
+           'LSR_121_CHA_15', 'LSR_121_CHA_7', 'LSR_121_CHA_60',]  # 127 + 1   'ICA_30'
     cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
             'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
             'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
@@ -11129,7 +11128,7 @@ def analysis_relabeldata():
     n_line_tail = 32  # 32 64 128
     n_line_head = 32  # == tail
     step = 5
-    date_str = datetime(2024, 2, 29).strftime("%Y%m%d")
+    date_str = datetime(2024, 3, 10).strftime("%Y%m%d")
     ftr_num_str = '128'
     filter_num_ratio = 1 / 5
     generate = False
@@ -11276,7 +11275,8 @@ def analysis_relabeldata():
     train_0_selected = df_part1_0.groupby('CUSTOMER_ID').apply(
         lambda x: x if x.name in selected_groups.values else None).reset_index(drop=True)
     train_0_selected = train_0_selected.dropna(subset=['Y'])
-    df_test_mix = pd.concat([df_part1_1_1, train_0_selected])
+    #df_test_mix = pd.concat([df_part1_1_1, train_0_selected])
+    df_test_mix = pd.concat([df_test_mix, train_0_selected])
     X_b = pd.DataFrame()
     if 1:
         select_cols = [None] * top_ftr_num
@@ -12246,5 +12246,5 @@ if __name__ == '__main__':
     # multiple_hypothesis_testing_y_optuna()
     # multiple_hypothesis_testing_y_augdata_optuna()
     # multiple_hypothesis_testing_y_augdata_cluster_optuna()
-    analysis_relabeldata()
-    # multiple_hypothesis_testing_y_cluster_multilabel_optuna()
+    # analysis_relabeldata()
+    multiple_hypothesis_testing_y_cluster_multilabel_optuna()
