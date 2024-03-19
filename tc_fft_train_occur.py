@@ -11492,15 +11492,15 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     df_all[col] = df_all[col].astype(float)
 
     ######### ftr
-    n_line_tail = 96  # 32 64 128
-    n_line_head = 96  # == tail
+    n_line_tail = 32  # 32 64 128
+    n_line_head = 32  # == tail
     step = 5
-    date_str = datetime(2024, 2, 20).strftime("%Y%m%d")
+    date_str = datetime(2024, 3, 20).strftime("%Y%m%d")
     ftr_num_str = '128'
     filter_num_ratio = 1 / 5
     filter = False
     ########## model
-    top_ftr_num = 1024  # 2 4 8 16 32 64 128 256 512 1024
+    top_ftr_num = 4096  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192
     cluster_model_path = './model/cluster8_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-8.pkl'
     cluster_less_train_num = 200    # 200
