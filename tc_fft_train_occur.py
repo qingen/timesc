@@ -11495,21 +11495,21 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     n_line_tail = 32  # 32 64 128
     n_line_head = 32  # == tail
     step = 5
-    date_str = datetime(2024, 3, 20).strftime("%Y%m%d")
+    date_str = datetime(2024, 3, 30).strftime("%Y%m%d")
     ftr_num_str = '128'
     filter_num_ratio = 1 / 5
     filter = False
     ########## model
-    top_ftr_num = 4096  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192
-    cluster_model_path = './model/cluster8_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
-    cluster_model_file = 'repr-cluster-train-8.pkl'
+    top_ftr_num = 16384  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384
+    cluster_model_path = './model/cluster4_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
+    cluster_model_file = 'repr-cluster-train-4.pkl'
     cluster_less_train_num = 200    # 200
     cluster_less_val_num = 100      # 100
     cluster_less_test_num = 50     # 50
     type = 'occur_addcredit_step' + str(step) + '_filter' + str(filter).lower() + '_cluster_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
     ## 'less_' + str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_'
     ######## optuna
-    n_trials = 1024
+    n_trials = 2048
     max_depth = 6
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
