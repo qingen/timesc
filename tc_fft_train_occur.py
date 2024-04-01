@@ -11495,14 +11495,14 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     n_line_tail = 32  # 32 64 128
     n_line_head = 32  # == tail
     step = 5
-    date_str = datetime(2024, 3, 30).strftime("%Y%m%d")
+    date_str = datetime(2024, 4, 19).strftime("%Y%m%d")
     ftr_num_str = '128'
     filter_num_ratio = 1 / 5
     filter = False
     ########## model
-    top_ftr_num = 16384  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384
-    cluster_model_path = './model/cluster4_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
-    cluster_model_file = 'repr-cluster-train-4.pkl'
+    top_ftr_num = 8192  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384
+    cluster_model_path = './model/cluster2_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
+    cluster_model_file = 'repr-cluster-train-2.pkl'
     cluster_less_train_num = 200    # 200
     cluster_less_val_num = 100      # 100
     cluster_less_test_num = 50     # 50
