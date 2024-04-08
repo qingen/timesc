@@ -11500,7 +11500,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     filter_num_ratio = 1 / 5
     filter = False
     ########## model
-    top_ftr_num = 8192  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384
+    top_ftr_num = 4096  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384
     cluster_model_path = './model/cluster2_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-2.pkl'
     cluster_less_train_num = 200    # 200
