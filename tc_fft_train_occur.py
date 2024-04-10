@@ -11509,7 +11509,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     type = 'occur_addcredit_step' + str(step) + '_filter' + str(filter).lower() + '_cluster_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
     ## 'less_' + str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_'
     ######## optuna
-    n_trials = 2048
+    n_trials = 32
     max_depth = 6
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
@@ -12203,11 +12203,14 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
             continue
         X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
         X = pd.concat([X, X_part])
-    X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
-    X.sort_values(by='prob', ascending=False, inplace=True)
-    X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
-    print('get same index, after sort:', X.head(200))
-    print('all rows is:', len(X['customerid']))
+    if X.empty:
+        print('same index: X is empty')
+    else:
+        X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
+        X.sort_values(by='prob', ascending=False, inplace=True)
+        X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
+        print('get same index, after sort:', X.head(200))
+        print('all rows is:', len(X['customerid']))
 
     X = pd.DataFrame()
     for i in range(len(label_list_test)):
@@ -12218,11 +12221,14 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
                 continue
             X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
             X = pd.concat([X, X_part])
-    X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
-    X.sort_values(by='prob', ascending=False, inplace=True)
-    X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
-    print('get top result, after sort:', X.head(200))
-    print('all rows is:', len(X['customerid']))
+    if X.empty:
+        print('top result: X is empty')
+    else:
+        X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
+        X.sort_values(by='prob', ascending=False, inplace=True)
+        X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
+        print('get top result, after sort:', X.head(200))
+        print('all rows is:', len(X['customerid']))
 
 
 if __name__ == '__main__':
