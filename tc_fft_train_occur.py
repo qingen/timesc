@@ -11500,9 +11500,10 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     filter_num_ratio = 1 / 5
     filter = False
     ########## model
-    top_ftr_num = 4096  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384
-    cluster_model_path = './model/cluster2_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
-    cluster_model_file = 'repr-cluster-train-2.pkl'
+    top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384
+    cluster_model_path = './model/cluster4_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
+    cluster_model_file = 'repr-cluster-train-4.pkl'
+    cluster_num = 4
     cluster_less_train_num = 200    # 200
     cluster_less_val_num = 100      # 100
     cluster_less_test_num = 50     # 50
@@ -11894,8 +11895,8 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     print('4 group data:', formatted_time)
     label_list_train = []
     customersid_list_train = []
-    label_list_train_file_path = './model/' + date_str + '_' + type + '_label_list_train.pkl'
-    customersid_list_train_file_path = './model/' + date_str + '_' + type + '_customersid_list_train.pkl'
+    label_list_train_file_path = './model/' + date_str + '_' + type + '_' + str(cluster_num) + '_label_list_train.pkl'
+    customersid_list_train_file_path = './model/' + date_str + '_' + type + '_' + str(cluster_num)  + '_customersid_list_train.pkl'
     if not os.path.exists(label_list_train_file_path):
         tsdataset_list_train, label_list_train, customersid_list_train = ts2vec_cluster_datagroup_model(tsdatasets_train,
                                                                                                         y_train,
@@ -11919,8 +11920,8 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
 
     label_list_val = []
     customersid_list_val = []
-    label_list_val_file_path = './model/' + date_str + '_' + type + '_label_list_val.pkl'
-    customersid_list_val_file_path = './model/' + date_str + '_' + type + '_customersid_list_val.pkl'
+    label_list_val_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num)  + '_label_list_val.pkl'
+    customersid_list_val_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num)  + '_customersid_list_val.pkl'
     if not os.path.exists(label_list_val_file_path):
         tsdataset_list_val, label_list_val, customersid_list_val = ts2vec_cluster_datagroup_model(tsdatasets_val,
                                                                                                   y_val,
@@ -12058,13 +12059,13 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
 
     for i in range(len(label_list_train)):
         select_cols = [None] * top_ftr_num
-        model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(i) + '.pkl'
+        model_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num)  + '_lgm_top' + str(top_ftr_num) + '_' + str(i) + '.pkl'
         if os.path.exists(model_file_path):
-            print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
+            #print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
             #os.remove(model_file_path)
-            #print(f" file '{model_file_path}' is removed.")
+            print(f" file '{model_file_path}' is removed.")
             continue
-        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
+        kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
         print('select_cols:', select_cols)
@@ -12104,12 +12105,12 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
         select_cols = [None] * top_ftr_num
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
+            model_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
             if not os.path.exists(model_file_path):
                 print('model {} not exists, so next it:'.format(model_file_path))
                 continue
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 #print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
@@ -12129,12 +12130,12 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
         select_cols = [None] * top_ftr_num
         df_val_part = df_val[df_val['CUSTOMER_ID'].isin(customersid_list_val[i])]
         for j in range(len(label_list_train)):
-            model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
+            model_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
             if not os.path.exists(model_file_path):
                 print('model {} not exists, so next it:'.format(model_file_path))
                 continue
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_val_' + str(j) + '_' + str(i) + '.csv'
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 #print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
@@ -12148,8 +12149,8 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
 
     label_list_test = []
     customersid_list_test = []
-    label_list_test_file_path = './model/' + date_str + '_' + type + '_label_list_test.pkl'
-    customersid_list_test_file_path = './model/' + date_str + '_' + type + '_customersid_list_test.pkl'
+    label_list_test_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_label_list_test.pkl'
+    customersid_list_test_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_customersid_list_test.pkl'
     if not os.path.exists(label_list_test_file_path):
         tsdataset_list_test, label_list_test, customersid_list_test = ts2vec_cluster_datagroup_model(tsdatasets_test,
                                                                                                      y_test,
@@ -12176,18 +12177,18 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
         df_test_part = df_test[df_test['CUSTOMER_ID'].isin(customersid_list_test[i])]
         for j in range(len(label_list_train)):
             #model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
-            model_file_path = './model/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
+            model_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
             if not os.path.exists(model_file_path):
                 print('model {} not exists, so next it:'.format(model_file_path))
                 continue
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
             #result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
-            result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 #print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
                 #os.remove(result_file_path)
-                print(f" file '{result_file_path}' is removed.")
+                #print(f" file '{result_file_path}' is removed.")
                 print('{} already exists, so no more infer.'.format(result_file_path))
                 continue
             df_test_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
