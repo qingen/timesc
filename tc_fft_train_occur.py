@@ -12198,7 +12198,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     for i in range(len(label_list_test)):
         model_index = i if i < len(label_list_train) else 0  #  models num
         dataset_group_index = i
-        result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_test_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
         if not os.path.exists(result_file_path):
             print('result {} not exists, so next it:'.format(result_file_path))
             continue
@@ -12216,7 +12216,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     X = pd.DataFrame()
     for i in range(len(label_list_test)):
         for j in range(len(label_list_train)):
-            result_file_path = './result/' + date_str + '_' + type + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             if not os.path.exists(result_file_path):
                 print('result {} not exists, so next it:'.format(result_file_path))
                 continue
