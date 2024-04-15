@@ -1110,7 +1110,7 @@ def ensemble_dl_ml_predict():
 from tc_fft_train_occur import benjamini_yekutieli_p_value_get_ftr
 
 def multiple_hypothesis_testing_predict():
-    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    usecol = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
                'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
                'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
                'STOCK_AGE_AVG_365',
@@ -1133,6 +1133,38 @@ def multiple_hypothesis_testing_predict():
                'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
                'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
                'LRR_AVG_90', 'LSR_91_AVG_30']  # 90 cols  1/8  Y ->
+    usecols = ['CUSTOMER_ID', 'Y', 'RDATE', 'XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+               'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+               'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+               'STOCK_AGE_AVG_365',
+               'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+               'LSR_91_AVG_365',
+               'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+               'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+               'STOCK_AGE_AVG_90',
+               'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+               'FREESPANRP_180D_R', 'SDV_REPAY_60',
+               'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+               'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+               'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+               'STOCK_AGE_CHA_RATIO_180',
+               'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+               'LSR_91_AVG_60',
+               'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+               'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+               'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+               'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+               'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+               'LRR_AVG_90', 'LSR_91_AVG_30',
+               'LRR_AVG_60', 'LSR_91_AVG_15', 'LRR_AVG_30', 'LSR_91_AVG_7', 'STOCK_OVER_91_RATIO',
+               'LSR_121_AVG_90', 'FREESPANRP_30D_R', 'JH_60_CNT', 'LSR_91_CHA_30', 'LSR_91_CHA_7', 'LSR_91_CHA_15',
+               'LSR_91_CHA_60',
+               'LSR_91_CHA_180', 'LRR_AVG_15', 'LSR_91_CHA_365', 'LSR_91_CHA_90', 'LRR_AVG_7', 'LSR_121_AVG_60',
+               'LRR_CHA_365', 'LRR_CHA_180',
+               'LRR_CHA_30', 'LRR_CHA_60', 'LRR_CHA_7', 'LRR_CHA_90', 'LOAN_REPAY_RATIO', 'LRR_CHA_15',
+               'LSR_121_AVG_30', 'LSR_121_AVG_15',
+               'LSR_121_AVG_7', 'STOCK_OVER_121_RATIO', 'LSR_121_CHA_180', 'LSR_121_CHA_90', 'LSR_121_CHA_30',
+               'LSR_121_CHA_15', 'LSR_121_CHA_7', 'LSR_121_CHA_60']  # 128 cols 1/5
     #df221 = pd.read_csv("./data/0720_2639/22_1_202307201615.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     #df227 = pd.read_csv("./data/0720_2639/22_7_202307201610.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
     #df23_1 = pd.read_csv("./data/0720_2639/2023_1_5_202308171425.csv", header=0, usecols=usecols,sep=',', encoding='gbk')
@@ -1154,7 +1186,7 @@ def multiple_hypothesis_testing_predict():
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('1 read csv :', formatted_time)
 
-    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+    cols = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
            'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
            'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
            'STOCK_AGE_AVG_365',
@@ -1177,27 +1209,59 @@ def multiple_hypothesis_testing_predict():
            'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
            'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
            'LRR_AVG_90', 'LSR_91_AVG_30', 'ICA_30']  # 90 + 1
-
+    col = ['XSZQ30D_DIFF', 'XSZQ90D_DIFF', 'UAR_AVG_365', 'UAR_AVG_180', 'UAR_AVG_90',
+           'UAR_AVG_7', 'UAR_AVG_15', 'UAR_AVG_30', 'UAR_AVG_60', 'GRP_AVAILAMT_SUM', 'USEAMOUNT_RATIO',
+           'UAR_CHA_365', 'UAR_CHA_15', 'UAR_CHA_30', 'UAR_CHA_60', 'UAR_CHA_90', 'UAR_CHA_180', 'UAR_CHA_7',
+           'STOCK_AGE_AVG_365',
+           'SDV_REPAY_365', 'INV_AVG_365', 'GRP_REPAYCARS180_SUM', 'JH_CCC', 'JH_HGZ', 'JH_JTS', 'LRR_AVG_365',
+           'LSR_91_AVG_365',
+           'STOCK_AGE_AVG_180', 'FREESPANRP_360D_R', 'SDV_REPAY_180', 'XSZQ180D_R', 'JH_SC_R', 'INV_AVG_180',
+           'GRP_REPAYCARS90_SUM', 'GRP_CNT', 'JH_HGZ_R', 'GRP_USEAMT_SUM', 'GRP_REPAYCARS30_SUM',
+           'STOCK_AGE_AVG_90',
+           'LSR_91_AVG_180', 'STOCK_AGE_AVG_60', 'XSZQ90D_R', 'SDV_REPAY_90', 'INV_AVG_90', 'LSR_121_AVG_365',
+           'FREESPANRP_180D_R', 'SDV_REPAY_60',
+           'LRR_AVG_180', 'INV_AVG_60', 'STOCK_AGE_AVG_30', 'JH_180_CNT', 'INV_AVG_30', 'STOCK_AGE_AVG_15',
+           'XSZQ30D_R', 'STOCK_AGE_AVG_7', 'SDV_REPAY_30',
+           'LSR_91_AVG_90', 'STOCK_AGE_CHA_RATIO_7', 'INV_RATIO_90', 'STOCK_AGE_AVG', 'STOCK_AGE_CHA_RATIO_365',
+           'STOCK_AGE_CHA_RATIO_180',
+           'STOCK_AGE_CHA_RATIO_90', 'STOCK_AGE_CHA_RATIO_60', 'STOCK_AGE_CHA_RATIO_30', 'STOCK_AGE_CHA_RATIO_15',
+           'LSR_91_AVG_60',
+           'INV_AVG_15', 'JH_90_CNT', 'INV_AVG_7', 'SDV_REPAY_15', 'INV_RATIO', 'INV_CHA_15', 'INV_CHA_30',
+           'INV_CHA_60', 'INV_CHA_90', 'INV_CHA_180',
+           'INV_CHA_365', 'INV_CHA_7', 'LSR_121_AVG_180', 'FREESPANRP_90D_R', 'REPAY_STD_RATIO_7_180',
+           'SDV_REPAY_7', 'REPAY_STD_RATIO_7_15',
+           'REPAY_STD_RATIO_7_30', 'REPAY_STD_RATIO_7_60', 'REPAY_STD_RATIO_7_90', 'REPAY_STD_RATIO_7_365',
+           'LRR_AVG_90', 'LSR_91_AVG_30',
+           'LRR_AVG_60', 'LSR_91_AVG_15', 'LRR_AVG_30', 'LSR_91_AVG_7', 'STOCK_OVER_91_RATIO',
+           'LSR_121_AVG_90', 'FREESPANRP_30D_R', 'JH_60_CNT', 'LSR_91_CHA_30', 'LSR_91_CHA_7', 'LSR_91_CHA_15',
+           'LSR_91_CHA_60',
+           'LSR_91_CHA_180', 'LRR_AVG_15', 'LSR_91_CHA_365', 'LSR_91_CHA_90', 'LRR_AVG_7', 'LSR_121_AVG_60',
+           'LRR_CHA_365', 'LRR_CHA_180',
+           'LRR_CHA_30', 'LRR_CHA_60', 'LRR_CHA_7', 'LRR_CHA_90', 'LOAN_REPAY_RATIO', 'LRR_CHA_15', 'LSR_121_AVG_30',
+           'LSR_121_AVG_15',
+           'LSR_121_AVG_7', 'STOCK_OVER_121_RATIO', 'LSR_121_CHA_180', 'LSR_121_CHA_90', 'LSR_121_CHA_30',
+           'LSR_121_CHA_15', 'LSR_121_CHA_7', 'LSR_121_CHA_60', 'ICA_30']  # 127 + 1
     df_all[col] = df_all[col].astype(float)
 
     ######### ftr
     n_line_tail = 32  # 32 64 128
     n_line_head = 32  # = tail
     step = 5
-    date_str = datetime(2023, 11, 25).strftime("%Y%m%d")
-    split_date_str = '20230101'
-    ftr_num_str = '91'
-    filter_num_ratio = 1 / 8  # 1/5
+    date_str = datetime(2024, 4, 19).strftime("%Y%m%d")
+    ftr_num_str = '128'
+    filter_num_ratio = 1 / 5  # 1/5
+    filter = False
     ########## model
-    model_num = 4
+    model_num = 3
     top_ftr_num = 128  # 32 64 128
-    cluster_model_path = './model/cluster_' + date_str + '_step' + str(step) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail) + '/'
-    cluster_model_file = 'repr-cluster-train-6.pkl'
+    cluster_model_path = './model/cluster4_' + date_str + '_step' + str(step) + '_ftr' + str(ftr_num_str) + '_ts' + str(
+        n_line_tail) + '/'
+    cluster_model_file = 'repr-cluster-train-4.pkl'
+    cluster_num = 4
     cluster_less_train_num = 200  # 200
     cluster_less_val_num = 100  # 100
     cluster_less_test_num = 50  # 50
-    type = 'occur_addcredit_augmentftr_step' + str(step) + '_reclass_less_' + str(cluster_less_train_num) + '_' + \
-           str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail)
+    type = 'occur_addcredit_step' + str(step) + '_filter' + str(filter).lower() + '_cluster_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
 
     def filter_func(x):
         return x[(x['RDATE'] >= 20230618) & (x['RDATE'] < 20231018)]
@@ -1321,20 +1385,26 @@ def multiple_hypothesis_testing_predict():
                                                                                                     cluster_model_path,
                                                                                                     cluster_model_file,
                                                                                                     20,
-                                                                                              n_line_tail)
+                                                                                                    n_line_tail,
+                                                                                                    'test')
 
     for i in range(len(label_list_all)):
         select_cols = [None] * top_ftr_num
         df_all_part = df_all[df_all['CUSTOMER_ID'].isin(customersid_list_all[i])]
         for j in range(model_num):
-            model_file_path = './model/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_' + str(j) + '.cbm'
-            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_predict_' + str(j) + '_' + str(i) + '.csv'
+            model_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_' + str(j) + '.pkl'
+            if not os.path.exists(model_file_path):
+                print('model {} not exists, so next it:'.format(model_file_path))
+                continue
+            kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
+            result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
-                os.remove(result_file_path)
-                print(f" file '{result_file_path}' is removed.")
+                # print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
+                # os.remove(result_file_path)
+                # print(f" file '{result_file_path}' is removed.")
+                print('{} already exists, so no more infer.'.format(result_file_path))
+                continue
             df_test_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_all_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:, select_cols],
                                     np.array(df_test_ftr_select_notime.loc[:, 'Y']),
@@ -1344,26 +1414,39 @@ def multiple_hypothesis_testing_predict():
     for i in range(len(label_list_all)):
         model_index = i if i < model_num else 0  # 3 models
         dataset_group_index = i
-        result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_predict_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_test_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        if not os.path.exists(result_file_path):
+            print('result {} not exists, so next it:'.format(result_file_path))
+            continue
         X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
         X = pd.concat([X, X_part])
-    X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
-    X.sort_values(by='prob', ascending=False, inplace=True)
-    X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
-    print('get same index, after sort:',X.head(20))
-    print('all rows is:',len(X['customerid']))
+
+    if X.empty:
+        print('same index: X is empty')
+    else:
+        X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
+        X.sort_values(by='prob', ascending=False, inplace=True)
+        X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
+        print('get same index, after sort:', X.head(200))
+        print('all rows is:', len(X['customerid']))
 
     X = pd.DataFrame()
     for i in range(len(label_list_all)):
         for j in range(model_num):
-            result_file_path = './result/' + date_str + '_' + type + '_cbc_top' + str(top_ftr_num) + '_predict_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            if not os.path.exists(result_file_path):
+                print('result {} not exists, so next it:'.format(result_file_path))
+                continue
             X_part = pd.read_csv(result_file_path, header=0, sep=',', encoding='gbk')
             X = pd.concat([X, X_part])
-    X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
-    X.sort_values(by='prob', ascending=False, inplace=True)
-    X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
-    print('get top result, after sort:', X.head(20))
-    print('all rows is:', len(X['customerid']))
+    if X.empty:
+        print('top result: X is empty')
+    else:
+        X['customerid'] = X['customerid'].str.replace('_.*', '', regex=True)
+        X.sort_values(by='prob', ascending=False, inplace=True)
+        X.drop_duplicates(subset=['customerid'], keep='first', inplace=True)
+        print('get top result, after sort:', X.head(200))
+        print('all rows is:', len(X['customerid']))
 
 if __name__ == '__main__':
     # test_for_report()
