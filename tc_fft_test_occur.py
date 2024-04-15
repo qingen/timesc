@@ -1336,27 +1336,36 @@ def multiple_hypothesis_testing_predict():
 
     from paddlets import TSDataset
     from paddlets.analysis import FFT
-    tsdatasets_all = TSDataset.load_from_dataframe(
-        df=df_all,
-        group_id='CUSTOMER_ID',
-        target_cols=col,
-        # known_cov_cols='CUSTOMER_ID',
-        fill_missing_dates=True,
-        fillna_method="zero",
-        static_cov_cols=['Y', 'CUSTOMER_ID'],
-    )
+    tsdataset_list_predict_file_path = './model/' + date_str + '_' + type + '_tsdataset_fft_list_predict.pkl'
+    if not os.path.exists(tsdataset_list_predict_file_path):
+        tsdatasets_all = TSDataset.load_from_dataframe(
+            df=df_all,
+            group_id='CUSTOMER_ID',
+            target_cols=col,
+            # known_cov_cols='CUSTOMER_ID',
+            fill_missing_dates=True,
+            fillna_method="zero",
+            static_cov_cols=['Y', 'CUSTOMER_ID'],
+        )
 
-    fft = FFT(fs=1, half=False)  # _amplitude  half
-    # cwt = CWT(scales=n_line_tail/2)
-    for data in tsdatasets_all:
-        resfft = fft(data)
-        # rescwt = cwt(data)  # coefs 63*24 complex128 x+yj
-        for x in data.columns:
-            # ----------------- fft
-            resfft[x + "_amplitude"].index = data[x].index
-            resfft[x + "_phase"].index = data[x].index
-            data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
-            data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
+        fft = FFT(fs=1, half=False)  # _amplitude  half
+        # cwt = CWT(scales=n_line_tail/2)
+        for data in tsdatasets_all:
+            resfft = fft(data)
+            # rescwt = cwt(data)  # coefs 63*24 complex128 x+yj
+            for x in data.columns:
+                # ----------------- fft
+                resfft[x + "_amplitude"].index = data[x].index
+                resfft[x + "_phase"].index = data[x].index
+                data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
+                data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
+        with open(tsdataset_list_predict_file_path, 'wb') as f:
+                pickle.dump(tsdatasets_test, f)
+        print('tsdatasets_fft_predict dump done.')
+    else:
+        with open(tsdataset_list_predict_file_path, 'rb') as f:
+            tsdatasets_all = pickle.load(f)
+        print('tsdatasets_fft_predict load done.')
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -1373,20 +1382,47 @@ def multiple_hypothesis_testing_predict():
 
     from paddlets.transform import StandardScaler
     ss_scaler = StandardScaler()
-    tsdatasets_all = ss_scaler.fit_transform(tsdatasets_all)
+    tsdataset_list_predict_file_path = './model/' + date_str + '_' + type + '_tsdataset_transform_list_predict.pkl'
+    if not os.path.exists(tsdataset_list_predict_file_path):
+        tsdatasets_all = ss_scaler.fit_transform(tsdatasets_all)
+        with open(tsdataset_list_predict_file_path, 'wb') as f:
+            pickle.dump(tsdatasets_all, f)
+        print('tsdatasets_transform_predict dump done.')
+    else:
+        with open(tsdataset_list_predict_file_path, 'rb') as f:
+            tsdatasets_all = pickle.load(f)
+        print('tsdatasets_transform_predict load done.')
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('4 group data:', formatted_time)
     # cluster_less_train_num
-    tsdataset_list_all, label_list_all, customersid_list_all = ts2vec_cluster_datagroup_model(tsdatasets_all,
+
+    label_list_all = []
+    customersid_list_all = []
+    label_list_predict_file_path = './model/' + date_str + '_' + type + '_' + str(cluster_num) + '_label_list_predict.pkl'
+    customersid_list_predict_file_path = './model/' + date_str + '_' + type + '_' + str(
+        cluster_num) + '_customersid_list_predict.pkl'
+    if not os.path.exists(label_list_predict_file_path):
+        tsdataset_list_all, label_list_all, customersid_list_all = ts2vec_cluster_datagroup_model(tsdatasets_all,
                                                                                                     y_all,
                                                                                                     y_all_customerid,
                                                                                                     cluster_model_path,
                                                                                                     cluster_model_file,
                                                                                                     20,
                                                                                                     n_line_tail,
-                                                                                                    'test')
+                                                                                                    'predict')
+        with open(label_list_predict_file_path, 'wb') as f:
+            pickle.dump(label_list_all, f)
+        with open(customersid_list_predict_file_path, 'wb') as f:
+            pickle.dump(customersid_list_all, f)
+        print('label_list_all and customersid_list_all dump done.')
+    else:
+        with open(label_list_predict_file_path, 'rb') as f:
+            label_list_all = pickle.load(f)
+        with open(customersid_list_predict_file_path, 'rb') as f:
+            customersid_list_all = pickle.load(f)
+        print('label_list_all and customersid_list_all load done.')
 
     for i in range(len(label_list_all)):
         select_cols = [None] * top_ftr_num
@@ -1397,7 +1433,7 @@ def multiple_hypothesis_testing_predict():
                 print('model {} not exists, so next it:'.format(model_file_path))
                 continue
             kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_kind_to_fc_parameters_top' + str(top_ftr_num) + '_' + str(j) + '.npy'
-            result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_predict_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
                 # print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
@@ -1414,7 +1450,7 @@ def multiple_hypothesis_testing_predict():
     for i in range(len(label_list_all)):
         model_index = i if i < model_num else 0  # 3 models
         dataset_group_index = i
-        result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_test_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
+        result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_predict_' + str(model_index) + '_' + str(dataset_group_index) + '.csv'
         if not os.path.exists(result_file_path):
             print('result {} not exists, so next it:'.format(result_file_path))
             continue
@@ -1433,7 +1469,7 @@ def multiple_hypothesis_testing_predict():
     X = pd.DataFrame()
     for i in range(len(label_list_all)):
         for j in range(model_num):
-            result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
+            result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_predict_' + str(j) + '_' + str(i) + '.csv'
             if not os.path.exists(result_file_path):
                 print('result {} not exists, so next it:'.format(result_file_path))
                 continue
