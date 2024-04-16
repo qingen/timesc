@@ -1360,7 +1360,7 @@ def multiple_hypothesis_testing_predict():
                 data.set_column(column=x + "_amplitude", value=resfft[x + "_amplitude"], type='target')
                 data.set_column(column=x + "_phase_fft", value=resfft[x + "_phase"], type='target')
         with open(tsdataset_list_predict_file_path, 'wb') as f:
-                pickle.dump(tsdatasets_test, f)
+                pickle.dump(tsdatasets_all, f)
         print('tsdatasets_fft_predict dump done.')
     else:
         with open(tsdataset_list_predict_file_path, 'rb') as f:
