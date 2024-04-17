@@ -3611,7 +3611,7 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
     i = 0
     while i < len(label_list):
         #if len(label_list[i]) < del_num or (sum(label_list[i]) == 0 or sum(label_list[i]) == len(label_list[i])):
-        if (sum(label_list[i]) == 0 or (sum(label_list[i]) == len(label_list[i]) and datasetype == 'train')):
+        if (datasetype != 'predict' or sum(label_list[i]) == 0 or (sum(label_list[i]) == len(label_list[i]) and datasetype == 'train')):
             print('warning del class ', i, ' less ', del_num, ', elements len: ',len(label_list[i]),' sum: ',sum(label_list[i]))
             for id in customersid_list[i]:
                 print(id)
@@ -11495,12 +11495,12 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     n_line_tail = 32  # 32 64 128
     n_line_head = 32  # == tail
     step = 5
-    date_str = datetime(2024, 4, 19).strftime("%Y%m%d")
+    date_str = datetime(2024, 4, 20).strftime("%Y%m%d")
     ftr_num_str = '128'
     filter_num_ratio = 1 / 5
     filter = False
     ########## model
-    top_ftr_num = 16  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384
+    top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384
     cluster_model_path = './model/cluster4_'+ date_str +'_step' + str(step) + '_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail) +'/'
     cluster_model_file = 'repr-cluster-train-4.pkl'
     cluster_num = 4
@@ -12061,10 +12061,10 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
         select_cols = [None] * top_ftr_num
         model_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num)  + '_lgm_top' + str(top_ftr_num) + '_' + str(i) + '.pkl'
         if os.path.exists(model_file_path):
-            #print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
-            #os.remove(model_file_path)
-            print(f" file '{model_file_path}' is removed.")
-            continue
+            print('{} already exists, so just retrain and overwriting.'.format(model_file_path))
+            os.remove(model_file_path)
+            #print(f" file '{model_file_path}' is removed.")
+            #continue
         kind_to_fc_parameters_file_path = './model/' + date_str + '_' + type+ '_' + str(cluster_num) + '_kind_to_fc_parameters_top'+str(top_ftr_num)+'_' + str(i) + '.npy'
         df_train_part = df_train[df_train['CUSTOMER_ID'].isin(customersid_list_train[i])]
         df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
@@ -12113,11 +12113,11 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
             result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_train_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                #print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
-                #os.remove(result_file_path)
+                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
+                os.remove(result_file_path)
                 #print(f" file '{result_file_path}' is removed.")
-                print('{} already exists, so no more infer.'.format(result_file_path))
-                continue
+                #print('{} already exists, so no more infer.'.format(result_file_path))
+                #continue
             df_train_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_train_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_train_ftr_select_notime.loc[:,select_cols], np.array(df_train_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_train_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -12138,11 +12138,11 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
             result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_val_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                #print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
-                #os.remove(result_file_path)
+                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
+                os.remove(result_file_path)
                 #print(f" file '{result_file_path}' is removed.")
-                print('{} already exists, so no more infer.'.format(result_file_path))
-                continue
+                #print('{} already exists, so no more infer.'.format(result_file_path))
+                #continue
             df_val_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_val_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_val_ftr_select_notime.loc[:,select_cols], np.array(df_val_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_val_ftr_select_notime.loc[:,'CUSTOMER_ID']))
@@ -12186,11 +12186,11 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
             result_file_path = './result/' + date_str + '_' + type+ '_' + str(cluster_num) + '_lgm_top' + str(top_ftr_num) + '_test_' + str(j) + '_' + str(i) + '.csv'
             print(result_file_path)
             if os.path.exists(result_file_path):
-                #print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
-                #os.remove(result_file_path)
+                print('{} already exists, so just remove it and reinfer.'.format(result_file_path))
+                os.remove(result_file_path)
                 #print(f" file '{result_file_path}' is removed.")
-                print('{} already exists, so no more infer.'.format(result_file_path))
-                continue
+                #print('{} already exists, so no more infer.'.format(result_file_path))
+                #continue
             df_test_ftr_select_notime = benjamini_yekutieli_p_value_get_ftr(df_test_part, usecols, select_cols, top_ftr_num, kind_to_fc_parameters_file_path)
             ml_model_forward_ks_roc(model_file_path, result_file_path, df_test_ftr_select_notime.loc[:,select_cols], np.array(df_test_ftr_select_notime.loc[:,'Y']),
                                  np.array(df_test_ftr_select_notime.loc[:,'CUSTOMER_ID']))
