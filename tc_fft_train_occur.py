@@ -3611,7 +3611,7 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
     i = 0
     while i < len(label_list):
         #if len(label_list[i]) < del_num or (sum(label_list[i]) == 0 or sum(label_list[i]) == len(label_list[i])):
-        if (datasetype != 'predict' or sum(label_list[i]) == 0 or (sum(label_list[i]) == len(label_list[i]) and datasetype == 'train')):
+        if ( (sum(label_list[i]) == 0 and datasetype != 'predict') or (sum(label_list[i]) == len(label_list[i]) and datasetype == 'train')):
             print('warning del class ', i, ' less ', del_num, ', elements len: ',len(label_list[i]),' sum: ',sum(label_list[i]))
             for id in customersid_list[i]:
                 print(id)
@@ -11893,6 +11893,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('4 group data:', formatted_time)
+    date_str = datetime(2024, 4, 20).strftime("%Y%m%d")  # change if you need update cluster model
     label_list_train = []
     customersid_list_train = []
     label_list_train_file_path = './model/' + date_str + '_' + type + '_' + str(cluster_num) + '_label_list_train.pkl'

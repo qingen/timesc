@@ -1253,7 +1253,7 @@ def multiple_hypothesis_testing_predict():
     filter = False
     ########## model
     model_num = 3
-    top_ftr_num = 128  # 32 64 128
+    top_ftr_num = 32  # 32 64 128
     cluster_model_path = './model/cluster4_' + date_str + '_step' + str(step) + '_ftr' + str(ftr_num_str) + '_ts' + str(
         n_line_tail) + '/'
     cluster_model_file = 'repr-cluster-train-4.pkl'
