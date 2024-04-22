@@ -11501,7 +11501,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     filter = False
     ########## model
     top_ftr_num = 32  # 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384
-    
+
     cluster_model_file = 'repr-cluster-train-4.pkl'
     cluster_num = 4
     cluster_less_train_num = 200    # 200
@@ -11893,7 +11893,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('4 group data:', formatted_time)
-    date_str = datetime(2024, 4, 22).strftime("%Y%m%d")  # change if you need update cluster model
+    date_str = datetime(2024, 4, 23).strftime("%Y%m%d")  # change if you need update cluster model
     cluster_model_path = './model/cluster4_' + date_str + '_step' + str(step) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail) + '/'
     label_list_train = []
     customersid_list_train = []
