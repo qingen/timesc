@@ -3582,7 +3582,7 @@ def ts2vec_cluster_datagroup_model(tsdatasets: List[TSDataset], y_labels: np.nda
                      "max_epochs": 5,
                      "verbose": 1,
                      "hidden_dims": hidden_dims,  # 64
-                     "seed": 4, }
+                     "seed": 8, }  # 4
     from paddlets.models.representation import ReprCluster
     from paddlets.models.representation import TS2Vec
     model = ReprCluster(repr_model=TS2Vec, repr_model_params=ts2vec_params)
@@ -11510,7 +11510,7 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     type = 'occur_addcredit_step' + str(step) + '_filter' + str(filter).lower() + '_cluster_ftr'+str(ftr_num_str)+'_ts'+str(n_line_tail)
     ## 'less_' + str(cluster_less_train_num) + '_' + str(cluster_less_val_num) + '_' + str(cluster_less_test_num) + '_'
     ######## optuna
-    n_trials = 32
+
     max_depth = 6
 
     df_part1 = df_all.groupby(['CUSTOMER_ID']).filter(lambda x: max(x["RDATE"]) >= 20170101)  # 20170101
@@ -11893,7 +11893,8 @@ def multiple_hypothesis_testing_y_cluster_multilabel_optuna():
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print('4 group data:', formatted_time)
-    date_str = datetime(2024, 4, 23).strftime("%Y%m%d")  # change if you need update cluster model
+    date_str = datetime(2024, 4, 28).strftime("%Y%m%d")  # change if you need update cluster model
+    n_trials = 64
     cluster_model_path = './model/cluster4_' + date_str + '_step' + str(step) + '_ftr' + str(ftr_num_str) + '_ts' + str(n_line_tail) + '/'
     label_list_train = []
     customersid_list_train = []
